@@ -9,7 +9,7 @@ Hilo is a private personal memory: the user tells a memory in their own words, t
 ## Stack
 
 - Swift 6.2+, language mode 6, strict concurrency. Default actor isolation is **MainActor**, single target. Approachable Concurrency ON.
-- SwiftUI only. iOS 26.0 minimum, iPhone, portrait.
+- SwiftUI only. iOS 26.4 minimum, iPhone, portrait. Built with Xcode 27 and the iOS 27 SDK.
 - SwiftData, Swift Testing, Foundation Models.
 - Third-party dependencies: none, in the app and in the tests. No exception.
 - Typography: New York for user-authored content (the memory text and the date in the user's words), SF for everything else, including model-written text.
@@ -55,7 +55,12 @@ Folders in a single target. The boundary is enforced by review and by a hook, no
 - `Codable` only. **Never** `JSONSerialization`.
 - **Never** `AnyView`, force unwrap, or `print()`. Use `Logger`.
 - Work that does not belong on the main actor leaves it explicitly, with `@concurrent` or a dedicated actor. `nonisolated` is written by hand on every `Domain` type — a missing annotation is a defect, not a detail.
-- Verify every iOS API against Cupertino MCP before using it, targeting iOS 26.0. **Never** an API above the deployment target.
+- Verify every iOS API against Cupertino MCP before using it, targeting iOS 26.4. **Never** an API above the deployment target.
+- The SDK is newer than the deployment target, so the compiler is not the only guard. **Never** add an availability check to reach an API newer than iOS 26.4: keep the 26.4 API and bring the decision to Rubén. An availability check written to use something newer is a BLOCKER.
+- **Comments are written in Spanish, in code that is written in English.** They explain a decision, never the code: write one only where the reason is not visible in the code itself — a trade-off, a non-obvious ordering, a rule from the spec the code alone does not reveal.
+- One line, plain language, the way Rubén would note something for his future self. **Never** a paragraph, **never** a file header comment, **never** doc-comments on every symbol, and **never** a comment that restates the line below it.
+- Clarity comes first from names, types, structure and small units. If a function needs a comment to be understood, try a better name or a smaller function first.
+- When implementing a rule from the spec, cite it in three or four words — `// regla 11: elemento sin recuerdos desaparece` — instead of explaining it.
 - Soft-deprecated APIs already present in a file you edit: keep them, deliver the change, propose migration as a separate task. Apple's scoping rule wins over the modernity rule.
 
 ### Data
@@ -69,7 +74,7 @@ Folders in a single target. The boundary is enforced by review and by a hook, no
 
 ### Localization & accessibility
 
-- **Interface strings are English literals in the view; the build generates the String Catalog entry. **Never edit the String Catalog by hand. 2 languages declared: English base, Spanish complete.
+- Interface strings are English literals in the view; the build generates the String Catalog entry. **Never** edit the String Catalog by hand. 2 languages declared: English base, Spanish complete.
 - **Always** declare a string as plural if it contains a quantity.
 - **Never** hardcode a date or number format. Use system format styles.
 - **Always** use leading/trailing, never left/right.
@@ -96,12 +101,14 @@ Folders in a single target. The boundary is enforced by review and by a hook, no
 
 - Apple Intelligence is a premise of this product, not a state: there is **no** interface for its absence, and the app never tells the user their device cannot do something. But the code must not fail when the model does not answer — it falls into the same path as a comprehension error.
 - Bound model output by generable type, not by prompt instruction. Validate before use.
-- **A failed comprehension is a product state, not a silent fallback.** Context overflow, guardrail block, refusal and unsupported language all end in "saved without analyzing, and told why". The user's text is never lost.
+- **A failed comprehension is a product state, not a silent fallback.** Context overflow, guardrail block, refusal, unsupported language, unavailable assets and a decoding failure all end in "saved without analyzing, and told why". The user's text is never lost.
+- Two error cases are defects of ours, not product states, and are fixed rather than explained to the user: an unsupported generation guide, and two concurrent requests on one session.
 - One session per generation. No history is kept between generations.
 - Three uses, three closed contracts: extracting a memory, interpreting a question, writing an answer or a portrait.
 - **Never** route to a server model, even if the system offers it.
 - Whatever can be decided with certainty is decided with certainty: canonical names, element resolution, retrieval steps 1 and 3, ordering, the cap, portrait validity and gap detection are pure functions. The model never decides which memories answer a question.
-- The retrieval cap is a single named constant. **Never** repeat its value in a test.
+- The retrieval cap is derived from the session's context size by a single pure function, with a floor and a ceiling, from the parameters in `ADR-001`. **Never** write a cap value as a literal, and **never** read the context size inside a test — inject it.
+- `tokenCount(for:)` is spike instrumentation, not runtime code: **never** count tokens before a generation.
 
 ## Documentation
 
@@ -132,16 +139,25 @@ A phase is opened by its spec, not by an ADR: ADRs exist only for decisions that
 
 At session start: read `MEMORY.md` and the current phase spec, plus any ADR still in `Estado: Proposed`.
 
+## Branching
+
+- **Never commit code to `main`.** Each phase runs on its own branch, created from `main` when the phase opens: `fase/F1-nucleo-de-dominio`, `fase/F4-captura-y-revision`.
+- One commit per atomic task, prefixed with the task: `F1.2: nombre canónico`. The repo is green at every commit — build and tests pass.
+- At phase close, once the five conditions above are met: commit `F<phase>-complete: <one-line summary>`, merge into `main` with `--no-ff`, and push both branches.
+- **Never** merge a phase whose closing conditions are not met. **Never** rebase, and **never** force-push. If a branch gets tangled, stop and ask.
+- **The F0.2 spike is the exception: it is throwaway.** Its code lives outside the app target and is **never** merged into `main`. What the spike delivers is a report and `ADR-001`.
+- Documentation and governance — `docs/`, `CLAUDE.md`, agents, skills, hooks — are written by Rubén and land on `main` directly. They are never part of a phase branch.
+
 ## Skills
 
 | Skill | Purpose | Status |
 |---|---|---|
 | `xcode` | Build, test and read errors through the Xcode MCP | Available |
-| `cupertino` | Verify iOS 26 APIs before use | Available |
+| `cupertino` | Verify iOS 26.4 APIs before use | Available |
 | `swiftui-moderno` | Views, navigation, previews | Available |
 | `concurrencia-swift` | Streaming, model actor, cancellation tied to the view | Available |
 | `nonisolated` | Explicit isolation under a MainActor default | Available |
-| `apis-modernas` | Current iOS 26 APIs and the soft-deprecation rule | Available |
+| `apis-modernas` | Current iOS 26.4 APIs and the soft-deprecation rule | Available |
 | `tests-de-verdad` | Test-first with real oracles | Available |
 | `accesibilidad-ios` | VoiceOver, Dynamic Type, Reduce Motion | Available |
 | `swiftdata` | Schema, identity across actors, external storage | Available |

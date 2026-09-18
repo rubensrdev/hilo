@@ -4,7 +4,7 @@
 - **Estado**: Accepted
 - **Opened**: 2026-09-17
 - **Closed**: 2026-09-17
-- **Reason**: Stack fijado; D1 = carpeta en target único, D4 = Xcode 26, D5 = iOS 26.0; reglas del kit resueltas
+- **Reason**: Stack fijado; D1 = carpeta en target único, D4 = Xcode 27, D5 = iOS 26.4 (ambos revisados el 18-09); reglas del kit resueltas
 
 ---
 
@@ -30,14 +30,29 @@ Hay además tres motivos para fijar esto ahora. El agente necesita un documento 
 |---|---|
 | Dispositivo | iPhone. Sin iPad, Mac, Watch ni visionOS |
 | Orientación | Solo vertical |
-| Versión mínima | **iOS 26.0** (D5) |
-| Generación de SDK | **Xcode 26 · SDK iOS 26** (D4) |
+| Versión mínima | **iOS 26.4** (D5, revisado) |
+| Generación de SDK | **Xcode 27 · SDK iOS 27** (D4, revisado) |
 | Lenguaje | Swift 6.2 o superior, modo de lenguaje Swift 6 |
 | Dependencias | Ninguna de terceros, ni en la app ni en los tests. Sin excepción |
 
-**D4 · Generación de SDK: Xcode 26 con SDK iOS 26.** El SDK coincide con la versión mínima, así que el compilador impide usar una API de iOS 27 y la regla de §11.4 la vigila la herramienta, no la revisión. Descartado Xcode 27 (Swift 6.4, SDK iOS 27) para el hackathon: toolchain recién publicado en una semana crítica y APIs visibles por encima del mínimo. Si Hilo sigue después, se revisa antes de abril de 2027, cuando App Store exigirá el SDK de iOS 27.
+**D4 · Generación de SDK: Xcode 27 con SDK de iOS 27.** Decisión revisada el 18 de septiembre. La elección inicial fue Xcode 26, para que el SDK coincidiera con la versión mínima y el compilador impidiera por sí solo usar una API posterior. Dejó de ser viable: el dispositivo de demo (iPhone 16) y el Mac están en la generación 27, y Xcode 26 no instala en un dispositivo con iOS 27. Sin dispositivo no hay validación manual en cierre de fase, que es condición de cierre de toda fase con UI y el criterio 1 de terminado.
 
-**D5 · Versión mínima: iOS 26.0.** Según `02_stack`, `contextSize` y `tokenCount(for:)` llegan en iOS 26.4; se verifica con Cupertino MCP en F0.2. La consecuencia es menor de lo que parece: **el tope de recuperación es una constante medida en F0.2, no un cálculo en tiempo de ejecución**, así que el código de la app no necesita leer la ventana ni contar tokens. Si alguna medición en ejecución resultase imprescindible, va detrás de una comprobación de disponibilidad y se justifica en `ADR-001`.
+La protección se mantiene casi entera, porque el objetivo de despliegue sigue en 26.0: **usar una API posterior sigue siendo error de compilación**. El hueco que abre es otro, y se tapa con una regla explícita:
+
+> **Nunca se añade una comprobación de disponibilidad para usar una API posterior a iOS 26.4.** Si el reemplazo moderno exige una versión mayor, se mantiene la API de 26.4 y se trae la decisión a Rubén.
+
+**D5 · Versión mínima: iOS 26.4.** Decisión revisada el 18 de septiembre, tras verificar con Cupertino MCP que `tokenCount(for:)` llega en 26.4 sin retro-despliegue y que `contextSize` está retro-desplegado a 26.0.
+
+Con el mínimo en 26.4, el tope de recuperación deja de ser un número fijo escrito a mano y pasa a **derivarse de la ventana real del dispositivo**: un iPhone con la generación 27 aprovecha su ventana mayor, y uno en 26.4 usa la suya sin desbordar. Es la diferencia entre un tope prudente para todos y el tope correcto en cada teléfono.
+
+El coste de subir de 26.0 a 26.4 es nulo aquí: no hay usuarios instalados, y ningún iPhone compatible con Apple Intelligence se queda fuera por un salto de versión menor.
+
+**Cómo se deriva el tope, y su límite:**
+
+- La app lee `contextSize` de la sesión, una vez, y calcula el tope con **una función pura**: ventana, menos las instrucciones, menos el espacio reservado para la respuesta generada, dividido por el coste típico de un recuerdo. El coste típico es la constante que sale del spike, medida por idioma.
+- La función tiene **suelo y techo**: nunca por debajo del tope conservador calculado para 4.096 tokens, nunca por encima de un máximo declarado, porque una respuesta con treinta recuerdos no es mejor, solo más lenta.
+- **Los tests inyectan la ventana**, nunca la leen del dispositivo: así el cálculo se prueba con 4.096, con la de la generación 27 y con los casos límite.
+- `tokenCount(for:)` **no se usa en ejecución**: contar tokens de cada recuerdo antes de cada generación añade latencia sin cambiar casi nada. Es instrumental del spike.
 
 ### 2. Concurrencia
 
@@ -151,12 +166,12 @@ Ratificado (D2 de F0):
 
 - **F0.1** crea el proyecto con Xcode 26, versión mínima iOS 26.0, los ajustes de §2 y las carpetas de §5 en un único target.
 - **`tokens.md`** define cada color semántico en sus cuatro apariencias, con su ratio de contraste declarado.
-- **F0.2** mide la ventana real y el consumo de tokens en ES y EN, y verifica la disponibilidad de las APIs de medición. Su resultado fija el tope como constante en `ADR-001`; ningún test lo repite como literal.
+- **F0.2** mide el consumo por recuerdo en ES y EN, y el margen que hay que reservar. Lo que fija `ADR-001` no es un tope sino **los parámetros de la función que lo deriva**, más el suelo conservador para 4.096 tokens. Ningún test repite un literal: inyectan la ventana.
 - **F1** escribe el dominio `nonisolated` y `Sendable`, sin importar SwiftData, SwiftUI ni Foundation Models. Sus tests invocan la API desde contexto no aislado para detectar anotaciones olvidadas.
 - **Fase 4 de la guía** añade un hook que rechaza importaciones prohibidas dentro de `Domain/`.
 - **F2** crea el contenedor de forma explícita y lo comparte con el actor de modelo. No hay carga inicial al arrancar.
 - **F3, F6 y F7** consumen el modelo a través de protocolos y se prueban con dobles deterministas.
-- **Toda API nueva** se verifica con Cupertino MCP antes de usarse, contra iOS 26.0.
+- **Toda API nueva** se verifica con Cupertino MCP antes de usarse, contra iOS 26.4. Con el SDK de iOS 27 delante, esa verificación deja de ser rutina y pasa a ser la única barrera real: `apis-modernas` y `revisor-constitucion` la vigilan, y una comprobación de disponibilidad para subir de versión es BLOCKER.
 - **Si Hilo sigue tras el hackathon**, este ADR se revisa en tres puntos: generación de SDK (obligatoria para App Store desde abril de 2027), nivel de adopción y la exclusión de `seguridad-apple`.
 
 ---
@@ -167,8 +182,8 @@ Ratificado (D2 de F0):
 |---|---|
 | Aislamiento por defecto | **Alto.** Obliga a revisar cada tipo escrito. No se toca después de F0.1 |
 | D1 → paquete local | **Medio.** Mover `Domain/` a un paquete y hacer `public` lo que se consume. Barato antes de F2, caro después de F6 |
-| D4 → Xcode 27 | **Bajo**: el SDK de iOS 26 no permite haber usado APIs de iOS 27 |
-| D5 → iOS 26.4 | **Bajo.** Solo quita comprobaciones de disponibilidad, si llegara a haberlas |
+| D4 → Xcode 26 | **Bajo hoy, creciente después**: obligaría a revisar cada comprobación de disponibilidad escrita entretanto, y dejaría el dispositivo de demo sin poder instalar |
+| D5 → iOS 26.0 | **Medio.** Obligaría a volver al tope fijo, porque `tokenCount(for:)` desaparece y el cálculo pierde su instrumental de calibración |
 | Reglas del kit | **Bajo.** Ninguna tiene código escrito todavía |
 | SwiftData | **Alto** una vez hay esquema y memoria de ejemplo |
 | Foundation Models | **No reversible.** Es el producto |
