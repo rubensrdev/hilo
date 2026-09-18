@@ -116,7 +116,7 @@ Folders in a single target. The boundary is enforced by review and by a hook, no
 |---|---|
 | `docs/specs/` | One spec per phase, `F0` to `F10`. Technology-free functional requirements — the contract for what to build |
 | `docs/decisions/` | ADRs, only for decisions that are expensive to reverse. `Estado: Proposed` means still open; `Accepted` ones are closed and must not be reverted |
-| `MEMORY.md` | Cross-session memory: decisions, known errors, patterns |
+| `MEMORY.md` | Cross-session memory: decisions, known errors, and patterns learned — the place to propose a new rule |
 | `docs/design/tokens.md` | The visual contract. Every colour, type, spacing, radius and motion token with its role. Exact values come from here, never from an image |
 | `docs/design/README.md` | Design notes, and the list of known deviations in `reference/` that must not be implemented |
 | `docs/design/reference/` | Static design references. Reference only — **never** a source of product truth, and never a substitute for the phase spec |
@@ -135,9 +135,41 @@ One phase at a time, one atomic task per turn — never start code before the pl
 4. Manual on-device validation by Rubén, for any phase that touches UI.
 5. `MEMORY.md` updated, and the commit `F<phase>-complete: <one-line summary>`.
 
-A phase is opened by its spec, not by an ADR: ADRs exist only for decisions that are expensive to reverse. Run `/compact` when an atomic task closes and before opening the next one, especially after a UI task with several preview iterations.
+A phase is opened by its spec, not by an ADR: ADRs exist only for decisions that are expensive to reverse.
+
+### Opening a session
+
+Before touching any code: read `MEMORY.md` in full, the current phase spec in `docs/specs/`, and any ADR still in `Estado: Proposed`. For a phase whose **Verificación** block says it touches UI, read `docs/design/README.md` and `tokens.md` too, and load the `accesibilidad-ios` skill — on a non-UI phase that skill only costs tokens.
+
+Then say, in one paragraph: current state, next atomic task, and any known risk or blocker. **Write no code until Rubén confirms the plan.**
+
+### During a phase
+
+- One atomic task at a time: propose, wait for approval, implement, and stop so Rubén can read the diff.
+- **A task touching three or more files, the schema, concurrency or navigation goes through Plan Mode, and the plan is written to disk** — a plan that only lives in the conversation does not survive a `/clear`.
+- After any change that affects UI, run `verificador-ui` in a loop until it passes. **Its green is the exit condition**, not the diff and not your own opinion.
+- On any concurrency or `Sendable` warning, run `auditor-concurrencia`.
+- **Never modify a test so that it passes.** Fix the implementation. The test is the one source of truth in this project that does not degrade as the context fills up.
+
+### Closing a phase
+
+1. Run the audits named in the phase's **Verificación** block, starting with `revisor-constitucion` over the files changed in this phase. **One BLOCKER means the phase does not close**: fix and run it again until it comes back clean.
+2. Clean build — the incremental one hides cached warnings — with zero errors and zero warnings.
+3. Manual on-device validation by Rubén, for any phase that touches UI.
+4. Update `MEMORY.md`: last session with date, task completed and next task; decisions taken in this phase; errors that cost time and how they were solved; and any rule worth keeping, in "Patrones aprendidos".
+5. If this phase opened an ADR, close it: `Estado: Proposed` → `Accepted`, fill `Closed` and `Reason`, and add any decision taken during the phase that is not yet written down.
+6. Commit `F<phase>-complete: <one-line summary>`, merge and push as described under Branching.
+7. Say what the next atomic task is, reading `docs/specs/`. **Start no new code: closing is only closing.**
+
+### `/compact` and `/clear`
+
+- Same phase, still working: `/compact`, by hand and early — around 60% of the window, not 80%. Compacting loses detail, so the later you do it, the more you lose. A UI task with several preview iterations is a good moment.
+- Back from a break, or changing phase: `/clear`, with the plan and the memory already written to disk.
+- Close the session without discussion, compacted or not, when the agent repeats answered questions, contradicts a decision already taken, duplicates code it wrote itself, or ignores files it just created. That is not fixed by insisting: persist, clear, reopen.
 
 At session start: read `MEMORY.md` and the current phase spec, plus any ADR still in `Estado: Proposed`.
+
+When the work reveals a rule worth keeping — a repeating pattern, a mistake worth preventing, a convention we settled on — write it at phase close in the "Patrones aprendidos en este proyecto" section of `MEMORY.md`, one line, in Spanish like the rest of that file. **Never** edit `CLAUDE.md` itself: a hook blocks it, and promoting a pattern to a rule is Rubén's call. If a rule in this file is wrong or in your way, say so and stop.
 
 ## Branching
 
