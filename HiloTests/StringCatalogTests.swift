@@ -53,6 +53,8 @@ struct StringCatalogTests {
     for key in expectedKeys {
       let entry = catalog.strings[key]
       #expect(entry != nil, "falta la clave \(key) en el catalogo")
+      // ninguna clave trae "en" explicito: por convencion de Xcode, el valor en
+      // ingles es la propia clave cuando el idioma base coincide con ella
       if let english = entry?.localizations?["en"]?.stringUnit.value {
         #expect(!english.isEmpty, "el valor en ingles de \(key) esta vacio")
       }

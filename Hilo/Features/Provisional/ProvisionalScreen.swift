@@ -21,8 +21,9 @@ struct ProvisionalScreen: View {
     ("separador", .separador),
   ]
 
-  // sin token para el tamano de esta cuadricula de depuracion: no es producto
-  // y se borra entera en F4/F5 (contrato 7), tokens.md no cubre cajas de icono
+  // sin token para las medidas de esta cuadricula de depuracion (grid y caja de
+  // muestra de 60x60 en el body): no es producto y se borra entera en F4/F5
+  // (contrato 7), tokens.md no cubre cajas de icono
   private let columns = [GridItem(.adaptive(minimum: 80))]
 
   var body: some View {
