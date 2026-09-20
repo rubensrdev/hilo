@@ -21,29 +21,31 @@ struct ProvisionalScreen: View {
         ("separador", .separador),
     ]
 
+    // sin token para el tamano de esta cuadricula de depuracion: no es producto
+    // y se borra entera en F4/F5 (contrato 7), tokens.md no cubre cajas de icono
     private let columns = [GridItem(.adaptive(minimum: 80))]
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: Spacing.espacio4) {
                 Image(systemName: "hammer")
                     .imageScale(.large)
                     .foregroundStyle(.secondary)
                 Text("Hilo")
-                    .font(.title)
+                    .tituloSeccion()
                 Text("Provisional screen — replaced in F4/F5")
-                    .font(.footnote)
+                    .metadato()
                     .foregroundStyle(.secondary)
 
                 // contrato 3: la cuadricula demuestra que los 16 tokens se resuelven
-                LazyVGrid(columns: columns, spacing: 12) {
+                LazyVGrid(columns: columns, spacing: Spacing.espacio3) {
                     ForEach(swatches, id: \.name) { swatch in
-                        VStack(spacing: 4) {
-                            RoundedRectangle(cornerRadius: 8)
+                        VStack(spacing: Spacing.espacio1) {
+                            RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous)
                                 .fill(swatch.color)
                                 .frame(width: 60, height: 60)
                             Text(swatch.name)
-                                .font(.caption2)
+                                .metadato()
                                 .multilineTextAlignment(.center)
                         }
                     }
