@@ -17,7 +17,7 @@ struct ContentView: View {
     }
     .padding()
     .task {
-      await ExtractionHarness().run()
+      await F023Runner().run()
     }
   }
 }
