@@ -74,7 +74,7 @@ Folders in a single target. The boundary is enforced by review and by a hook, no
 
 ### Localization & accessibility
 
-- Interface strings are English literals in the view; the build generates the String Catalog entry. **Never** edit the String Catalog by hand. 2 languages declared: English base, Spanish complete.
+- Interface strings are English literals in the view; the build generates the String Catalog entry. Translations are written **only** through the Xcode MCP's String Catalog tools — **never** by hand-editing the `.xcstrings` file. 2 languages declared: English base, Spanish complete.
 - **Always** declare a string as plural if it contains a quantity.
 - **Never** hardcode a date or number format. Use system format styles.
 - **Always** use leading/trailing, never left/right.
