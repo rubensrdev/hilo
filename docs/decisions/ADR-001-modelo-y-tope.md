@@ -1,10 +1,10 @@
 # ADR-001 — Contrato del modelo y tope de recuperación
 
 - **Fase**: F0.2
-- **Estado**: Proposed
+- **Estado**: Accepted
 - **Opened**: 2026-09-20
-- **Closed**: —
-- **Reason**: —
+- **Closed**: 2026-09-20
+- **Reason**: Parámetros del tope fijados (71 / 300 / 176 / 21 / 30); contrato de extracción validado con dos matices de validación posterior para F3; superficie de error decidida — ambas, `GenerationError` y `LanguageModelError`
 
 ---
 
@@ -74,6 +74,7 @@ Todos, confirmados o no, siguen acabando en "guardar sin analizar y decir por qu
 ## Consecuencias
 
 - **F3** implementa la función del tope tal como está aquí, inyectando `contextSize` en los tests, nunca leyéndolo dentro de un test. El `catch` cubre `GenerationError` y `LanguageModelError` con ramas explícitas.
+- **F3** confirma, antes de reutilizar el patrón de logging del spike (`String(describing: error)` con `privacy: .public`), que la descripción de ningún caso de error incluye un fragmento del texto del relato — el spike no lo comprobó exhaustivamente, solo observó que los mensajes capturados hasta ahora citan cifras y categorías, nunca texto de usuario.
 - **F3** añade validación posterior al contrato de extracción para descartar `dateText` sin fecha real en el texto — no cambia el contrato, añade una comprobación después de recibirlo.
 - **F6/F7**, cuando generen retratos y respuestas reales, revisan el techo de 30: si la calidad no mejora bastante antes de llegar ahí, se puede bajar; si mejora hasta el límite, se documenta por qué se mantiene.
 - **El techo y el suelo son constantes con nombre, en un solo sitio** (spec F0.2, riesgos abiertos) — cambiarlos no debe tocar ningún test salvo los que verifican la función misma.
