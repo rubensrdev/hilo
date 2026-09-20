@@ -1,8 +1,12 @@
 #!/bin/bash
 # Hilo · PreToolUse (Write|Edit|MultiEdit y escrituras vía MCP de Xcode)
 #
-# Ficheros que no se editan desde una sesión de agente. Algunos porque los genera
-# Xcode, otros porque son el contrato que gobierna al propio agente.
+# Tres reglas, y solo tres. Lo que no está aquí se escribe libremente: el diff se
+# revisa antes de cada merge. Una regla de más para el trabajo cada dos por tres, y
+# un hook que estorba acaba desactivado entero.
+#
+# Se comprueba la RUTA DE DESTINO, nunca el contenido: citar un fichero protegido
+# dentro de un test o de un comentario no es escribir en él.
 #
 # Salida: exit 0 permite, exit 2 bloquea y devuelve el motivo al agente.
 
@@ -11,32 +15,15 @@ INPUT=$(cat)
 python3 - "$INPUT" <<'PY'
 import json, sys
 
-# (patron, motivo). El patron se busca en la RUTA del fichero que se va a escribir.
 RULES = [
-    (".pbxproj",        "el proyecto lo edita Xcode o el MCP de proyecto, nunca a mano"),
-    (".xcworkspace/",   "lo genera Xcode"),
-    (".xcstrings",      "las traducciones se escriben con las herramientas de String Catalog del MCP, nunca a mano"),
-    ("/.git/",          "no se toca el repositorio por dentro"),
-    ("DerivedData/",    "es cache de build"),
-    ("/.build/",        "es cache de SPM"),
-    ("/checkouts/",     "es cache de SPM"),
-    ("/CLAUDE.md",      "es el contrato que te gobierna: lo edita Ruben"),
-    ("/docs/specs/",    "las specs las escribe Ruben en preproduccion"),
-    ("/docs/decisions/","los ADRs los escribe Ruben"),
-    ("/docs/design/",   "el contrato visual y su referencia son entrada, no salida"),
-    (".env",            "secretos"),
-    (".pem",            "claves"),
-    (".p8",             "claves"),
-    (".p12",            "claves"),
-    (".mobileprovision","perfiles de aprovisionamiento"),
+    (".pbxproj",      "el proyecto lo edita Xcode o el MCP, nunca a mano"),
+    (".xcworkspace/", "lo genera Xcode"),
+    (".xcstrings",    "las traducciones se escriben con las herramientas de String Catalog del MCP, nunca a mano"),
+    ("/CLAUDE.md",    "es el contrato que te gobierna: lo edita Ruben"),
 ]
 
-# Claves que, segun la herramienta, contienen la RUTA de destino. El contenido del
-# fichero (content, new_string, edits...) NUNCA se inspecciona: citar una ruta
-# protegida dentro de un test o de un comentario no es escribir en ella.
+# Claves que llevan la ruta de destino, segun la herramienta.
 PATH_KEYS = ("file_path", "filePath", "path", "notebook_path", "target_file", "destination")
-
-EXEMPT = (".env.example", ".env.sample", ".env.template")
 
 try:
     payload = json.loads(sys.argv[1])
@@ -58,8 +45,6 @@ def paths(node):
             yield from paths(value)
 
 for value in paths(tool_input):
-    if value.endswith(EXEMPT):
-        continue
     for pattern, reason in RULES:
         if pattern == ".xcstrings" and mcp_xcode:
             continue
