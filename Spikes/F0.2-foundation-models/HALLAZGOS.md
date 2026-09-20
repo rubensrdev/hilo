@@ -54,7 +54,38 @@ El simulador y el físico, ambos generación 27, dan un `contextSize` distinto. 
 
 ### M2, M3 — medidos, idénticos entre simulador y físico
 
-Los tokens de instrucciones/esquema/prompt (M2) y del material de redacción (M3) salieron exactamente iguales en ambos dispositivos, como cabía esperar: dependen del tokenizador, no del tamaño de la ventana.
+Los tokens de instrucciones/esquema/prompt (M2) y del material de redacción (M3) salieron exactamente iguales en ambos dispositivos, como cabía esperar: dependen del tokenizador, no del tamaño de la ventana. La tabla completa no se transcribió en la pasada física original (solo se anotó la conclusión cualitativa); como `tokenCount(for:)` no genera, no tiene rate limit ni necesita espaciado, se repitió en el simulador para tener los números exactos, sin volver a gastar tiempo de físico.
+
+**M2 — coste en tokens de la extracción, por relato**
+
+| Relato | Instrucciones | Esquema | Prompt | Total |
+|---|---|---|---|---|
+| es-corto | 71 | 326 | 48 | 445 |
+| es-cuatroParrafos | 71 | 326 | 176 | 573 |
+| es-sinFecha | 71 | 326 | 53 | 450 |
+| es-fechaAmbigua | 71 | 326 | 43 | 440 |
+| en-corto | 71 | 326 | 31 | 428 |
+| en-cuatroParrafos | 71 | 326 | 154 | 551 |
+| en-sinFecha | 71 | 326 | 38 | 435 |
+| en-fechaAmbigua | 71 | 326 | 39 | 436 |
+| intimo-muerte | 71 | 326 | 69 | 466 |
+| intimo-enfermedad | 71 | 326 | 60 | 457 |
+| guerra-posguerra | 71 | 326 | 77 | 474 |
+| mixto-esEn | 71 | 326 | 75 | 472 |
+
+Instrucciones (71) y esquema (326) son constantes: no varían por relato ni por idioma, solo el prompt. El relato más caro es `es-cuatroParrafos` (573 total, el más largo del corpus); el más barato, `en-corto` (428).
+
+**M3 — coste en tokens de un prompt de redacción, por N de recuerdos**
+
+| Recuerdos (N) | Tokens |
+|---|---|
+| 4 | 169 |
+| 6 | 245 |
+| 8 | 317 |
+| 10 | 392 |
+| 12 | 473 |
+
+Crecimiento aproximadamente lineal: ~38 tokens por recuerdo añadido (169→245 son 6 recuerdos más por 76 tokens, ≈12.7/recuerdo con resúmenes truncados a 120 caracteres; la pendiente real con recuerdos completos sería mayor — este número es una cota inferior, no el coste típico de un recuerdo real).
 
 ### El hallazgo que bloqueó el resto de la pasada física
 
