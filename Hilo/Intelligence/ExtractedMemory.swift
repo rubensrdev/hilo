@@ -41,3 +41,18 @@ nonisolated enum ExtractedElementType {
   case place
   case object
 }
+
+extension ExtractedMemory {
+  // un elemento solo aparece cuando sus tres campos ya llegaron completos (contrato 3, §8.2.1)
+  init(partial: ExtractedMemory.PartiallyGenerated) {
+    self.init(
+      elements: (partial.elements ?? []).compactMap { element in
+        guard let name = element.name, let type = element.type, let role = element.role else {
+          return nil
+        }
+        return ExtractedElement(name: name, type: type, role: role)
+      },
+      dateText: partial.dateText,
+      deducedYear: partial.deducedYear)
+  }
+}
