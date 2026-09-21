@@ -11,6 +11,8 @@ nonisolated struct FoundationModelsMemoryComprehender: MemoryComprehending {
       let task = Task {
         do {
           // una sesion por generacion, sin historial
+          // precalentamiento descartado: M5 (spike F0.2, HALLAZGOS.md) midio que prewarm(promptPrefix:)
+          // no baja la latencia al primer fragmento y hace el total mas inestable
           let session = LanguageModelSession(
             instructions: Self.instructions(interfaceLanguage: interfaceLanguage))
           let stream = session.streamResponse(to: narrative, generating: ExtractedMemory.self)
