@@ -5,7 +5,7 @@ import FoundationModels
   description:
     "Lo que se entiende de un recuerdo: sus elementos y la fecha tal como la contó quien lo recuerda"
 )
-struct ExtractedMemory {
+nonisolated struct ExtractedMemory {
   @Guide(
     description:
       "Personas, lugares u objetos nombrables y singulares mencionados en el relato, en el orden en que aparecen"
@@ -26,7 +26,7 @@ struct ExtractedMemory {
 }
 
 @Generable(description: "Un elemento nombrable extraído de un recuerdo")
-struct ExtractedElement {
+nonisolated struct ExtractedElement {
   @Guide(description: "El nombre tal como aparece en el relato")
   let name: String
   @Guide(description: "El tipo de elemento")
@@ -36,7 +36,7 @@ struct ExtractedElement {
 }
 
 @Generable
-enum ExtractedElementType {
+nonisolated enum ExtractedElementType {
   case person
   case place
   case object

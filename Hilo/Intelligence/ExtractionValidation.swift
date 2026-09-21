@@ -1,5 +1,3 @@
-import Foundation
-
 // contrato 2 + ADR-001 §2: una estructura bien formada puede traer nombres o fechas que el relato no dice
 nonisolated enum ExtractionValidation {
   static func validate(_ extracted: ExtractedMemory, against narrative: String) -> ExtractedMemory {
