@@ -1,3 +1,4 @@
+import Foundation
 import FoundationModels
 import Testing
 
@@ -6,9 +7,6 @@ import Testing
 // contrato 4: contextOverflow, guardrailViolation, refusal, unsupportedLanguage, assetsUnavailable,
 // decodingFailure y noResponse son estados de producto; concurrentRequests, unsupportedGuide y
 // unsupportedGenerationGuide son defectos nuestros (preconditionFailure), no se prueban aqui
-// LanguageModelError exige iOS 27.0 (SDK real, ver FoundationModels.swiftinterface): con deployment
-// target 26.4 no se puede construir sin un @available prohibido por CLAUDE.md, asi que solo se
-// prueba la superficie GenerationError (26.0), que ya cubre los 7 casos
 nonisolated struct MemoryComprehensionErrorMappingTests {
   private struct UnrecognizedTestError: Error, Sendable {}
 
@@ -58,6 +56,93 @@ nonisolated struct MemoryComprehensionErrorMappingTests {
 
   @Test func `Generation rate limited maps to noResponse`() {
     let error = LanguageModelSession.GenerationError.rateLimited(.init(debugDescription: "test"))
+
+    #expect(MemoryComprehensionError(mapping: error) == .noResponse)
+  }
+
+  // MARK: - LanguageModelError (iOS 27+, excepcion acotada de CLAUDE.md: el simulador activo es 27.0)
+
+  @Test func `Model guardrail violation maps to guardrailViolation`() {
+    guard #available(iOS 27, *) else {
+      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
+      return
+    }
+    let error = LanguageModelError.guardrailViolation(.init(debugDescription: "test"))
+
+    #expect(MemoryComprehensionError(mapping: error) == .guardrailViolation)
+  }
+
+  @Test func `Model context size exceeded maps to contextOverflow`() {
+    guard #available(iOS 27, *) else {
+      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
+      return
+    }
+    let error = LanguageModelError.contextSizeExceeded(
+      .init(contextSize: 4096, tokenCount: 5000, debugDescription: "test"))
+
+    #expect(MemoryComprehensionError(mapping: error) == .contextOverflow)
+  }
+
+  @Test func `Model unsupported language or locale maps to unsupportedLanguage`() {
+    guard #available(iOS 27, *) else {
+      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
+      return
+    }
+    let error = LanguageModelError.unsupportedLanguageOrLocale(
+      .init(languageCode: "xx", debugDescription: "test"))
+
+    #expect(MemoryComprehensionError(mapping: error) == .unsupportedLanguage)
+  }
+
+  @Test func `Model refusal maps to refusal`() {
+    guard #available(iOS 27, *) else {
+      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
+      return
+    }
+    let error = LanguageModelError.refusal(
+      .init(explanation: "test", debugDescription: "test"))
+
+    #expect(MemoryComprehensionError(mapping: error) == .refusal)
+  }
+
+  @Test func `Model rate limited maps to noResponse`() {
+    guard #available(iOS 27, *) else {
+      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
+      return
+    }
+    let error = LanguageModelError.rateLimited(.init(resetDate: nil, debugDescription: "test"))
+
+    #expect(MemoryComprehensionError(mapping: error) == .noResponse)
+  }
+
+  @Test func `Model timeout maps to noResponse`() {
+    guard #available(iOS 27, *) else {
+      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
+      return
+    }
+    let error = LanguageModelError.timeout(.init(debugDescription: "test"))
+
+    #expect(MemoryComprehensionError(mapping: error) == .noResponse)
+  }
+
+  @Test func `Model unsupported capability maps to noResponse`() {
+    guard #available(iOS 27, *) else {
+      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
+      return
+    }
+    let error = LanguageModelError.unsupportedCapability(
+      .init(capability: .vision, debugDescription: "test"))
+
+    #expect(MemoryComprehensionError(mapping: error) == .noResponse)
+  }
+
+  @Test func `Model unsupported transcript content maps to noResponse`() {
+    guard #available(iOS 27, *) else {
+      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
+      return
+    }
+    let error = LanguageModelError.unsupportedTranscriptContent(
+      .init(unsupportedContent: [], debugDescription: "test"))
 
     #expect(MemoryComprehensionError(mapping: error) == .noResponse)
   }

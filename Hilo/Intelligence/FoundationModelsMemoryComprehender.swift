@@ -22,8 +22,7 @@ nonisolated struct FoundationModelsMemoryComprehender: MemoryComprehending {
           }
           continuation.finish()
         } catch {
-          // mapeo caso a caso a MemoryComprehensionError llega en F3.4; aqui se reenvia tal cual
-          continuation.finish(throwing: error)
+          continuation.finish(throwing: MemoryComprehensionError(mapping: error))
         }
       }
       continuation.onTermination = { _ in task.cancel() }
