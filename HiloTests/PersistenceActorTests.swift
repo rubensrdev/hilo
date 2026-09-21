@@ -185,4 +185,103 @@ struct PersistenceActorTests {
 
     #expect(try await actor.photoData(for: MemoryID()) == nil)
   }
+
+  // contrato 4 + reglas 11/12: la limpieza de huerfanos ocurre en el camino de escritura
+  @Test func `Deleting a memory removes an element that only appeared in it`() async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "Un paseo por el puerto con mi abuelo.", savedAt: Self.fixedSavedAt))
+    let element = try #require(Element(displayName: "Abuelo", type: .person))
+    _ = try await actor.save(memory, isAnalyzed: false, isExample: false)
+    _ = try await actor.save(element)
+    try await actor.save(
+      Appearance(memoryID: memory.id, elementID: element.id, role: nil, status: .confirmedByUser))
+
+    try await actor.deleteMemory(id: memory.id)
+
+    let remainingElements = try await actor.fetchElements()
+    #expect(!remainingElements.contains { $0.id == element.id })
+  }
+
+  @Test func `Deleting a memory keeps an element that still appears in another memory`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let firstMemory = try #require(
+      Memory(narrative: "Comimos marisco en la lonja.", savedAt: Self.fixedSavedAt))
+    let secondMemory = try #require(
+      Memory(narrative: "Volvimos a la lonja al año siguiente.", savedAt: Self.fixedSavedAt))
+    let element = try #require(Element(displayName: "Tío Paco", type: .person))
+    _ = try await actor.save(firstMemory, isAnalyzed: false, isExample: false)
+    _ = try await actor.save(secondMemory, isAnalyzed: false, isExample: false)
+    _ = try await actor.save(element)
+    try await actor.save(
+      Appearance(
+        memoryID: firstMemory.id, elementID: element.id, role: nil, status: .confirmedByUser))
+    try await actor.save(
+      Appearance(
+        memoryID: secondMemory.id, elementID: element.id, role: nil, status: .confirmedByUser))
+
+    try await actor.deleteMemory(id: firstMemory.id)
+
+    let remainingElements = try await actor.fetchElements()
+    #expect(remainingElements.contains { $0.id == element.id })
+  }
+
+  @Test func `Deleting a memory with a photo removes its photo data`() async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "La última tarde en el mirador.", savedAt: Self.fixedSavedAt))
+    let photo = try PhotoStripperTests.jpegWithGPS()
+    let savedID = try await actor.save(
+      memory, photoData: photo, isAnalyzed: false, isExample: false)
+
+    try await actor.deleteMemory(id: savedID)
+
+    #expect(try await actor.photoData(for: savedID) == nil)
+  }
+
+  @Test func `Deleting a memory removes its appearances`() async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "Cena de despedida en casa de Elena.", savedAt: Self.fixedSavedAt))
+    let element = try #require(Element(displayName: "Elena", type: .person))
+    _ = try await actor.save(memory, isAnalyzed: false, isExample: false)
+    _ = try await actor.save(element)
+    try await actor.save(
+      Appearance(memoryID: memory.id, elementID: element.id, role: nil, status: .proposed))
+
+    try await actor.deleteMemory(id: memory.id)
+
+    let remainingAppearances = try await actor.fetchAppearances()
+    #expect(!remainingAppearances.contains { $0.memoryID == memory.id })
+  }
+
+  @Test func `Deleting a memory id that was never saved throws memoryNotFound`() async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+
+    await #expect(throws: PersistenceActor.WriteError.memoryNotFound) {
+      try await actor.deleteMemory(id: MemoryID())
+    }
+  }
+
+  @Test func `Deleting a memory with no elements or appearances leaves it out of fetchMemories`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "Un día cualquiera sin nada especial.", savedAt: Self.fixedSavedAt))
+    _ = try await actor.save(memory, isAnalyzed: false, isExample: false)
+
+    try await actor.deleteMemory(id: memory.id)
+
+    let remainingMemories = try await actor.fetchMemories()
+    #expect(!remainingMemories.contains { $0.id == memory.id })
+  }
 }

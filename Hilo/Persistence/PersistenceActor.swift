@@ -66,6 +66,24 @@ actor PersistenceActor {
     try fetchMemoryRecord(id: id)?.photoData
   }
 
+  // contrato 4: el cascade borra apariciones y foto; el dominio decide los huerfanos (reglas 11+12)
+  func deleteMemory(id: MemoryID) throws {
+    guard let record = try fetchMemoryRecord(id: id) else { throw WriteError.memoryNotFound }
+    modelContext.delete(record)
+    try modelContext.save()
+    try cleanOrphanedElements()
+  }
+
+  private func cleanOrphanedElements() throws {
+    let orphans = OrphanElements.among(try fetchElements(), appearances: try fetchAppearances())
+    for id in orphans {
+      if let record = try fetchElementRecord(id: id) {
+        modelContext.delete(record)
+      }
+    }
+    try modelContext.save()
+  }
+
   private func fetchMemoryRecord(id: MemoryID) throws -> MemoryRecord? {
     // #Predicate exige capturar un valor simple, no acceder a .value del struct dentro del closure
     let targetID = id.value
