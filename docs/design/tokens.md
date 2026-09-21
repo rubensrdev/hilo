@@ -65,8 +65,8 @@ Los tres tipos también deben distinguirse en escala de grises. Lo garantizan el
 | Token | Rol | C | O | C·AC | O·AC | Peor ratio | Además del color |
 |---|---|---|---|---|---|---|---|
 | `estado-exito` | Recuerdo guardado | `#2E6B3A` | `#86C995` | `#1F5229` | `#B0E2BB` | 5,2 / 7,6 / 7,7 / 11,8 | Símbolo + anuncio de VoiceOver |
-| `estado-aviso` | Guardado sin analizar, retrato sin vigencia | `#855400` | `#E9B45C` | `#633E00` | `#F5CE8A` | 5,2 / 7,8 / 8,0 / 11,5 | Símbolo + texto explicativo |
-| `estado-error` | Error de comprensión | `#B0261C` | `#FF8A80` | `#8A1810` | `#FFB3AC` | 5,4 / 6,5 / 8,0 / 10,0 | Símbolo + texto; el relato sigue visible |
+| `estado-aviso` | Guardado sin analizar (también tras un error de comprensión), retrato sin vigencia | `#855400` | `#E9B45C` | `#633E00` | `#F5CE8A` | 5,2 / 7,8 / 8,0 / 11,5 | Símbolo + texto explicativo |
+| `estado-error` | Base de `destructivo`. Ningún estado de la comprensión lo usa: si comprender falla, el recuerdo queda guardado sin analizar y es `estado-aviso` | `#B0261C` | `#FF8A80` | `#8A1810` | `#FFB3AC` | 5,4 / 6,5 / 8,0 / 10,0 | Solo a través de `destructivo` |
 | `destructivo` | Borrar recuerdo, borrar memoria, borrar ejemplo | = `estado-error` | | | | | Rol `destructive` del sistema + confirmación |
 | `seleccionado` | Selector Recuerdos/Elementos, filtro de tipo activo | = `acento-hilo` | | | | | Estado del control del sistema (marca, peso) |
 | `seleccion-fila` | Pulsación en fila de lista | Color del sistema | | | | | No es el acento |
@@ -225,7 +225,7 @@ Solo SF Symbols. Escala `medium`. El peso acompaña al texto contiguo.
 | Hebra suelta | `questionmark.circle` | |
 | Estado aviso | `exclamationmark.triangle.fill` | Con `estado-aviso` |
 | Estado éxito | `checkmark.circle.fill` | Con `estado-exito` |
-| Estado error | `exclamationmark.octagon.fill` | Con `estado-error`. Forma distinta del aviso: se distinguen en escala de grises |
+| Estado error | `exclamationmark.octagon.fill` | Con `estado-error`. Sin uso en el MVP desde la 1.4: el error de comprensión usa el símbolo de aviso |
 | Filtro de tipo activo | Símbolo del tipo | Chip de filtro con `seleccionado` y marca de estado del control |
 | Descartar | `xmark` | |
 | Ajustes | `gearshape` | |
@@ -272,6 +272,7 @@ Direcciones: **leading / trailing**, nunca izquierda / derecha.
 ## Histórico
 
 - **1.0** — Redacción inicial.
+- **1.4** — Apertura de F4 (DEC-43): el error de comprensión pasa a `estado-aviso` con su símbolo; `estado-error` queda solo como base de `destructivo`.
 - **1.3** — Cierre de la 0.4: foto de tarjeta dentro del relleno, estilo del botón de contar, extracto centrado en la coincidencia.
 - **1.2** — Tras el segundo handoff: `trazo-conexion` separado de `trazo-vinculo`; ubicación única de la acción de contar en todos los tamaños.
 - **1.1** — Tras el primer handoff de Claude Design: chips de elemento (relleno, bordes, variante quitada), resalte de búsqueda sin color, proporciones de foto, símbolos de estado y del filtro de tipo, acción de contar en la barra de herramientas.
