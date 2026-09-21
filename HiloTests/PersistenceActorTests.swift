@@ -1,4 +1,5 @@
 import Foundation
+import ImageIO
 import SwiftData
 import Testing
 
@@ -422,5 +423,129 @@ struct PersistenceActorTests {
     let jose = try #require(remainingElements.first { $0.displayName == "José" })
     let remainingAppearances = try await actor.fetchAppearances()
     #expect(remainingAppearances.filter { $0.elementID == jose.id }.count == 1)
+  }
+
+  // contrato 6 + regla 25: el borrado total no deja recuerdos, elementos ni apariciones
+  @Test
+  func `Wiping all data with memories, elements, appearances and a photo leaves every fetch empty`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "Una comida familiar en la terraza.", savedAt: Self.fixedSavedAt))
+    let photo = try PhotoStripperTests.jpegWithGPS()
+    let savedID = try await actor.save(
+      memory, photoData: photo, isAnalyzed: false, isExample: false)
+    let element = try #require(Element(displayName: "Tía Carmen", type: .person))
+    let elementID = try await actor.save(element)
+    try await actor.save(
+      Appearance(memoryID: savedID, elementID: elementID, role: nil, status: .confirmedByUser))
+
+    try await actor.wipeAllData()
+
+    #expect(try await actor.fetchMemories().isEmpty)
+    #expect(try await actor.fetchElements().isEmpty)
+    #expect(try await actor.fetchAppearances().isEmpty)
+  }
+
+  @Test func `Wiping all data removes an orphaned discard record with no element`() async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let context = ModelContext(container)
+    context.insert(DiscardRecord(gapType: "unsupportedLanguage", element: nil))
+    try context.save()
+
+    try await actor.wipeAllData()
+
+    let remainingDiscards = try ModelContext(container).fetch(FetchDescriptor<DiscardRecord>())
+    #expect(remainingDiscards.isEmpty)
+  }
+
+  @Test func `Wiping all data on an already empty container does not throw`() async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+
+    try await actor.wipeAllData()
+
+    #expect(try await actor.fetchMemories().isEmpty)
+  }
+
+  // contrato 6: la foto externalizada tambien desaparece del disco, no solo del store
+  @Test func `Wiping all data with a real on-disk container frees the externally stored photo`()
+    async throws
+  {
+    let storeDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(
+      UUID().uuidString, isDirectory: true)
+    try FileManager.default.createDirectory(
+      at: storeDirectory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: storeDirectory) }
+    let storeURL = storeDirectory.appendingPathComponent("test.store")
+    let configuration = ModelConfiguration(url: storeURL)
+    let container = try ModelContainer(
+      for: PersistenceContainer.schema, configurations: [configuration])
+    let actor = PersistenceActor(modelContainer: container)
+    // el propio fichero SQLite (y su -wal/-shm) no se encoge al borrar filas: se excluyen
+    // para medir solo lo que Core Data guarda fuera del store, es decir, el dato externo
+    let storeFileNames = Set(
+      [storeURL.lastPathComponent, "test.store-wal", "test.store-shm"])
+    let baselineSize = try Self.externalByteSize(of: storeDirectory, excluding: storeFileNames)
+
+    let memory = try #require(
+      Memory(narrative: "Un viaje largo con muchas fotos.", savedAt: Self.fixedSavedAt))
+    let photo = try Self.noiseJPEG(width: 900, height: 900)
+    _ = try await actor.save(memory, photoData: photo, isAnalyzed: false, isExample: false)
+
+    let sizeAfterSaving = try Self.externalByteSize(of: storeDirectory, excluding: storeFileNames)
+    #expect(sizeAfterSaving > baselineSize)
+
+    try await actor.wipeAllData()
+
+    let sizeAfterWipe = try Self.externalByteSize(of: storeDirectory, excluding: storeFileNames)
+    #expect(sizeAfterWipe <= baselineSize)
+  }
+
+  private static func externalByteSize(of directory: URL, excluding storeFileNames: Set<String>)
+    throws -> Int
+  {
+    guard
+      let enumerator = FileManager.default.enumerator(
+        at: directory, includingPropertiesForKeys: [.fileSizeKey], options: [])
+    else { return 0 }
+    var total = 0
+    for entry in enumerator {
+      guard let url = entry as? URL, !storeFileNames.contains(url.lastPathComponent) else {
+        continue
+      }
+      let values = try url.resourceValues(forKeys: [.fileSizeKey, .isDirectoryKey])
+      if values.isDirectory == true { continue }
+      total += values.fileSize ?? 0
+    }
+    return total
+  }
+
+  // ruido por pixel, no un color plano: el JPEG debe pesar lo bastante para forzar almacenamiento externo
+  private static func noiseJPEG(width: Int, height: Int) throws -> Data {
+    let colorSpace = try #require(CGColorSpace(name: CGColorSpace.sRGB))
+    let bytesPerPixel = 4
+    var pixels = [UInt8](repeating: 0, count: width * height * bytesPerPixel)
+    for index in pixels.indices {
+      pixels[index] = UInt8.random(in: 0...255)
+    }
+    let context = try #require(
+      pixels.withUnsafeMutableBytes { buffer in
+        CGContext(
+          data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8,
+          bytesPerRow: width * bytesPerPixel, space: colorSpace,
+          bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)
+      })
+    let image = try #require(context.makeImage())
+
+    let output = NSMutableData()
+    let destination = try #require(
+      CGImageDestinationCreateWithData(output, "public.jpeg" as CFString, 1, nil))
+    CGImageDestinationAddImage(destination, image, nil)
+    #expect(CGImageDestinationFinalize(destination))
+    return output as Data
   }
 }

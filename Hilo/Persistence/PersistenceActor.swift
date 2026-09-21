@@ -127,6 +127,20 @@ actor PersistenceActor {
     try modelContext.fetch(FetchDescriptor<MemoryRecord>(predicate: #Predicate { $0.isExample }))
   }
 
+  // contrato 6 + regla 25: borrado total, sin restos ni en el almacen ni en la foto externa
+  func wipeAllData() throws {
+    for record in try modelContext.fetch(FetchDescriptor<MemoryRecord>()) {
+      modelContext.delete(record)
+    }
+    for record in try modelContext.fetch(FetchDescriptor<ElementRecord>()) {
+      modelContext.delete(record)
+    }
+    for record in try modelContext.fetch(FetchDescriptor<DiscardRecord>()) {
+      modelContext.delete(record)
+    }
+    try modelContext.save()
+  }
+
   private func fetchMemoryRecord(id: MemoryID) throws -> MemoryRecord? {
     // #Predicate exige capturar un valor simple, no acceder a .value del struct dentro del closure
     let targetID = id.value
