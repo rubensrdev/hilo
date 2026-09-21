@@ -1,0 +1,95 @@
+import Foundation
+import SwiftData
+
+@ModelActor
+actor PersistenceActor {
+  enum WriteError: Error, Equatable {
+    case memoryNotFound
+    case elementNotFound
+  }
+
+  // unico punto de escritura (contrato 2): las vistas nunca insertan, borran ni guardan
+  func save(_ memory: Memory, isAnalyzed: Bool, isExample: Bool) throws -> MemoryID {
+    let record = MemoryRecord(
+      id: memory.id.value, narrative: memory.narrative, dateText: memory.date?.text,
+      deducedYear: memory.date?.deducedYear, savedAt: memory.savedAt,
+      isAnalyzed: isAnalyzed, isExample: isExample)
+    modelContext.insert(record)
+    try modelContext.save()
+    return memory.id
+  }
+
+  // contrato 1: el canonico lo calcula el dominio, la persistencia solo lo guarda
+  func save(_ element: Element) throws -> ElementID {
+    let record = ElementRecord(
+      id: element.id.value, displayName: element.displayName,
+      canonicalName: CanonicalName.of(element.displayName), type: element.type,
+      aliases: element.aliases)
+    modelContext.insert(record)
+    try modelContext.save()
+    return element.id
+  }
+
+  func save(_ appearance: Appearance) throws {
+    guard let memoryRecord = try fetchMemoryRecord(id: appearance.memoryID) else {
+      throw WriteError.memoryNotFound
+    }
+    guard let elementRecord = try fetchElementRecord(id: appearance.elementID) else {
+      throw WriteError.elementNotFound
+    }
+    let record = AppearanceRecord(
+      memory: memoryRecord, element: elementRecord, role: appearance.role?.text,
+      status: appearance.status)
+    modelContext.insert(record)
+    try modelContext.save()
+  }
+
+  // extraccion de valores Sendable (contrato 2): el dominio nunca ve un @Model
+  func fetchMemories() throws -> [Memory] {
+    try modelContext.fetch(FetchDescriptor<MemoryRecord>()).map(Self.memory(from:))
+  }
+
+  func fetchElements() throws -> [Element] {
+    try modelContext.fetch(FetchDescriptor<ElementRecord>()).map(Self.element(from:))
+  }
+
+  func fetchAppearances() throws -> [Appearance] {
+    try modelContext.fetch(FetchDescriptor<AppearanceRecord>()).compactMap(Self.appearance(from:))
+  }
+
+  private func fetchMemoryRecord(id: MemoryID) throws -> MemoryRecord? {
+    // #Predicate exige capturar un valor simple, no acceder a .value del struct dentro del closure
+    let targetID = id.value
+    var descriptor = FetchDescriptor<MemoryRecord>(predicate: #Predicate { $0.id == targetID })
+    descriptor.fetchLimit = 1
+    return try modelContext.fetch(descriptor).first
+  }
+
+  private func fetchElementRecord(id: ElementID) throws -> ElementRecord? {
+    let targetID = id.value
+    var descriptor = FetchDescriptor<ElementRecord>(predicate: #Predicate { $0.id == targetID })
+    descriptor.fetchLimit = 1
+    return try modelContext.fetch(descriptor).first
+  }
+
+  private static func memory(from record: MemoryRecord) -> Memory {
+    let date = record.dateText.flatMap { MemoryDate(text: $0, deducedYear: record.deducedYear) }
+    return Memory(
+      id: MemoryID(value: record.id), narrative: record.narrative, date: date,
+      savedAt: record.savedAt)
+  }
+
+  private static func element(from record: ElementRecord) -> Element {
+    Element(
+      id: ElementID(value: record.id), displayName: record.displayName, type: record.type,
+      aliases: record.aliases)
+  }
+
+  // sin memoria o elemento (relacion rota), no hay Aparicion valida que devolver
+  private static func appearance(from record: AppearanceRecord) -> Appearance? {
+    guard let memoryID = record.memory?.id, let elementID = record.element?.id else { return nil }
+    return Appearance(
+      memoryID: MemoryID(value: memoryID), elementID: ElementID(value: elementID),
+      role: record.role.flatMap(ElementRole.init), status: record.status)
+  }
+}

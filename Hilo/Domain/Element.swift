@@ -30,6 +30,14 @@ nonisolated struct Element: Sendable, Identifiable {
     self.aliases = aliases
   }
 
+  // reconstruccion desde persistencia (F2.2): conserva el id ya validado al guardar, no crea uno nuevo
+  init(id: ElementID, displayName: String, type: ElementType, aliases: [String] = []) {
+    self.id = id
+    self.displayName = displayName
+    self.type = type
+    self.aliases = aliases
+  }
+
   // compartido entre contrato 3 (resolucion) y contrato 5 (colision): mismo canonico en nombre o alias
   func matches(canonical: String) -> Bool {
     CanonicalName.of(displayName) == canonical

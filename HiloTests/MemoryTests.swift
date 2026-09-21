@@ -25,4 +25,21 @@ nonisolated struct MemoryTests {
       Memory(narrative: "Un paseo por la playa.", savedAt: Self.fixedSavedAt))
     #expect(memory.savedAt == Self.fixedSavedAt)
   }
+
+  // F2.2: init de reconstruccion conserva el id ya validado; el failable siempre crea uno nuevo
+  @Test
+  func
+    `The reconstruction init keeps the exact id it is given, unlike the failable init which always creates a new one`()
+    throws
+  {
+    let memoryID = MemoryID()
+    let reconstructed = Memory(
+      id: memoryID, narrative: "Aprendí a nadar en la piscina del pueblo.",
+      savedAt: Self.fixedSavedAt)
+    #expect(reconstructed.id == memoryID)
+
+    let freshlyCreated = try #require(
+      Memory(narrative: "Aprendí a nadar en la piscina del pueblo.", savedAt: Self.fixedSavedAt))
+    #expect(freshlyCreated.id != memoryID)
+  }
 }

@@ -24,6 +24,14 @@ nonisolated struct Memory: Sendable, Identifiable {
     self.savedAt = savedAt
   }
 
+  // reconstruccion desde persistencia (F2.2): conserva el id ya validado al guardar, no crea uno nuevo
+  init(id: MemoryID, narrative: String, date: MemoryDate? = nil, savedAt: Date) {
+    self.id = id
+    self.narrative = narrative
+    self.date = date
+    self.savedAt = savedAt
+  }
+
   // regla 17: el año deducido solo ordena; desempate por guardado y, al final, por id para que el orden sea total
   static func isOrderedBefore(_ a: Memory, _ b: Memory) -> Bool {
     let yearA = a.date?.deducedYear

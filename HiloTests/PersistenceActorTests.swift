@@ -1,0 +1,151 @@
+import Foundation
+import SwiftData
+import Testing
+
+@testable import Hilo
+
+// F2.2: values Sendable de ida y vuelta por el actor de modelo, sin reglas de dominio de por medio
+struct PersistenceActorTests {
+  static let fixedSavedAt = Date(timeIntervalSince1970: 0)
+
+  @Test
+  func `A memory saved without a date is fetched with the same id, narrative, savedAt and no date`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "Aprendí a nadar en la piscina del pueblo.", savedAt: Self.fixedSavedAt))
+
+    let savedID = try await actor.save(memory, isAnalyzed: false, isExample: false)
+    #expect(savedID == memory.id)
+
+    let fetched = try #require(try await actor.fetchMemories().first)
+    #expect(fetched.id == memory.id)
+    #expect(fetched.narrative == memory.narrative)
+    #expect(fetched.savedAt == memory.savedAt)
+    #expect(fetched.date == nil)
+  }
+
+  @Test func `A memory saved with a MemoryDate keeps its text and deduced year after fetching`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let date = try #require(MemoryDate(text: "el verano del 87", deducedYear: 1987))
+    let memory = try #require(
+      Memory(narrative: "Aquel verano en la playa.", date: date, savedAt: Self.fixedSavedAt))
+
+    _ = try await actor.save(memory, isAnalyzed: false, isExample: false)
+
+    let fetched = try #require(try await actor.fetchMemories().first)
+    #expect(fetched.date?.text == "el verano del 87")
+    #expect(fetched.date?.deducedYear == 1987)
+  }
+
+  @Test
+  func
+    `An element saved with non-empty aliases is fetched with the same id, displayName, type and aliases`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let element = try #require(
+      Element(displayName: "Manuel", type: .person, aliases: ["Manolo", "Tío Manuel"]))
+
+    let savedID = try await actor.save(element)
+    #expect(savedID == element.id)
+
+    let fetched = try #require(try await actor.fetchElements().first)
+    #expect(fetched.id == element.id)
+    #expect(fetched.displayName == "Manuel")
+    #expect(fetched.type == .person)
+    #expect(fetched.aliases == ["Manolo", "Tío Manuel"])
+  }
+
+  @Test
+  func
+    `Saving an element stores its canonical name without the leading article, in the underlying record`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let element = try #require(Element(displayName: "El Abuelo", type: .person))
+
+    _ = try await actor.save(element)
+
+    let context = ModelContext(container)
+    let record = try #require(try context.fetch(FetchDescriptor<ElementRecord>()).first)
+    #expect(record.canonicalName == CanonicalName.of("El Abuelo"))
+  }
+
+  @Test
+  func
+    `An appearance connecting a saved memory and element is fetched with the same ids, role and status`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "Comimos en casa de mi tía.", savedAt: Self.fixedSavedAt))
+    let element = try #require(Element(displayName: "Tía Rosa", type: .person))
+    let role = try #require(ElementRole(text: "la anfitriona"))
+    _ = try await actor.save(memory, isAnalyzed: false, isExample: false)
+    _ = try await actor.save(element)
+    let appearance = Appearance(
+      memoryID: memory.id, elementID: element.id, role: role, status: .confirmedByUser)
+
+    try await actor.save(appearance)
+
+    let fetched = try #require(try await actor.fetchAppearances().first)
+    #expect(fetched.memoryID == memory.id)
+    #expect(fetched.elementID == element.id)
+    #expect(fetched.role?.text == "la anfitriona")
+    #expect(fetched.status == .confirmedByUser)
+  }
+
+  @Test func `Saving an appearance whose memory was never saved throws memoryNotFound`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let missingMemoryID = MemoryID()
+    let element = try #require(Element(displayName: "Un banco del parque", type: .object))
+    _ = try await actor.save(element)
+    let appearance = Appearance(
+      memoryID: missingMemoryID, elementID: element.id, role: nil, status: .proposed)
+
+    await #expect(throws: PersistenceActor.WriteError.memoryNotFound) {
+      try await actor.save(appearance)
+    }
+  }
+
+  @Test func `Saving an appearance whose element was never saved throws elementNotFound`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "Un paseo por el parque.", savedAt: Self.fixedSavedAt))
+    _ = try await actor.save(memory, isAnalyzed: false, isExample: false)
+    let missingElementID = ElementID()
+    let appearance = Appearance(
+      memoryID: memory.id, elementID: missingElementID, role: nil, status: .proposed)
+
+    await #expect(throws: PersistenceActor.WriteError.elementNotFound) {
+      try await actor.save(appearance)
+    }
+  }
+
+  @Test
+  func `A freshly created container returns empty arrays for memories, elements and appearances`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+
+    #expect(try await actor.fetchMemories().isEmpty)
+    #expect(try await actor.fetchElements().isEmpty)
+    #expect(try await actor.fetchAppearances().isEmpty)
+  }
+}
