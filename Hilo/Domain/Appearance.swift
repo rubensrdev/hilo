@@ -1,4 +1,5 @@
-nonisolated enum RecognitionStatus: Sendable, Equatable {
+// rawValue String + Codable: F2 lo persiste como columna, no como blob serializado
+nonisolated enum RecognitionStatus: String, Sendable, Equatable, Codable {
   case confirmedByUser
   case proposed
 }
