@@ -8,7 +8,8 @@ nonisolated struct ElementID: Sendable, Hashable {
   }
 }
 
-nonisolated enum ElementType: Sendable, Equatable {
+// rawValue String + Codable: F2 lo persiste como columna, no como blob serializado
+nonisolated enum ElementType: String, Sendable, Equatable, Codable {
   case person
   case place
   case object
