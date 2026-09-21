@@ -28,4 +28,10 @@ nonisolated struct Element: Sendable, Identifiable {
     self.type = type
     self.aliases = aliases
   }
+
+  // compartido entre contrato 3 (resolucion) y contrato 5 (colision): mismo canonico en nombre o alias
+  func matches(canonical: String) -> Bool {
+    CanonicalName.of(displayName) == canonical
+      || aliases.contains { CanonicalName.of($0) == canonical }
+  }
 }

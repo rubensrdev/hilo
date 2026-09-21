@@ -10,10 +10,7 @@ nonisolated enum ElementResolution: Sendable, Equatable {
     let canonical = CanonicalName.of(name)
     let sameType = elements.filter { $0.type == type }
 
-    let exact = sameType.filter { element in
-      CanonicalName.of(element.displayName) == canonical
-        || element.aliases.contains { CanonicalName.of($0) == canonical }
-    }
+    let exact = sameType.filter { $0.matches(canonical: canonical) }
     if !exact.isEmpty {
       return .exactMatch(Set(exact.map(\.id)))
     }

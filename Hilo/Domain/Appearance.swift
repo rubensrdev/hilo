@@ -3,7 +3,7 @@ nonisolated enum RecognitionStatus: Sendable, Equatable {
   case proposed
 }
 
-// contrato 3 + regla 3: ninguna comprension entra sin confirmacion; la identidad es el par recuerdo-elemento (regla 9, ss12)
+// contrato 3 + regla 3: comprension sin confirmar no entra
 nonisolated struct Appearance: Sendable {
   let memoryID: MemoryID
   let elementID: ElementID

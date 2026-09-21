@@ -9,8 +9,7 @@ nonisolated enum NameCollision: Sendable, Equatable {
     let canonical = CanonicalName.of(name)
     let colliding = elements.first { element in
       guard element.id != elementID, element.type == type else { return false }
-      return CanonicalName.of(element.displayName) == canonical
-        || element.aliases.contains { CanonicalName.of($0) == canonical }
+      return element.matches(canonical: canonical)
     }
     if let colliding {
       return .collidesWith(colliding.id)
