@@ -147,6 +147,77 @@ nonisolated struct MemoryComprehensionErrorMappingTests {
     #expect(MemoryComprehensionError(mapping: error) == .noResponse)
   }
 
+  // MARK: - SystemLanguageModel.Error, GeneratedContent.ParsingError (iOS 27+)
+
+  @Test func `System model assets unavailable maps to assetsUnavailable`() {
+    guard #available(iOS 27, *) else {
+      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
+      return
+    }
+    let error = SystemLanguageModel.Error.assetsUnavailable(.init(debugDescription: "test"))
+
+    #expect(MemoryComprehensionError(mapping: error) == .assetsUnavailable)
+  }
+
+  @Test func `Generated content parsing error maps to decodingFailure`() {
+    guard #available(iOS 27, *) else {
+      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
+      return
+    }
+    let error = GeneratedContent.ParsingError(rawContent: "test", debugDescription: "test")
+
+    #expect(MemoryComprehensionError(mapping: error) == .decodingFailure)
+  }
+
+  // MARK: - MemoryComprehensionClassification, defectos propios (no estados de producto)
+
+  @Test func `Generation concurrent requests classifies as an own defect`() {
+    let error = LanguageModelSession.GenerationError.concurrentRequests(
+      .init(debugDescription: "test"))
+
+    guard case .ownDefect = MemoryComprehensionClassification(classifying: error) else {
+      Issue.record("expected .ownDefect for concurrentRequests")
+      return
+    }
+  }
+
+  @Test func `Generation unsupported guide classifies as an own defect`() {
+    let error = LanguageModelSession.GenerationError.unsupportedGuide(
+      .init(debugDescription: "test"))
+
+    guard case .ownDefect = MemoryComprehensionClassification(classifying: error) else {
+      Issue.record("expected .ownDefect for unsupportedGuide")
+      return
+    }
+  }
+
+  @Test func `Model unsupported generation guide classifies as an own defect`() {
+    guard #available(iOS 27, *) else {
+      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
+      return
+    }
+    let error = LanguageModelError.unsupportedGenerationGuide(
+      .init(schemaName: nil, debugDescription: "test"))
+
+    guard case .ownDefect = MemoryComprehensionClassification(classifying: error) else {
+      Issue.record("expected .ownDefect for unsupportedGenerationGuide")
+      return
+    }
+  }
+
+  @Test func `Session concurrent requests classifies as an own defect`() {
+    guard #available(iOS 27, *) else {
+      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
+      return
+    }
+    let error = LanguageModelSession.Error.concurrentRequests
+
+    guard case .ownDefect = MemoryComprehensionClassification(classifying: error) else {
+      Issue.record("expected .ownDefect for concurrentRequests")
+      return
+    }
+  }
+
   // MARK: - Cualquier otro error
 
   @Test func `An unrecognized error maps to noResponse`() {
