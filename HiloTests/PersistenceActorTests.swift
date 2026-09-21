@@ -148,4 +148,41 @@ struct PersistenceActorTests {
     #expect(try await actor.fetchElements().isEmpty)
     #expect(try await actor.fetchAppearances().isEmpty)
   }
+
+  // contrato 3 + DEC-27: la foto se guarda como pixeles, nunca con sus metadatos de ubicacion
+  @Test func `A memory saved with a photo is fetched with pixel data stripped of its GPS metadata`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "Una tarde en el mirador.", savedAt: Self.fixedSavedAt))
+    let originalPhoto = try PhotoStripperTests.jpegWithGPS()
+    #expect(PhotoStripperTests.gpsDictionary(in: originalPhoto) != nil)
+
+    let savedID = try await actor.save(
+      memory, photoData: originalPhoto, isAnalyzed: false, isExample: false)
+
+    let storedPhoto = try #require(try await actor.photoData(for: savedID))
+    #expect(storedPhoto != originalPhoto)
+    #expect(PhotoStripperTests.gpsDictionary(in: storedPhoto) == nil)
+  }
+
+  @Test func `A memory saved without a photo has no photo data when fetched`() async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "Un domingo sin cámara.", savedAt: Self.fixedSavedAt))
+
+    let savedID = try await actor.save(memory, isAnalyzed: false, isExample: false)
+
+    #expect(try await actor.photoData(for: savedID) == nil)
+  }
+
+  @Test func `Fetching photo data for a memory id that was never saved returns nil`() async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+
+    #expect(try await actor.photoData(for: MemoryID()) == nil)
+  }
 }

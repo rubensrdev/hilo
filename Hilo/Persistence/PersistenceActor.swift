@@ -9,10 +9,14 @@ actor PersistenceActor {
   }
 
   // unico punto de escritura (contrato 2): las vistas nunca insertan, borran ni guardan
-  func save(_ memory: Memory, isAnalyzed: Bool, isExample: Bool) throws -> MemoryID {
+  func save(
+    _ memory: Memory, photoData: Data? = nil, isAnalyzed: Bool, isExample: Bool
+  ) throws -> MemoryID {
+    // contrato 3 + DEC-27: los metadatos (incluida la ubicacion) se eliminan al guardar
+    let strippedPhotoData = try photoData.map(PhotoStripper.stripMetadata(from:))
     let record = MemoryRecord(
       id: memory.id.value, narrative: memory.narrative, dateText: memory.date?.text,
-      deducedYear: memory.date?.deducedYear, savedAt: memory.savedAt,
+      deducedYear: memory.date?.deducedYear, photoData: strippedPhotoData, savedAt: memory.savedAt,
       isAnalyzed: isAnalyzed, isExample: isExample)
     modelContext.insert(record)
     try modelContext.save()
@@ -55,6 +59,11 @@ actor PersistenceActor {
 
   func fetchAppearances() throws -> [Appearance] {
     try modelContext.fetch(FetchDescriptor<AppearanceRecord>()).compactMap(Self.appearance(from:))
+  }
+
+  // la foto no es del dominio (F1); sale como Data simple, ya Sendable por si misma
+  func photoData(for id: MemoryID) throws -> Data? {
+    try fetchMemoryRecord(id: id)?.photoData
   }
 
   private func fetchMemoryRecord(id: MemoryID) throws -> MemoryRecord? {
