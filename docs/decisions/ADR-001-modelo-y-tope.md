@@ -89,3 +89,24 @@ Todos, confirmados o no, siguen acabando en "guardar sin analizar y decir por qu
 | Parámetros del tope (71 / 300 / 176 / 21 / 30) | **Bajo mientras F3 no exista.** Son constantes con nombre; cambiar un número no toca la forma de la función ni sus tests, que inyectan `contextSize` |
 | Cubrir ambas superficies de error en el `catch` | **Bajo.** Añadir o quitar una rama de `catch` no cambia el contrato hacia el resto de la app: los dos caminos ya acaban en el mismo estado de producto |
 | Contrato de extracción sin cambios | **N/A** — no se tocó, se validó tal cual |
+
+---
+
+## Enmienda (F3.4)
+
+Al implementar el `catch` de F3.4 contra el SDK instalado (no solo la documentación,
+tal como pedía O6), `FoundationModels.LanguageModelError` resultó ser
+`@available(iOS 27.0, *)` — no existe por debajo de esa versión. La rama que el
+arnés del spike (`ExtractionHarness.swift`, F0.2.3) usaba para capturarlo compilaba
+porque el arnés no fijaba deployment target 26.4; en el target real de la app, un
+`catch let error as LanguageModelError` sin más no compila.
+
+**La decisión de fondo no cambia**: ambas superficies se capturan, ninguna basta
+sola — el rate limit y el desbordamiento reales del físico llegaron por
+`LanguageModelError`, confirmado en su momento, y un `catch` que solo mirara
+`GenerationError` (deprecada en iOS 27, el propio SDK del dispositivo de demo)
+seguiría sin capturarlos ahí. Lo que cambia es cómo se llega a esa rama: tras
+`if #available(iOS 27, *)`, bajo la excepción acotada que `CLAUDE.md` añade para
+esto — reconocer un error que el sistema lanza en tiempo de ejecución, nunca para
+llamar a una API nueva ni activar comportamiento nuevo. Por debajo de iOS 27, el
+`catch` sigue cubriendo `GenerationError` y el genérico de siempre.
