@@ -84,6 +84,49 @@ actor PersistenceActor {
     try modelContext.save()
   }
 
+  // contrato 5 + B11: contenido fijo, resuelto contra los elementos ya existentes (F1 contrato 3)
+  func loadExampleMemory(language: ExampleMemoryLanguage, loadedAt: Date) throws {
+    guard try fetchExampleMemoryRecords().isEmpty else { return }
+    var knownElements = try fetchElements()
+    for seed in ExampleMemoryContent.seeds(for: language) {
+      let date = seed.dateText.flatMap { MemoryDate(text: $0, deducedYear: seed.deducedYear) }
+      let memory = Memory(id: MemoryID(), narrative: seed.narrative, date: date, savedAt: loadedAt)
+      let memoryID = try save(memory, isAnalyzed: true, isExample: true)
+      for appearanceSeed in seed.appearances {
+        let elementID: ElementID
+        switch ElementResolution.resolving(
+          name: appearanceSeed.displayName, type: appearanceSeed.type, against: knownElements
+        ) {
+        case .exactMatch(let ids):
+          guard let id = ids.first else { continue }
+          elementID = id
+        case .new, .identityDoubt:
+          let element = Element(
+            id: ElementID(), displayName: appearanceSeed.displayName, type: appearanceSeed.type)
+          elementID = try save(element)
+          knownElements.append(element)
+        }
+        try save(
+          Appearance(
+            memoryID: memoryID, elementID: elementID,
+            role: appearanceSeed.role.flatMap(ElementRole.init), status: .confirmedByUser))
+      }
+    }
+  }
+
+  // contrato 6 + B11: el cascade borra apariciones; el dominio decide que elemento sobrevive
+  func deleteExampleMemory() throws {
+    for record in try fetchExampleMemoryRecords() {
+      modelContext.delete(record)
+    }
+    try modelContext.save()
+    try cleanOrphanedElements()
+  }
+
+  private func fetchExampleMemoryRecords() throws -> [MemoryRecord] {
+    try modelContext.fetch(FetchDescriptor<MemoryRecord>(predicate: #Predicate { $0.isExample }))
+  }
+
   private func fetchMemoryRecord(id: MemoryID) throws -> MemoryRecord? {
     // #Predicate exige capturar un valor simple, no acceder a .value del struct dentro del closure
     let targetID = id.value

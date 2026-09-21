@@ -284,4 +284,143 @@ struct PersistenceActorTests {
     let remainingMemories = try await actor.fetchMemories()
     #expect(!remainingMemories.contains { $0.id == memory.id })
   }
+
+  // F2.5: memoria de ejemplo, carga, borrado e idempotencia
+  @Test func `Loading the example memory in Spanish produces five memories`() async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+
+    try await actor.loadExampleMemory(language: .spanish, loadedAt: Self.fixedSavedAt)
+
+    #expect(try await actor.fetchMemories().count == 5)
+  }
+
+  @Test
+  func `Loading the example memory in Spanish gives José four appearances and el reloj three`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+
+    try await actor.loadExampleMemory(language: .spanish, loadedAt: Self.fixedSavedAt)
+
+    let elements = try await actor.fetchElements()
+    let appearances = try await actor.fetchAppearances()
+    let jose = try #require(elements.first { $0.displayName == "José" })
+    let watch = try #require(elements.first { $0.displayName == "el reloj" })
+    #expect(appearances.filter { $0.elementID == jose.id }.count == 4)
+    #expect(appearances.filter { $0.elementID == watch.id }.count == 3)
+  }
+
+  @Test
+  func `Loading the example memory in English gives José four appearances and the watch three`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+
+    try await actor.loadExampleMemory(language: .english, loadedAt: Self.fixedSavedAt)
+
+    let elements = try await actor.fetchElements()
+    let appearances = try await actor.fetchAppearances()
+    let jose = try #require(elements.first { $0.displayName == "José" })
+    let watch = try #require(elements.first { $0.displayName == "the watch" })
+    #expect(appearances.filter { $0.elementID == jose.id }.count == 4)
+    #expect(appearances.filter { $0.elementID == watch.id }.count == 3)
+  }
+
+  @Test
+  func
+    `Loading the example memory saves every memory analyzed and every appearance confirmed by the user`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+
+    try await actor.loadExampleMemory(language: .spanish, loadedAt: Self.fixedSavedAt)
+
+    let context = ModelContext(container)
+    let memoryRecords = try context.fetch(FetchDescriptor<MemoryRecord>())
+    #expect(memoryRecords.count == 5)
+    #expect(memoryRecords.allSatisfy { $0.isAnalyzed })
+
+    let appearances = try await actor.fetchAppearances()
+    #expect(!appearances.isEmpty)
+    #expect(appearances.allSatisfy { $0.status == .confirmedByUser })
+  }
+
+  @Test
+  func `Loading the example memory twice does not duplicate memories, elements or appearances`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    try await actor.loadExampleMemory(language: .spanish, loadedAt: Self.fixedSavedAt)
+    let memoriesAfterFirstLoad = try await actor.fetchMemories().count
+    let elementsAfterFirstLoad = try await actor.fetchElements().count
+    let appearancesAfterFirstLoad = try await actor.fetchAppearances().count
+
+    try await actor.loadExampleMemory(language: .spanish, loadedAt: Self.fixedSavedAt)
+
+    #expect(try await actor.fetchMemories().count == memoriesAfterFirstLoad)
+    #expect(try await actor.fetchElements().count == elementsAfterFirstLoad)
+    #expect(try await actor.fetchAppearances().count == appearancesAfterFirstLoad)
+  }
+
+  @Test
+  func
+    `Loading the example memory in English after Spanish is a no-op once an example already exists`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    try await actor.loadExampleMemory(language: .spanish, loadedAt: Self.fixedSavedAt)
+
+    try await actor.loadExampleMemory(language: .english, loadedAt: Self.fixedSavedAt)
+
+    #expect(try await actor.fetchMemories().count == 5)
+    let elements = try await actor.fetchElements()
+    #expect(elements.contains { $0.displayName == "el reloj" })
+    #expect(!elements.contains { $0.displayName == "the watch" })
+  }
+
+  @Test func `Deleting the example memory removes its memories and leaves no elements behind`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    try await actor.loadExampleMemory(language: .spanish, loadedAt: Self.fixedSavedAt)
+
+    try await actor.deleteExampleMemory()
+
+    #expect(try await actor.fetchMemories().isEmpty)
+    #expect(try await actor.fetchElements().isEmpty)
+  }
+
+  @Test
+  func
+    `Deleting the example memory keeps an element that also appears in a real memory, with only that appearance left`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    try await actor.loadExampleMemory(language: .spanish, loadedAt: Self.fixedSavedAt)
+    let joseFromExample = try #require(
+      try await actor.fetchElements().first { $0.displayName == "José" })
+    let realMemory = try #require(
+      Memory(narrative: "Comimos con José el domingo pasado.", savedAt: Self.fixedSavedAt))
+    _ = try await actor.save(realMemory, isAnalyzed: false, isExample: false)
+    try await actor.save(
+      Appearance(
+        memoryID: realMemory.id, elementID: joseFromExample.id, role: nil,
+        status: .confirmedByUser))
+
+    try await actor.deleteExampleMemory()
+
+    let remainingElements = try await actor.fetchElements()
+    #expect(remainingElements.count == 1)
+    let jose = try #require(remainingElements.first { $0.displayName == "José" })
+    let remainingAppearances = try await actor.fetchAppearances()
+    #expect(remainingAppearances.filter { $0.elementID == jose.id }.count == 1)
+  }
 }
