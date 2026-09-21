@@ -8,6 +8,7 @@ Las fases cerradas se archivan enteras en `docs/decisions/memory-archive/F<n>.md
 
 - [F0.1](docs/decisions/memory-archive/F0.1.md) — Proyecto y cimientos: zonas, catálogo de colores, tipografía/espaciado, String Catalog y prueba de aislamiento
 - [F0.2](docs/decisions/memory-archive/F0.2.md) — Spike de Foundation Models: parámetros del tope, contrato de extracción validado, superficie de error de O6 resuelta. Nunca fusionada — entrega `ADR-001` y `INFORME.md` directamente en `main`
+- [F1](docs/decisions/memory-archive/F1.md) — Núcleo de dominio: nombre canónico, duda de identidad, resolución, conexión deducida, renombrar/alias con colisión y huérfanos. Todo puro, `nonisolated`, sin estado
 
 Decisiones vivas, todavía sin archivar:
 
@@ -32,6 +33,7 @@ Decisiones vivas, todavía sin archivar:
 - **F0.2.3, pasada espaciada en el físico**: `RunProject` se quedó colgado más de 120s dos veces seguidas, con "the app failed to launch after building successfully" pese a `BUILD SUCCEEDED`. Causa no confirmada (hipótesis sin cerrar en `HALLAZGOS.md`). Solución aplicada: M5, M6 y O2-O5 se cerraron en el simulador (misma generación 27), documentando la desviación del criterio de aceptación en el informe en vez de insistir sin diagnóstico.
 - **F0.2.4**: `GetConsoleOutput` no deja fichero de log recuperable en una sesión posterior, a diferencia de `RunProject`/`RunAllTests`. Los números de M2/M3 de una pasada anterior se perdieron tras un `/compact` y hubo que remedirlos. Solución: cualquier número leído por `GetConsoleOutput` se transcribe al fichero de notas en el momento, nunca se deja para "más tarde en la misma sesión".
 - **Cierre de F0.2**: `revisor-constitucion` dio un BLOCKER falso al auditar `INFORME.md` y `ADR-001` con la rama del spike pagada — esos dos ficheros solo existen en `main` (la fase nunca se fusiona). Solución: auditar los entregables de cierre de F0.2 con `main` pagado, no con la rama de fase.
+- **Cierre de F1**: `ElementResolution.resolving` (F1.3) y `NameCollision.checking` (F1.5) duplicaban el mismo predicado de coincidencia de canónico contra `displayName`/`aliases`, con código casi idéntico. Ninguna de las dos auditorías por tarea lo detectó porque cada una solo veía su propio fichero nuevo. Solución: extraído a `Element.matches(canonical:)`, usado por ambas.
 
 ## Patrones aprendidos en este proyecto
 
@@ -45,13 +47,16 @@ Decisiones vivas, todavía sin archivar:
 - `revisor-constitucion` conviene lanzarlo tras cada tarea atómica con impacto en las reglas no negociables (imports, APIs prohibidas), no solo al cerrar la fase — así no sobrevive una violación varias tareas sin detectarse.
 - Las cabeceras de fichero que autogenera Xcode en cada `.swift` nuevo ("Created by...") se limpian sistemáticamente al cerrar la fase, no al crearlas — interrumpir la tarea atómica en curso por un comentario de plantilla no compensa (visto en F0.1 y en F0.2).
 - Una fase excepcional que entrega documentación directamente a `main` sin fusionar (F0.2) deja esos ficheros invisibles en el `checkout` de su propia rama de fase — cualquier auditoría o lectura de esos entregables tiene que hacerse con `main` pagado, nunca con la rama de la fase.
+- La auditoría de cierre de fase sobre el conjunto completo encuentra cosas que las auditorías por tarea, una a una, no pueden ver por diseño: duplicación de lógica entre tipos escritos en tareas distintas (F1: `ElementResolution` y `NameCollision`). Auditar tarea a tarea sigue siendo necesario para no arrastrar una violación varias tareas, pero no sustituye la pasada de cierre sobre todos los ficheros juntos.
+- Un tipo del dominio inmutable cuyo inicializador regenera siempre su propio `ID` no puede "mutar" dentro del dominio — solo puede validar una operación (renombrar, añadir alias) y devolver el veredicto; construir el valor actualizado le corresponde a la capa que sí tiene identidad persistente (F1.5, `Element`/`ElementID`).
+- Cuando una regla de plegado de texto (mayúsculas, acentos) puede variar con el idioma del dispositivo, fijar el locale explícitamente (`en_US_POSIX`) en vez de dejarlo `nil` — si no, el mismo nombre canonicaliza distinto en un iPhone en español que en uno en inglés (F1.2, `CanonicalName.of`).
 
 ## Última sesión
 
-### F0.2 — Spike de Foundation Models (cerrada 2026-09-20)
+### F1 — Núcleo de dominio (cerrada 2026-09-21)
 
-- **Estado**: fase cerrada. **Nunca fusionada** a `main` (es la fase excepcional): su código sigue solo en `fase/F0.2-spike-foundation-models`, y lo que llega a `main` es `docs/decisions/ADR-001-modelo-y-tope.md` (`Estado: Accepted`) y `Spikes/F0.2-foundation-models/INFORME.md`, comiteados directamente. Detalle completo en [docs/decisions/memory-archive/F0.2.md](decisions/memory-archive/F0.2.md).
-- **Próxima tarea**: F1 — Núcleo de dominio. Leer `docs/specs/F1_Nucleo_de_Dominio.md` y `ADR-001` (parámetros del tope) antes de abrirla.
-- **Pendiente, no bloqueante**: confirmar el mensaje de desbordamiento del modelo contra el `contextSize` real de 4096 del físico (solo se confirmó en el simulador, con 8192) — se retoma en la próxima sesión de dispositivo físico. El dictado del sistema del checklist de F0.2.1 tampoco quedó confirmado en fichero.
-- **Riesgos o bloqueos**: ninguno para F1 ni F2. El techo del tope (30) es un presupuesto de ingeniería, no un hallazgo de calidad — F6/F7 lo revisan con datos reales. Pendientes de fase futura sin cambios: A1 (F5), B3–B7 y B15 (F6), B8, B9 y B14 (F7), B12 (F9), A2 (F10).
+- **Estado**: fase cerrada y fusionada a `main` con `--no-ff` (rama `fase/F1-nucleo-de-dominio`). Ocho contratos, cinco tareas atómicas (F1.1-F1.5) más la auditoría de cierre con 2 MINOR corregidas. 78/78 tests en verde, 0 warnings. Detalle completo en [docs/decisions/memory-archive/F1.md](decisions/memory-archive/F1.md).
+- **Próxima tarea**: F2 — Persistencia. Leer `docs/specs/F2_Persistencia.md` antes de abrirla; usa los tipos de `Domain` de F1 (en particular `NameCollision`, `ElementRenaming.affectedMemories`, `OrphanElements.among`) para las operaciones de renombrar, añadir alias y borrar.
+- **Pendiente, no bloqueante**: si `DomainTypesIsolationTests.swift` debería cubrir explícitamente cada tipo puro nuevo de F1 uno a uno (`Resemblance`, `ElementResolution`, `NameCollision`, `ElementRenaming`, `OrphanElements`) en vez de solo por el patrón `nonisolated struct ...Tests` de cada suite — decisión abierta de Rubén.
+- **Riesgos o bloqueos**: ninguno para F2. Pendientes de fase futura sin cambios: A1 (F5), B3–B7 y B15 (F6), B8, B9 y B14 (F7), B12 (F9), A2 (F10).
 - **Contenido pendiente de Rubén**: los recuerdos de la memoria de ejemplo (F2), y los textos de producto del error de comprensión, la revisión sin conexiones, el reconocimiento honesto y el borrado total. `IPHONEOS_DEPLOYMENT_TARGET` a nivel de proyecto sigue en 27.0 (inocuo); `docs/specs/F0.1_Proyecto_y_Cimientos.md` contrato 1 sigue diciendo "iOS 26.0".
