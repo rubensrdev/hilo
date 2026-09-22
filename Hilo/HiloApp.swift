@@ -15,19 +15,36 @@ struct HiloApp: App {
 
   private static let logger = Logger(subsystem: "com.hilo.app", category: "captura")
 
-  // contrato 1: S2 Captura sustituye la pantalla provisional (F4/F5). onUnderstood
-  // solo registra por ahora: la navegacion a Revision llega en F4.3
-  @State private var captureState = CaptureState(
-    comprehender: FoundationModelsMemoryComprehender(),
-    persistenceActor: PersistenceActor(modelContainer: Self.container),
-    interfaceLanguage: Locale.current.language.languageCode?.identifier ?? "en"
-  ) { _, _, _, _ in
-    Self.logger.notice("Memory understood")
+  @State private var captureState: CaptureState
+  @State private var reviewCoordinator: ReviewCoordinator
+
+  // el closure de onUnderstood se construye aqui, antes de que self exista, asi que no
+  // puede tocar un @State de la app: captura reviewCoordinator (una referencia), no self
+  init() {
+    let persistenceActor = PersistenceActor(modelContainer: Self.container)
+    let coordinator = ReviewCoordinator(persistenceActor: persistenceActor)
+    _reviewCoordinator = State(initialValue: coordinator)
+    _captureState = State(
+      initialValue: CaptureState(
+        comprehender: FoundationModelsMemoryComprehender(),
+        persistenceActor: persistenceActor,
+        interfaceLanguage: Locale.current.language.languageCode?.identifier ?? "en"
+      ) { extracted, narrative, _, savedMemoryID in
+        coordinator.present(
+          extracted: extracted, narrative: narrative, savedMemoryID: savedMemoryID)
+      })
   }
 
   var body: some Scene {
     WindowGroup {
       CaptureScreen(state: captureState)
+        .sheet(item: $reviewCoordinator.presentation) { presentation in
+          ReviewScreen(initial: presentation.reviewState, narrative: presentation.narrative) {
+            _, _ in
+            // F4.5 sustituye este registro por el guardado real y el momento de la conexion
+            Self.logger.notice("Revision saved")
+          }
+        }
     }
     .modelContainer(Self.container)
   }

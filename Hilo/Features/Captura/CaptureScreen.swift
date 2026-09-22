@@ -30,7 +30,7 @@ struct CaptureScreen: View {
     .onChange(of: state.extractedSoFar?.elements.count) { _, _ in
       guard let element = state.extractedSoFar?.elements.last else { return }
       AccessibilityNotification.Announcement(
-        "\(element.name), \(Self.typeName(element.type))"
+        "\(element.name), \(ElementType(element.type).displayName)"
       ).post()
     }
     .onChange(of: state.phase) { _, newPhase in
@@ -136,11 +136,11 @@ struct CaptureScreen: View {
         .chipElemento()
         .foregroundStyle(Color.textoPrimario)
     } icon: {
-      Image(systemName: Self.symbolName(element.type))
-        .foregroundStyle(Self.typeColor(element.type))
+      Image(systemName: ElementType(element.type).symbolName)
+        .foregroundStyle(ElementType(element.type).color)
     }
     .accessibilityElement(children: .combine)
-    .accessibilityLabel("\(element.name), \(Self.typeName(element.type))")
+    .accessibilityLabel("\(element.name), \(ElementType(element.type).displayName)")
     .transition(.opacity)
   }
 
@@ -228,31 +228,7 @@ struct CaptureScreen: View {
     }
   }
 
-  // MARK: ayudas — tokens.md §4 (simbolo/color por tipo), placeholder de contrato 1
-
-  private static func symbolName(_ type: ExtractedElementType) -> String {
-    switch type {
-    case .person: "person.fill"
-    case .place: "mappin.and.ellipse"
-    case .object: "cube.fill"
-    }
-  }
-
-  private static func typeColor(_ type: ExtractedElementType) -> Color {
-    switch type {
-    case .person: .tipoPersona
-    case .place: .tipoLugar
-    case .object: .tipoObjeto
-    }
-  }
-
-  private static func typeName(_ type: ExtractedElementType) -> String {
-    switch type {
-    case .person: "Person"
-    case .place: "Place"
-    case .object: "Object"
-    }
-  }
+  // MARK: ayudas — placeholder de contrato 1 (simbolo/color/nombre por tipo: DesignSystem)
 
   // contrato 1: el texto de ayuda enseña con un recuerdo de ejemplo real, nunca una instruccion
   private static var placeholder: String {

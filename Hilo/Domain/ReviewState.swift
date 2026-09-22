@@ -147,7 +147,12 @@ nonisolated struct ReviewState: Sendable {
             id: item.id, elementIDs: ids, name: item.currentName, type: item.type,
             otherMemoriesCount: otherMemoriesCount(for: ids)))
       case .doubtful:
-        guard case .doubt(let candidates, let answer) = item.identity else { continue }
+        guard case .doubt(let candidateIDs, let answer) = item.identity else { continue }
+        let candidates = candidateIDs.compactMap { id -> ReviewBlocks.Doubtful.Candidate? in
+          guard let element = knownElements.first(where: { $0.id == id }) else { return nil }
+          return ReviewBlocks.Doubtful.Candidate(
+            id: id, name: element.displayName, otherMemoriesCount: otherMemoriesCount(for: [id]))
+        }
         doubtful.append(
           .init(
             id: item.id, name: item.currentName, type: item.type, candidates: candidates,
@@ -253,10 +258,17 @@ nonisolated struct ReviewBlocks: Sendable, Equatable {
   }
 
   struct Doubtful: Sendable, Equatable, Identifiable {
+    // el nombre y el recuento ya salen del dominio (DEC-22): la vista no repite la regla
+    struct Candidate: Sendable, Equatable, Identifiable {
+      let id: ElementID
+      let name: String
+      let otherMemoriesCount: Int
+    }
+
     let id: ReviewItemID
     let name: String
     let type: ElementType
-    let candidates: Set<ElementID>
+    let candidates: [Candidate]
     let answer: DoubtAnswer?
   }
 

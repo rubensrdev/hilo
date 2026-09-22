@@ -118,4 +118,33 @@ nonisolated struct ReviewStateBlocksTests {
     #expect(known.elementIDs == [firstAna.id, secondAna.id])
     #expect(known.otherMemoriesCount == 2)
   }
+
+  @Test
+  func
+    `a doubtful item's candidates carry the known element's name and otherMemoriesCount, DEC-22`()
+    throws
+  {
+    let jose = try #require(Element(displayName: "José", type: .person))
+    let thisMemory = MemoryID()
+    let otherMemoryA = MemoryID()
+    let otherMemoryB = MemoryID()
+    let appearances = [
+      Appearance(memoryID: thisMemory, elementID: jose.id, role: nil, status: .confirmedByUser),
+      Appearance(
+        memoryID: otherMemoryA, elementID: jose.id, role: nil, status: .confirmedByUser),
+      Appearance(memoryID: otherMemoryB, elementID: jose.id, role: nil, status: .proposed),
+    ]
+
+    let state = ReviewState(
+      candidates: [try candidate("José García", .person)],
+      extractedDateText: nil, extractedDeducedYear: nil,
+      knownElements: [jose], appearances: appearances, excludingMemoryID: thisMemory)
+
+    let doubtful = try #require(state.blocks.doubtful.first)
+    #expect(doubtful.candidates.count == 1)
+    let onlyCandidate = try #require(doubtful.candidates.first)
+    #expect(onlyCandidate.id == jose.id)
+    #expect(onlyCandidate.name == jose.displayName)
+    #expect(onlyCandidate.otherMemoriesCount == 2)
+  }
 }

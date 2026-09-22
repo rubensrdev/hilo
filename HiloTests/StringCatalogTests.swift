@@ -9,7 +9,24 @@ struct StringCatalogTests {
         struct StringUnit: Codable {
           let value: String
         }
-        let stringUnit: StringUnit
+        // una clave plural (regla del proyecto: toda cantidad se declara como tal) no trae
+        // stringUnit al nivel superior, sino variations.plural.{one,other,...}.stringUnit
+        struct Variations: Codable {
+          struct Plural: Codable {
+            struct Case: Codable {
+              let stringUnit: StringUnit
+            }
+            let one: Case?
+            let other: Case?
+          }
+          let plural: Plural?
+        }
+        let stringUnit: StringUnit?
+        let variations: Variations?
+
+        var value: String? {
+          stringUnit?.value ?? variations?.plural?.other?.stringUnit.value
+        }
       }
       let localizations: [String: Localization]?
     }
@@ -55,10 +72,10 @@ struct StringCatalogTests {
       #expect(entry != nil, "falta la clave \(key) en el catalogo")
       // ninguna clave trae "en" explicito: por convencion de Xcode, el valor en
       // ingles es la propia clave cuando el idioma base coincide con ella
-      if let english = entry?.localizations?["en"]?.stringUnit.value {
+      if let english = entry?.localizations?["en"]?.value {
         #expect(!english.isEmpty, "el valor en ingles de \(key) esta vacio")
       }
-      let spanish = entry?.localizations?["es"]?.stringUnit.value
+      let spanish = entry?.localizations?["es"]?.value
       #expect(spanish?.isEmpty == false, "falta el valor en espanol de \(key)")
     }
   }
