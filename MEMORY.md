@@ -2,6 +2,14 @@
 
 Memoria entre sesiones. Se lee al empezar y se actualiza al cerrar cada fase.
 
+## Checkpoint F4 (en curso)
+
+- **F4.4 (identidad y renombrado)**, verificada por `verificador-ui`: 6 de 7 criterios en verde, en vivo. El criterio 2 (botón "Rename" deshabilitado con el campo vacío) está pendiente de validación manual por Rubén — se comprobó en vivo el caso "sin cambios", pero no el de campo totalmente vacío.
+- **Infraestructura**: añadida la Skill oficial de Apple `device-interaction` en `.claude/skills/`, exportada de Xcode 27. `verificador-ui` tiene ahora `Skill` en su `tools:` y la carga como primer paso de su Loop.
+- **Defecto conocido, alcance de F4.5**: tras `.understood`, `CaptureState.handle(_:)` (`CaptureState.swift:111-126`) no cambia `phase`, y la Captura queda en `.comprehending` para siempre. Todavía no existe la vuelta de la Revisión a la Captura. Guardar desde la Revisión hoy solo escribe en el log — no persiste nada.
+- **Hueco abierto, lo decide Rubén**: qué pasa al cerrar la Revisión sin guardar. La propuesta es volver a la Captura con relato y foto intactos, sin persistir nada.
+- **Próxima tarea**: F4.5, que empieza por esos dos requisitos, con Plan Mode y test primero.
+
 ## Decisiones tomadas
 
 Las fases cerradas se archivan enteras en `docs/decisions/memory-archive/F<n>.md` y aquí queda una línea por fase. Así crece el archivo, no la memoria activa.
