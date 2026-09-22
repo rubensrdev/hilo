@@ -16,7 +16,7 @@ nonisolated enum ElementType: String, Sendable, Equatable, Codable {
 }
 
 // contrato 8: un elemento sin nombre no existe, y el nombre mostrado nunca se reescribe
-nonisolated struct Element: Sendable, Identifiable {
+nonisolated struct Element: Sendable, Identifiable, Equatable {
   let id: ElementID
   let displayName: String
   let type: ElementType
