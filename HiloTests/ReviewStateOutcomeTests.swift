@@ -173,6 +173,51 @@ nonisolated struct ReviewStateOutcomeTests {
 
   @Test
   func
+    `rejecting a recognition discards its pending rename, and the new element keeps the originally extracted name`()
+    throws
+  {
+    let jose = try #require(Element(displayName: "José", type: .person))
+    var state = ReviewState(
+      candidates: [try candidate("José", .person)],
+      extractedDateText: nil, extractedDeducedYear: nil,
+      knownElements: [jose], appearances: [])
+    let itemID = try #require(state.items.first?.id)
+    state.rename(itemID, to: "Pepe")
+
+    state.rejectRecognition(itemID)
+
+    #expect(state.items.first?.pendingName == nil)
+    #expect(state.blocks.understood.map(\.name) == ["José"])
+    let outcome = state.outcome(memoryID: MemoryID(), dateTextAtSave: "")
+    #expect(outcome.elementsToCreate.map(\.element.displayName) == ["José"])
+    #expect(outcome.renamesToApply.isEmpty)
+  }
+
+  @Test
+  func
+    `rejecting a recognition that came from DEC-41 discards the pending rename, and the resulting homonym with the existing element is not blocked`()
+    throws
+  {
+    let carmen = try #require(Element(displayName: "Carmen", type: .person))
+    var state = ReviewState(
+      candidates: [try candidate("la tía", .person)],
+      extractedDateText: nil, extractedDeducedYear: nil,
+      knownElements: [carmen], appearances: [])
+    let itemID = try #require(state.items.first?.id)
+    state.rename(itemID, to: "Carmen")
+
+    state.rejectRecognition(itemID)
+
+    #expect(state.items.first?.pendingName == nil)
+    #expect(state.blocks.understood.map(\.name) == ["la tía"])
+    let outcome = state.outcome(memoryID: MemoryID(), dateTextAtSave: "")
+    #expect(outcome.elementsToCreate.map(\.element.displayName) == ["la tía"])
+    #expect(outcome.renamesToApply.isEmpty)
+    #expect(outcome.confirmedAppearances.isEmpty)
+  }
+
+  @Test
+  func
     `outcome resolves the date from the extracted text, the deduced year and the text at save time`()
     throws
   {

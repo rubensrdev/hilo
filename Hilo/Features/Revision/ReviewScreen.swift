@@ -9,6 +9,24 @@ struct ReviewScreen: View {
   let onSave: (ReviewState, String) -> Void
   @Environment(\.dismiss) private var dismiss
 
+  // MARK: renombrar — contrato 4, DEC-40/DEC-26/DEC-41/DEC-48: un unico alert del sistema con
+  // campo de texto, para cualquier elemento; el aviso de alcance solo si ya existia (DEC-22)
+  private struct RenamePrompt {
+    let itemID: ReviewItemID
+    let currentName: String
+    let otherMemoriesCount: Int?  // nil = elemento nuevo, sin aviso de alcance
+  }
+
+  private struct RenameConflict {
+    let conflictName: String
+    let isReviewSibling: Bool
+  }
+
+  @State private var renamePrompt: RenamePrompt?
+  @State private var renameText = ""
+  @State private var renameConflict: RenameConflict?
+  @State private var pendingRenamePrompt: RenamePrompt?
+
   init(initial: ReviewState, narrative: String, onSave: @escaping (ReviewState, String) -> Void) {
     _reviewState = State(initialValue: initial)
     _dateText = State(initialValue: initial.extractedDateText ?? "")
@@ -53,6 +71,92 @@ struct ReviewScreen: View {
           Button("Cancel") { dismiss() }
         }
       }
+      .alert(
+        renameAlertTitle, isPresented: isRenamePromptPresented, presenting: renamePrompt
+      ) { prompt in
+        TextField("Name", text: $renameText)
+        Button(prompt.otherMemoriesCount == nil ? "Rename" : "Rename Everywhere") {
+          confirmRename(prompt)
+        }
+        .disabled(isRenameConfirmDisabled(prompt))
+        Button("Cancel", role: .cancel) {}
+      } message: { prompt in
+        if let otherMemoriesCount = prompt.otherMemoriesCount {
+          Text(
+            "\(prompt.currentName) appears in \(otherMemoriesCount) other memories. The new name will show there too."
+          )
+        }
+      }
+      .alert(
+        renameConflictTitle, isPresented: isRenameConflictPresented, presenting: renameConflict
+      ) { conflict in
+        Button("OK") {
+          renameConflict = nil
+          renamePrompt = pendingRenamePrompt
+          pendingRenamePrompt = nil
+        }
+      } message: { conflict in
+        Text(
+          conflict.isReviewSibling
+            ? "Choose a different name, or rename \(conflict.conflictName) first."
+            : "Choose a different name."
+        )
+      }
+    }
+  }
+
+  // MARK: renombrar — helpers puros de presentacion, la decision (aplicar/bloquear) es de ReviewState
+
+  private var isRenamePromptPresented: Binding<Bool> {
+    Binding(get: { renamePrompt != nil }, set: { if !$0 { renamePrompt = nil } })
+  }
+
+  private var isRenameConflictPresented: Binding<Bool> {
+    Binding(get: { renameConflict != nil }, set: { if !$0 { renameConflict = nil } })
+  }
+
+  private var renameAlertTitle: Text {
+    // nunca se ve: el alert solo se presenta cuando renamePrompt no es nil (isRenamePromptPresented)
+    guard let renamePrompt else { return Text(verbatim: "") }
+    return renamePrompt.otherMemoriesCount == nil
+      ? Text("Rename \(renamePrompt.currentName)?")
+      : Text("Rename \(renamePrompt.currentName) everywhere?")
+  }
+
+  private var renameConflictTitle: Text {
+    guard let renameConflict else { return Text(verbatim: "") }
+    return renameConflict.isReviewSibling
+      ? Text("\(renameConflict.conflictName) is already in this memory")
+      : Text("\(renameConflict.conflictName) already exists")
+  }
+
+  private func isRenameConfirmDisabled(_ prompt: RenamePrompt) -> Bool {
+    let trimmed = renameText.trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmed.isEmpty || trimmed == prompt.currentName
+  }
+
+  private func startRenaming(itemID: ReviewItemID, currentName: String, otherMemoriesCount: Int?) {
+    renamePrompt = RenamePrompt(
+      itemID: itemID, currentName: currentName, otherMemoriesCount: otherMemoriesCount)
+    renameText = currentName
+  }
+
+  // DEC-26/DEC-48: nombra al conflicto por su nombre visible actual, pendiente si lo tiene
+  private func confirmRename(_ prompt: RenamePrompt) {
+    let trimmed = renameText.trimmingCharacters(in: .whitespacesAndNewlines)
+    switch reviewState.rename(prompt.itemID, to: trimmed) {
+    case .applied, .becameRecognized:
+      renamePrompt = nil
+    case .blocked(let elementID):
+      let name = reviewState.knownElements.first(where: { $0.id == elementID })?.displayName ?? ""
+      pendingRenamePrompt = prompt
+      renamePrompt = nil
+      renameConflict = RenameConflict(conflictName: name, isReviewSibling: false)
+    case .blockedByReviewItem(let siblingID):
+      let name = reviewState.items.first(where: { $0.id == siblingID })?.currentName ?? ""
+      pendingRenamePrompt = prompt
+      renamePrompt = nil
+      renameConflict = RenameConflict(conflictName: name, isReviewSibling: true)
     }
   }
 
@@ -135,18 +239,36 @@ struct ReviewScreen: View {
 
   private func understoodChip(_ row: UnderstoodRow) -> some View {
     HStack(spacing: Spacing.espacio2) {
-      Label {
-        Text(row.name)
-          .chipElemento()
-          .foregroundStyle(row.isRemoved ? Color.textoSecundario : Color.textoPrimario)
-          .strikethrough(row.isRemoved)
-      } icon: {
-        Image(systemName: row.type.symbolName)
-          .foregroundStyle(row.isRemoved ? Color.textoSecundario : row.type.color)
+      if row.isRemoved {
+        // quitado: no se ofrece renombrar hasta deshacer (regla del proyecto, F4.1 rename())
+        Label {
+          Text(row.name)
+            .chipElemento()
+            .foregroundStyle(Color.textoSecundario)
+            .strikethrough()
+        } icon: {
+          Image(systemName: row.type.symbolName)
+            .foregroundStyle(Color.textoSecundario)
+        }
+        .accessibilityLabel("\(row.name), \(row.type.displayName), removed from this memory")
+      } else {
+        Button {
+          startRenaming(itemID: row.id, currentName: row.name, otherMemoriesCount: nil)
+        } label: {
+          Label {
+            Text(row.name)
+              .chipElemento()
+              .foregroundStyle(Color.textoPrimario)
+          } icon: {
+            Image(systemName: row.type.symbolName)
+              .foregroundStyle(row.type.color)
+          }
+        }
+        .buttonStyle(.plain)
+        .frame(minHeight: Spacing.objetivoToqueMinimo)
+        .accessibilityLabel("\(row.name), \(row.type.displayName)")
+        .accessibilityHint("Double tap to rename")
       }
-      .accessibilityLabel(
-        "\(row.name), \(row.type.displayName)\(row.isRemoved ? ", removed from this memory" : "")"
-      )
 
       if row.isRemoved {
         Text("Removed from this memory")
@@ -187,9 +309,19 @@ struct ReviewScreen: View {
       Image(systemName: known.type.symbolName)
         .foregroundStyle(known.type.color)
       VStack(alignment: .leading, spacing: Spacing.espacio1) {
-        Text(known.name)
-          .nombreElemento()
-          .foregroundStyle(Color.textoPrimario)
+        Button {
+          startRenaming(
+            itemID: known.id, currentName: known.name,
+            otherMemoriesCount: known.otherMemoriesCount)
+        } label: {
+          Text(known.name)
+            .nombreElemento()
+            .foregroundStyle(Color.textoPrimario)
+        }
+        .buttonStyle(.plain)
+        .frame(minHeight: Spacing.objetivoToqueMinimo, alignment: .leading)
+        .accessibilityLabel("\(known.name), \(known.type.displayName)")
+        .accessibilityHint("Double tap to rename")
         Text("\(known.type.displayName) · in \(known.otherMemoriesCount) memories")
           .metadato()
           .foregroundStyle(Color.textoSecundario)

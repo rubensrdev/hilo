@@ -61,10 +61,20 @@ nonisolated struct ReviewState: Sendable {
 
   // MARK: acciones — regla 3+9+17, nada se persiste aqui, solo se recalcula en vivo
 
+  // regla 3: toda union es rechazable, tambien la de una duda ya confirmada (bloque 2) —
+  // y el rechazo siempre descarta el renombrado pendiente, el elemento nuevo nace con el nombre extraido
   mutating func rejectRecognition(_ itemID: ReviewItemID) {
     guard let index = items.firstIndex(where: { $0.id == itemID }) else { return }
-    guard case .recognized(let ids, false) = items[index].identity else { return }
-    items[index].identity = .recognized(ids, rejected: true)
+    switch items[index].identity {
+    case .recognized(let ids, false):
+      items[index].identity = .recognized(ids, rejected: true)
+      items[index].pendingName = nil
+    case .doubt(let candidates, .same):
+      items[index].identity = .doubt(candidates: candidates, answer: .notTheSame)
+      items[index].pendingName = nil
+    default:
+      return
+    }
   }
 
   mutating func confirmDoubt(_ itemID: ReviewItemID, as elementID: ElementID) {
@@ -105,6 +115,9 @@ nonisolated struct ReviewState: Sendable {
           return .blocked(other)
         }
       }
+      if let sibling = collidingSibling(of: itemID, type: item.type, newName: newName) {
+        return .blockedByReviewItem(sibling)
+      }
       items[index].pendingName = newName
       return .applied
 
@@ -115,6 +128,11 @@ nonisolated struct ReviewState: Sendable {
         items[index].identity = .recognized(ids, rejected: false)
         return .becameRecognized(ids)
       case .new, .identityDoubt:
+        // conocidos no colisionan (justo comprobado): ahora lo que existira al guardar en esta
+        // misma revision, DEC-41 siempre primero para que dos renombrados al mismo conocido no se bloqueen entre si
+        if let sibling = collidingSibling(of: itemID, type: item.type, newName: newName) {
+          return .blockedByReviewItem(sibling)
+        }
         items[index].pendingName = newName
         return .applied
       }
@@ -124,6 +142,34 @@ nonisolated struct ReviewState: Sendable {
       // no se valida un camino que la vista no toma)
       items[index].pendingName = newName
       return .applied
+    }
+  }
+
+  // F4.4: el otro lado de una colision de renombrado puede no existir todavia como Element —
+  // cuenta cualquier item (quitado incluido, DEC-17 lo deja restaurable) que fuera a crear uno nuevo
+  private func collidingSibling(of itemID: ReviewItemID, type: ElementType, newName: String)
+    -> ReviewItemID?
+  {
+    let canonical = CanonicalName.of(newName)
+    return items.first { sibling in
+      sibling.id != itemID && sibling.type == type
+        && wouldBecomeNewElement(sibling.identity)
+        && CanonicalName.of(sibling.currentName) == canonical
+    }?.id
+  }
+
+  // el mismo criterio que outcome() usa para decidir si un item crea un elemento nuevo
+  private func wouldBecomeNewElement(_ identity: ReviewIdentity) -> Bool {
+    switch identity {
+    case .new:
+      return true
+    case .recognized(_, let rejected):
+      return rejected
+    case .doubt(_, let answer):
+      switch answer {
+      case .same: return false
+      case .notTheSame, nil: return true
+      }
     }
   }
 
@@ -238,6 +284,7 @@ nonisolated struct ReviewState: Sendable {
 nonisolated enum RenameOutcome: Sendable, Equatable {
   case applied
   case blocked(ElementID)
+  case blockedByReviewItem(ReviewItemID)  // F4.4: colisiona con otro elemento nuevo de esta misma revision
   case becameRecognized(Set<ElementID>)
 }
 

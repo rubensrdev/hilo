@@ -107,6 +107,53 @@ nonisolated struct ReviewStateActionsTests {
 
   @Test
   func
+    `rejecting a confirmed doubt through "Not the same" separates the elements, moving the item from known back into understood`()
+    throws
+  {
+    let jose = try #require(Element(displayName: "José", type: .person))
+    let joseGarciaPerez = try #require(Element(displayName: "José García Pérez", type: .person))
+    var state = ReviewState(
+      candidates: [try candidate("José García", .person)],
+      extractedDateText: nil, extractedDeducedYear: nil,
+      knownElements: [jose, joseGarciaPerez], appearances: [])
+    let itemID = try #require(state.items.first?.id)
+    state.confirmDoubt(itemID, as: jose.id)
+
+    state.rejectRecognition(itemID)
+
+    #expect(state.blocks.known.isEmpty)
+    #expect(state.blocks.doubtful.isEmpty)
+    #expect(state.blocks.understood.map(\.name) == ["José García"])
+    let outcome = state.outcome(memoryID: MemoryID(), dateTextAtSave: "")
+    #expect(outcome.confirmedAppearances.isEmpty)
+    #expect(outcome.aliasesToAdd.isEmpty)  // regla 7 deshecha: rechazar no deja alias de José
+    #expect(outcome.elementsToCreate.map(\.element.displayName) == ["José García"])
+  }
+
+  @Test
+  func `rejecting a confirmed doubt that was renamed afterward discards the pending rename too`()
+    throws
+  {
+    let jose = try #require(Element(displayName: "José", type: .person))
+    let joseGarciaPerez = try #require(Element(displayName: "José García Pérez", type: .person))
+    var state = ReviewState(
+      candidates: [try candidate("José García", .person)],
+      extractedDateText: nil, extractedDeducedYear: nil,
+      knownElements: [jose, joseGarciaPerez], appearances: [])
+    let itemID = try #require(state.items.first?.id)
+    state.confirmDoubt(itemID, as: jose.id)
+    state.rename(itemID, to: "Pepito")
+
+    state.rejectRecognition(itemID)
+
+    #expect(state.items.first?.pendingName == nil)
+    #expect(state.blocks.understood.map(\.name) == ["José García"])
+    let outcome = state.outcome(memoryID: MemoryID(), dateTextAtSave: "")
+    #expect(outcome.elementsToCreate.map(\.element.displayName) == ["José García"])
+  }
+
+  @Test
+  func
     `removing an item takes it out of every block, and restoring returns exactly what it had before, DEC-17`()
     throws
   {

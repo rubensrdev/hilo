@@ -135,4 +135,115 @@ nonisolated struct ReviewStateRenamingTests {
     #expect(outcome == .applied)
     #expect(state.items.first?.pendingName == "cualquier cosa")
   }
+
+  // F4.4: colision de un renombrado contra los demas candidatos de esta misma revision — lo que
+  // existira al guardar, no solo lo ya persistido (DEC-26/DEC-41 solo miraban knownElements)
+
+  @Test
+  func
+    `renaming a new item to the name another candidate was extracted with is blocked, naming that sibling item`()
+    throws
+  {
+    var state = ReviewState(
+      candidates: [try candidate("Federico", .person), try candidate("Manolo", .person)],
+      extractedDateText: nil, extractedDeducedYear: nil,
+      knownElements: [], appearances: [])
+    let federicoID = try #require(state.items.first(where: { $0.originalName == "Federico" })?.id)
+    let manoloID = try #require(state.items.first(where: { $0.originalName == "Manolo" })?.id)
+
+    let outcome = state.rename(federicoID, to: "Manolo")
+
+    #expect(outcome == .blockedByReviewItem(manoloID))
+    #expect(state.items.first(where: { $0.id == federicoID })?.pendingName == nil)
+    #expect(state.blocks.understood.map(\.name).contains("Federico"))
+  }
+
+  @Test
+  func
+    `renaming a new item to a name another item was already renamed to is blocked, naming that sibling item`()
+    throws
+  {
+    var state = ReviewState(
+      candidates: [try candidate("Federico", .person), try candidate("Manolo", .person)],
+      extractedDateText: nil, extractedDeducedYear: nil,
+      knownElements: [], appearances: [])
+    let federicoID = try #require(state.items.first(where: { $0.originalName == "Federico" })?.id)
+    let manoloID = try #require(state.items.first(where: { $0.originalName == "Manolo" })?.id)
+    #expect(state.rename(manoloID, to: "Pepito") == .applied)
+
+    let outcome = state.rename(federicoID, to: "Pepito")
+
+    #expect(outcome == .blockedByReviewItem(manoloID))
+    #expect(state.items.first(where: { $0.id == federicoID })?.pendingName == nil)
+  }
+
+  // guarda de precedencia: la comprobacion nueva contra hermanos de la revision no debe romper
+  // DEC-41 — este test ya pasa hoy, antes de tocar rename(), en cuanto el caso nuevo compile
+  @Test
+  func
+    `renaming two different new items to an existing element's name recognizes both against it instead of blocking them against each other, DEC-41 precedence`()
+    throws
+  {
+    let carmen = try #require(Element(displayName: "Carmen", type: .person))
+    var state = ReviewState(
+      candidates: [try candidate("la tía", .person), try candidate("Auntie", .person)],
+      extractedDateText: nil, extractedDeducedYear: nil,
+      knownElements: [carmen], appearances: [])
+    let auntID = try #require(state.items.first(where: { $0.originalName == "la tía" })?.id)
+    let auntieID = try #require(state.items.first(where: { $0.originalName == "Auntie" })?.id)
+    #expect(state.rename(auntID, to: "Carmen") == .becameRecognized([carmen.id]))
+
+    let outcome = state.rename(auntieID, to: "Carmen")
+
+    #expect(outcome == .becameRecognized([carmen.id]))
+  }
+
+  @Test
+  func `renaming an existing element to a new sibling's name is blocked, naming that sibling item`()
+    throws
+  {
+    let jose = try #require(Element(displayName: "José", type: .person))
+    var state = ReviewState(
+      candidates: [try candidate("José", .person), try candidate("Manolo", .person)],
+      extractedDateText: nil, extractedDeducedYear: nil,
+      knownElements: [jose], appearances: [])
+    let joseItemID = try #require(state.items.first(where: { $0.originalName == "José" })?.id)
+    let manoloID = try #require(state.items.first(where: { $0.originalName == "Manolo" })?.id)
+
+    let outcome = state.rename(joseItemID, to: "Manolo")
+
+    #expect(outcome == .blockedByReviewItem(manoloID))
+    #expect(state.items.first(where: { $0.id == joseItemID })?.pendingName == nil)
+  }
+
+  @Test func `renaming to a sibling's name of a different type is not blocked`() throws {
+    var state = ReviewState(
+      candidates: [try candidate("Manolo", .person), try candidate("Federico", .place)],
+      extractedDateText: nil, extractedDeducedYear: nil,
+      knownElements: [], appearances: [])
+    let federicoID = try #require(state.items.first(where: { $0.originalName == "Federico" })?.id)
+
+    let outcome = state.rename(federicoID, to: "Manolo")
+
+    #expect(outcome == .applied)
+    #expect(state.items.first(where: { $0.id == federicoID })?.pendingName == "Manolo")
+  }
+
+  @Test
+  func
+    `a removed sibling still blocks a rename toward its name, so undoing the removal never produces a duplicate`()
+    throws
+  {
+    var state = ReviewState(
+      candidates: [try candidate("Federico", .person), try candidate("Manolo", .person)],
+      extractedDateText: nil, extractedDeducedYear: nil,
+      knownElements: [], appearances: [])
+    let federicoID = try #require(state.items.first(where: { $0.originalName == "Federico" })?.id)
+    let manoloID = try #require(state.items.first(where: { $0.originalName == "Manolo" })?.id)
+    state.remove(manoloID)
+
+    let outcome = state.rename(federicoID, to: "Manolo")
+
+    #expect(outcome == .blockedByReviewItem(manoloID))
+  }
 }
