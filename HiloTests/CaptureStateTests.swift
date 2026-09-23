@@ -212,6 +212,57 @@ struct CaptureStateTests {
     #expect(try await actor.fetchMemories().count == 1)
   }
 
+  @Test
+  func `A retry that fails again keeps the single unanalyzed memory saved by the first failure`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let state = CaptureState(
+      comprehender: SequencedComprehender(scripts: [.fails(.noResponse), .fails(.noResponse)]),
+      persistenceActor: PersistenceActor(modelContainer: container), interfaceLanguage: "es"
+    ) { _, _, _, _ in }
+    state.narrative = "La tarde que Diego aprendió a nadar."
+
+    state.understandAndSave()
+    await waitUntil { state.phase != .comprehending }
+    let firstSavedID = try #require(state.savedMemoryID)
+    state.retry()
+    await waitUntil { state.phase != .comprehending }
+
+    #expect(state.phase == .notAnalyzed(.generic))
+    #expect(state.canRetry)
+    #expect(state.savedMemoryID == firstSavedID)
+    let records = try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>())
+    #expect(records.count == 1)
+    #expect(records.first?.id == firstSavedID.value)
+    #expect(records.first?.isAnalyzed == false)
+  }
+
+  @Test
+  func `A retry that fails with a different reason updates the phase but still keeps one memory`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let state = CaptureState(
+      comprehender: SequencedComprehender(
+        scripts: [.fails(.noResponse), .fails(.guardrailViolation)]),
+      persistenceActor: PersistenceActor(modelContainer: container), interfaceLanguage: "es"
+    ) { _, _, _, _ in }
+    state.narrative = "La tarde que Diego aprendió a nadar."
+
+    state.understandAndSave()
+    await waitUntil { state.phase != .comprehending }
+    let firstSavedID = try #require(state.savedMemoryID)
+    state.retry()
+    await waitUntil { state.phase != .comprehending }
+
+    #expect(state.phase == .notAnalyzed(.guardrail))
+    #expect(state.savedMemoryID == firstSavedID)
+    let records = try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>())
+    #expect(records.count == 1)
+    #expect(records.first?.id == firstSavedID.value)
+  }
+
   // MARK: saveWithoutAnalyzing
 
   @Test

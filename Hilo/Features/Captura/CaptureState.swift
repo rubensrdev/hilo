@@ -164,8 +164,9 @@ final class CaptureState {
     case .notAnalyzed(let text, let reason):
       // contrato 1 + DEC-43: el texto ya esta a salvo en cuanto aparece el estado de error.
       // este guardado se completa a proposito aunque cancel() llegue mientras esta en vuelo:
-      // el texto del usuario nunca se pierde, no hay nada que deshacer aqui
-      if let id = try? await persist(narrative: text) {
+      // el texto del usuario nunca se pierde, no hay nada que deshacer aqui.
+      // DEC-45: en el reintento el relato ya esta guardado, no se inserta otra copia
+      if savedMemoryID == nil, let id = try? await persist(narrative: text) {
         savedMemoryID = id
       }
       phase = .notAnalyzed(reason)
