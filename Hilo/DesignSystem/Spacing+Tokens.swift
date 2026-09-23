@@ -27,6 +27,9 @@ enum Spacing {
   static let radioFoto: CGFloat = 12
   static let radioChip = Capsule()
 
+  // foto-tarjeta (tokens.md §1.9): ancho entre alto
+  static let proporcionFotoTarjeta: CGFloat = 3 / 2
+
   static let trazoBordeTarjeta: CGFloat = 1
   static let trazoChipConocido: CGFloat = 1.5
   static let trazoConexion: CGFloat = 2.5

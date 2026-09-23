@@ -121,12 +121,12 @@ struct CaptureScreen: View {
   private var photoSection: some View {
     if let photoData = state.photoData,
       let thumbnail = PhotoThumbnail.image(
-        from: photoData, maxPixelSize: Int((120 * 3 / 2 * displayScale).rounded(.up)))
+        from: photoData, maxPixelSize: Int((120 * Spacing.proporcionFotoTarjeta * displayScale).rounded(.up)))
     {
       HStack(alignment: .top, spacing: Spacing.espacio3) {
         // el hueco fija el tamaño visible; la foto lo llena sin desbordar el marco de VoiceOver
         Color.clear
-          .aspectRatio(3 / 2, contentMode: .fit)
+          .aspectRatio(Spacing.proporcionFotoTarjeta, contentMode: .fit)
           .frame(height: 120)
           .overlay {
             Image(decorative: thumbnail, scale: displayScale)
@@ -175,7 +175,7 @@ struct CaptureScreen: View {
       }
     }
     .animation(
-      reduceMotion ? .easeInOut(duration: 0.15) : .spring(response: 0.3, dampingFraction: 1),
+      reduceMotion ? Motion.aparicionElementoReducida : Motion.aparicionElemento,
       value: state.extractedSoFar?.elements.count)
   }
 
