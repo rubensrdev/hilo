@@ -39,7 +39,7 @@ final class CaptureState {
   @ObservationIgnored private var isSavingFailedNarrative = false
   private let logger = Logger(subsystem: "com.hilo.app", category: "captura")
 
-  private enum ReviewSaveError: Error {
+  private enum SaveError: Error {
     case blankNarrative
   }
 
@@ -256,15 +256,18 @@ final class CaptureState {
       return existingID
     }
     guard let memory = Memory(narrative: text, savedAt: Date()) else {
-      throw ReviewSaveError.blankNarrative
+      throw SaveError.blankNarrative
     }
     return try await persistenceActor.saveReviewed(
       memory, photoData: photoData,
       outcome: reviewState.outcome(memoryID: memory.id, dateTextAtSave: dateTextAtSave))
   }
 
-  private func persist(narrative text: String) async throws -> MemoryID? {
-    guard let memory = Memory(narrative: text, date: nil, savedAt: Date()) else { return nil }
+  // un relato que Memory rechaza es un fallo, nunca un «guardado» sin recuerdo detras
+  private func persist(narrative text: String) async throws -> MemoryID {
+    guard let memory = Memory(narrative: text, date: nil, savedAt: Date()) else {
+      throw SaveError.blankNarrative
+    }
     return try await persistenceActor.save(
       memory, photoData: photoData, isAnalyzed: false, isExample: false)
   }
