@@ -549,3 +549,264 @@ struct PersistenceActorTests {
     return output as Data
   }
 }
+
+// F4.5.2 + DEC-40: el ReviewOutcome entero se aplica en una sola operacion, o no se aplica
+struct PersistenceActorReviewTests {
+  static let fixedSavedAt = Date(timeIntervalSince1970: 0)
+
+  @Test
+  func `Saving a reviewed memory inserts it analyzed with its narrative, date and stripped photo`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let date = try #require(MemoryDate(text: "el verano del 87", deducedYear: 1987))
+    let memory = try #require(
+      Memory(narrative: "Aquel verano en la playa de Cádiz.", date: date, savedAt: Self.fixedSavedAt))
+    let originalPhoto = try PhotoStripperTests.jpegWithGPS()
+
+    let savedID = try await actor.saveReviewed(
+      memory, photoData: originalPhoto, outcome: Self.outcome(date: date))
+
+    #expect(savedID == memory.id)
+    let records = try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>())
+    #expect(records.count == 1)
+    let record = try #require(records.first)
+    #expect(record.id == memory.id.value)
+    #expect(record.isAnalyzed)
+    #expect(record.narrative == "Aquel verano en la playa de Cádiz.")
+    #expect(record.dateText == "el verano del 87")
+    #expect(record.deducedYear == 1987)
+    #expect(record.savedAt == Self.fixedSavedAt)
+    let storedPhoto = try #require(record.photoData)
+    #expect(PhotoStripperTests.gpsDictionary(in: storedPhoto) == nil)
+  }
+
+  @Test
+  func `A new element in the outcome is created with its canonical name and a confirmed appearance with its role`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "La tía Marta hacía rosquillas.", savedAt: Self.fixedSavedAt))
+    let marta = try #require(Element(displayName: "la tía Marta", type: .person))
+
+    _ = try await actor.saveReviewed(
+      memory, photoData: nil,
+      outcome: Self.outcome(
+        elementsToCreate: [.init(element: marta, role: ElementRole(text: "mi tía"))]))
+
+    let elements = try ModelContext(container).fetch(FetchDescriptor<ElementRecord>())
+    #expect(elements.count == 1)
+    let record = try #require(elements.first)
+    #expect(record.id == marta.id.value)
+    #expect(record.displayName == "la tía Marta")
+    #expect(record.canonicalName == "tia marta")
+    #expect(record.type == .person)
+    let appearances = try await actor.fetchAppearances()
+    #expect(appearances.count == 1)
+    let appearance = try #require(appearances.first)
+    #expect(appearance.memoryID == memory.id)
+    #expect(appearance.elementID == marta.id)
+    #expect(appearance.role?.text == "mi tía")
+    #expect(appearance.status == .confirmedByUser)
+  }
+
+  @Test
+  func `A confirmed appearance links the existing element without creating another one`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let jose = try #require(Element(displayName: "José", type: .person))
+    _ = try await actor.save(jose)
+    let memory = try #require(
+      Memory(narrative: "José me enseñó a pescar.", savedAt: Self.fixedSavedAt))
+
+    _ = try await actor.saveReviewed(
+      memory, photoData: nil,
+      outcome: Self.outcome(confirmedAppearances: [.init(elementID: jose.id, role: nil)]))
+
+    let elements = try await actor.fetchElements()
+    #expect(elements.map(\.id) == [jose.id])
+    #expect(elements.first?.displayName == "José")
+    let appearances = try await actor.fetchAppearances()
+    #expect(appearances.count == 1)
+    #expect(appearances.first?.memoryID == memory.id)
+    #expect(appearances.first?.elementID == jose.id)
+    #expect(appearances.first?.status == .confirmedByUser)
+  }
+
+  // regla 7: el nombre usado en este recuerdo pasa a ser alias del elemento existente
+  @Test func `An alias added on save makes the element resolve by that name`() async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let manuel = try #require(Element(displayName: "Manuel", type: .person))
+    _ = try await actor.save(manuel)
+    let memory = try #require(
+      Memory(narrative: "Manolo arreglaba bicis en el garaje.", savedAt: Self.fixedSavedAt))
+
+    _ = try await actor.saveReviewed(
+      memory, photoData: nil,
+      outcome: Self.outcome(
+        confirmedAppearances: [.init(elementID: manuel.id, role: nil)],
+        aliasesToAdd: [.init(elementID: manuel.id, alias: "Manolo")]))
+
+    let elements = try await actor.fetchElements()
+    #expect(elements.first?.aliases == ["Manolo"])
+    #expect(
+      ElementResolution.resolving(name: "Manolo", type: .person, against: elements)
+        == .exactMatch([manuel.id]))
+  }
+
+  // regla 10: renombrar un elemento lo renombra en toda la memoria, tambien en recuerdos anteriores
+  @Test
+  func `A rename applied on save changes the element's name and canonical name everywhere`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let abuelo = try #require(Element(displayName: "el abuelo", type: .person))
+    _ = try await actor.save(abuelo)
+    let earlier = try #require(
+      Memory(narrative: "El abuelo tenía un huerto.", savedAt: Self.fixedSavedAt))
+    _ = try await actor.save(earlier, isAnalyzed: true, isExample: false)
+    try await actor.save(
+      Appearance(memoryID: earlier.id, elementID: abuelo.id, role: nil, status: .confirmedByUser))
+    let memory = try #require(
+      Memory(narrative: "El abuelo Ramón nos llevó al río.", savedAt: Self.fixedSavedAt))
+
+    _ = try await actor.saveReviewed(
+      memory, photoData: nil,
+      outcome: Self.outcome(
+        confirmedAppearances: [.init(elementID: abuelo.id, role: nil)],
+        renamesToApply: [.init(elementID: abuelo.id, newName: "abuelo Ramón")]))
+
+    let records = try ModelContext(container).fetch(FetchDescriptor<ElementRecord>())
+    #expect(records.count == 1)
+    #expect(records.first?.displayName == "abuelo Ramón")
+    #expect(records.first?.canonicalName == "abuelo ramon")
+    let appearances = try await actor.fetchAppearances()
+    #expect(Set(appearances.map(\.memoryID)) == [earlier.id, memory.id])
+    #expect(appearances.allSatisfy { $0.elementID == abuelo.id })
+  }
+
+  // DEC-45 + DEC-35: comprender mas tarde actualiza el mismo recuerdo, sin tocar savedAt ni la foto
+  @Test
+  func `Completing the analysis updates the same memory without touching savedAt, photo or narrative`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "La boda de Elena en el pueblo.", savedAt: Self.fixedSavedAt))
+    let savedID = try await actor.save(
+      memory, photoData: try PhotoStripperTests.jpegWithGPS(), isAnalyzed: false,
+      isExample: false)
+    let photoBefore = try await actor.photoData(for: savedID)
+    let elena = try #require(Element(displayName: "Elena", type: .person))
+    let date = try #require(MemoryDate(text: "en mayo", deducedYear: nil))
+
+    try await actor.completeAnalysis(
+      of: savedID,
+      outcome: Self.outcome(
+        elementsToCreate: [.init(element: elena, role: nil)], date: date))
+
+    let records = try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>())
+    #expect(records.count == 1)
+    let record = try #require(records.first)
+    #expect(record.id == savedID.value)
+    #expect(record.isAnalyzed)
+    #expect(record.savedAt == Self.fixedSavedAt)
+    #expect(record.narrative == "La boda de Elena en el pueblo.")
+    #expect(record.photoData == photoBefore)
+    #expect(record.dateText == "en mayo")
+    #expect(record.deducedYear == nil)
+    let appearances = try await actor.fetchAppearances()
+    #expect(appearances.map(\.memoryID) == [savedID])
+    #expect(appearances.map(\.elementID) == [elena.id])
+  }
+
+  @Test func `Completing the analysis of a memory that was never saved throws memoryNotFound`()
+    async throws
+  {
+    let actor = PersistenceActor(modelContainer: try PersistenceContainer.make(inMemory: true))
+
+    await #expect(throws: PersistenceActor.WriteError.memoryNotFound) {
+      try await actor.completeAnalysis(of: MemoryID(), outcome: Self.outcome())
+    }
+  }
+
+  // DEC-40: "en la misma operacion que el resto" — un fallo a mitad no deja nada a medias
+  @Test
+  func `A failure halfway through saving leaves neither the memory nor the new element in the store`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "Pintamos la valla con Irene.", savedAt: Self.fixedSavedAt))
+    let irene = try #require(Element(displayName: "Irene", type: .person))
+
+    await #expect(throws: PersistenceActor.WriteError.elementNotFound) {
+      try await actor.saveReviewed(
+        memory, photoData: nil,
+        outcome: Self.outcome(
+          elementsToCreate: [.init(element: irene, role: nil)],
+          confirmedAppearances: [.init(elementID: ElementID(), role: nil)]))
+    }
+
+    // lo que quedara a medias en el contexto del actor saldria en su siguiente guardado
+    let later = try #require(Element(displayName: "el taller", type: .place))
+    _ = try await actor.save(later)
+
+    let context = ModelContext(container)
+    #expect(try context.fetch(FetchDescriptor<MemoryRecord>()).isEmpty)
+    #expect(try context.fetch(FetchDescriptor<ElementRecord>()).map(\.id) == [later.id.value])
+    #expect(try context.fetch(FetchDescriptor<AppearanceRecord>()).isEmpty)
+  }
+
+  @Test
+  func `A failure halfway through completing the analysis leaves the memory unanalyzed and untouched`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "La excursión con Irene al pantano.", savedAt: Self.fixedSavedAt))
+    let savedID = try await actor.save(memory, isAnalyzed: false, isExample: false)
+    let irene = try #require(Element(displayName: "Irene", type: .person))
+    let date = try #require(MemoryDate(text: "en otoño", deducedYear: nil))
+
+    await #expect(throws: PersistenceActor.WriteError.elementNotFound) {
+      try await actor.completeAnalysis(
+        of: savedID,
+        outcome: Self.outcome(
+          elementsToCreate: [.init(element: irene, role: nil)],
+          confirmedAppearances: [.init(elementID: ElementID(), role: nil)], date: date))
+    }
+
+    let later = try #require(Element(displayName: "el taller", type: .place))
+    _ = try await actor.save(later)
+
+    let context = ModelContext(container)
+    let record = try #require(try context.fetch(FetchDescriptor<MemoryRecord>()).first)
+    #expect(record.isAnalyzed == false)
+    #expect(record.dateText == nil)
+    #expect(try context.fetch(FetchDescriptor<ElementRecord>()).map(\.id) == [later.id.value])
+    #expect(try context.fetch(FetchDescriptor<AppearanceRecord>()).isEmpty)
+  }
+
+  private static func outcome(
+    elementsToCreate: [ReviewOutcome.NewElement] = [],
+    confirmedAppearances: [ReviewOutcome.ConfirmedAppearance] = [],
+    aliasesToAdd: [ReviewOutcome.AliasToAdd] = [],
+    renamesToApply: [ReviewOutcome.RenameToApply] = [],
+    date: MemoryDate? = nil
+  ) -> ReviewOutcome {
+    ReviewOutcome(
+      elementsToCreate: elementsToCreate, confirmedAppearances: confirmedAppearances,
+      aliasesToAdd: aliasesToAdd, renamesToApply: renamesToApply, date: date)
+  }
+}

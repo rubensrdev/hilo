@@ -1,4 +1,3 @@
-import OSLog
 import SwiftData
 import SwiftUI
 
@@ -12,8 +11,6 @@ struct HiloApp: App {
       fatalError("No se pudo crear el ModelContainer: \(error)")
     }
   }()
-
-  private static let logger = Logger(subsystem: "com.hilo.app", category: "captura")
 
   @State private var captureState: CaptureState
   @State private var reviewCoordinator: ReviewCoordinator
@@ -39,13 +36,12 @@ struct HiloApp: App {
   var body: some Scene {
     WindowGroup {
       CaptureScreen(state: captureState)
-        // DEC-47: deslizar y Cancel pasan los dos por aqui; guardar (F4.5.2) avisa antes y esto queda inocuo
+        // DEC-47: deslizar y Cancel pasan los dos por aqui; guardar ya ha salido de .reviewing y esto queda inocuo
         .sheet(item: $reviewCoordinator.presentation, onDismiss: captureState.reviewDismissed) {
           presentation in
           ReviewScreen(initial: presentation.reviewState, narrative: presentation.narrative) {
-            _, _ in
-            // F4.5 sustituye este registro por el guardado real y el momento de la conexion
-            Self.logger.notice("Revision saved")
+            reviewState, dateText in
+            captureState.reviewConfirmed(reviewState, dateTextAtSave: dateText)
           }
         }
     }

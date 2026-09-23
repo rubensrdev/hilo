@@ -9,6 +9,7 @@ final class CaptureState {
     case comprehending
     case reviewing
     case savingWithoutAnalyzing
+    case savingReview
     case notAnalyzed(MemoryComprehensionReason)
   }
 
@@ -29,6 +30,10 @@ final class CaptureState {
   private let onUnderstood: (ExtractedMemory, String, Data?, MemoryID?) -> Void
   private var comprehensionTask: Task<Void, Never>?
   private let logger = Logger(subsystem: "com.hilo.app", category: "captura")
+
+  private enum ReviewSaveError: Error {
+    case blankNarrative
+  }
 
   init(
     comprehender: MemoryComprehending, persistenceActor: PersistenceActor,
@@ -98,9 +103,29 @@ final class CaptureState {
     extractedSoFar = nil
   }
 
-  func reviewSaved() {
+  // DEC-47: salir de .reviewing antes de que la hoja se cierre deja inocuo su onDismiss
+  func reviewConfirmed(_ reviewState: ReviewState, dateTextAtSave: String) {
     guard phase == .reviewing else { return }
-    resetForNewMemory()
+    phase = .savingReview
+    let text = narrative
+    let photo = photoData
+    let existingID = savedMemoryID
+    // self fuerte: un guardado del texto del usuario no se salta aunque la captura desaparezca
+    Task {
+      do {
+        try await self.persistReview(
+          reviewState, dateTextAtSave: dateTextAtSave, narrative: text, photoData: photo,
+          existingID: existingID)
+        self.resetForNewMemory()
+      } catch {
+        // solo el tipo: el error no debe arrastrar al log nada del usuario
+        self.logger.error(
+          "No se pudo guardar la revision: \(String(describing: type(of: error)), privacy: .public)"
+        )
+        self.phase = self.phaseBeforeComprehension
+        self.extractedSoFar = nil
+      }
+    }
   }
 
   private func resetForNewMemory() {
@@ -162,6 +187,25 @@ final class CaptureState {
     case .cancelled:
       phase = .capturing
     }
+  }
+
+  // DEC-45: con un recuerdo ya guardado por el error, se analiza ese en vez de insertar otro
+  private func persistReview(
+    _ reviewState: ReviewState, dateTextAtSave: String, narrative text: String, photoData: Data?,
+    existingID: MemoryID?
+  ) async throws {
+    if let existingID {
+      try await persistenceActor.completeAnalysis(
+        of: existingID,
+        outcome: reviewState.outcome(memoryID: existingID, dateTextAtSave: dateTextAtSave))
+      return
+    }
+    guard let memory = Memory(narrative: text, savedAt: Date()) else {
+      throw ReviewSaveError.blankNarrative
+    }
+    _ = try await persistenceActor.saveReviewed(
+      memory, photoData: photoData,
+      outcome: reviewState.outcome(memoryID: memory.id, dateTextAtSave: dateTextAtSave))
   }
 
   private func persist(narrative text: String) async throws -> MemoryID? {

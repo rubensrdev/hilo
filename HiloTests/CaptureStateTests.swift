@@ -446,72 +446,14 @@ struct CaptureStateTests {
     #expect(records.first?.isAnalyzed == false)
   }
 
-  @Test
-  func `Saving the review empties the capture for a new memory without persisting anything itself`()
-    async throws
-  {
-    let container = try PersistenceContainer.make(inMemory: true)
-    let actor = PersistenceActor(modelContainer: container)
-    var understoodCallCount = 0
-    let state = CaptureState(
-      comprehender: FakeMemoryComprehender(
-        script: .succeeds(
-          partials: [],
-          final: ExtractedMemory(
-            elements: [ExtractedElement(name: "Lucía", type: .person, role: "mi hija")],
-            dateText: nil, deducedYear: nil))),
-      persistenceActor: actor, interfaceLanguage: "es"
-    ) { _, _, _, _ in understoodCallCount += 1 }
-    state.narrative = "Lucía aprendió a montar en bici."
-    state.photoData = Data([0x0A])
-
-    state.understandAndSave()
-    await waitUntil { understoodCallCount == 1 }
-    state.reviewSaved()
-
-    #expect(state.narrative == "")
-    #expect(state.photoData == nil)
-    #expect(state.extractedSoFar == nil)
-    #expect(state.savedMemoryID == nil)
-    #expect(state.phase == .capturing)
-    #expect(state.canUnderstand == false)
-    #expect(try await actor.fetchMemories().isEmpty)
-  }
-
-  @Test
-  func `Saving a review opened by retry releases the saved id so the next memory is not an update`()
-    async throws
-  {
-    var understoodCallCount = 0
-    let state = CaptureState(
-      comprehender: SequencedComprehender(
-        scripts: [.fails(.noResponse), .succeeds(partials: [], final: Self.emptyExtraction)]),
-      persistenceActor: PersistenceActor(
-        modelContainer: try PersistenceContainer.make(inMemory: true)),
-      interfaceLanguage: "es"
-    ) { _, _, _, _ in understoodCallCount += 1 }
-    state.narrative = "La mudanza al piso de la calle Mayor."
-
-    state.understandAndSave()
-    await waitUntil { state.phase == .notAnalyzed(.generic) }
-    _ = try #require(state.savedMemoryID)
-    state.retry()
-    await waitUntil { understoodCallCount == 1 }
-    state.reviewSaved()
-
-    #expect(state.savedMemoryID == nil)
-    #expect(state.phase == .capturing)
-  }
-
   @Test func `Dismissing when no review is open changes nothing`() async throws {
-    var understoodCallCount = 0
+    let actor = PersistenceActor(modelContainer: try PersistenceContainer.make(inMemory: true))
+    var understood: [ExtractedMemory] = []
     let state = CaptureState(
       comprehender: FakeMemoryComprehender(
         script: .succeeds(partials: [], final: Self.emptyExtraction)),
-      persistenceActor: PersistenceActor(
-        modelContainer: try PersistenceContainer.make(inMemory: true)),
-      interfaceLanguage: "es"
-    ) { _, _, _, _ in understoodCallCount += 1 }
+      persistenceActor: actor, interfaceLanguage: "es"
+    ) { extracted, _, _, _ in understood.append(extracted) }
 
     state.narrative = "Un relato a medio escribir."
     state.reviewDismissed()
@@ -520,8 +462,11 @@ struct CaptureStateTests {
     #expect(state.phase == .capturing)
 
     state.understandAndSave()
-    await waitUntil { understoodCallCount == 1 }
-    state.reviewSaved()
+    await waitUntil { understood.count == 1 }
+    state.reviewConfirmed(
+      try await Self.reviewState(for: try #require(understood.first), actor: actor),
+      dateTextAtSave: "")
+    await waitUntil { state.phase == .capturing }
     // onDismiss llega tambien despues de guardar: no debe devolver nada a la captura vacia
     state.reviewDismissed()
 
@@ -529,10 +474,202 @@ struct CaptureStateTests {
     #expect(state.phase == .capturing)
   }
 
+  // MARK: guardar desde la revision — F4.5.2, contrato 2 + DEC-40 + DEC-45
+
+  @Test
+  func `Saving the review persists one analyzed memory with its elements and empties the capture`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    var understood: [ExtractedMemory] = []
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(partials: [], final: Self.luciaExtraction)),
+      persistenceActor: actor, interfaceLanguage: "es"
+    ) { extracted, _, _, _ in understood.append(extracted) }
+    state.narrative = "Lucía aprendió a montar en bici."
+    state.photoData = try PhotoStripperTests.jpegWithGPS()
+
+    state.understandAndSave()
+    await waitUntil { understood.count == 1 }
+    state.reviewConfirmed(
+      try await Self.reviewState(for: try #require(understood.first), actor: actor),
+      dateTextAtSave: "")
+    await waitUntil { state.phase == .capturing }
+
+    let context = ModelContext(container)
+    let records = try context.fetch(FetchDescriptor<MemoryRecord>())
+    #expect(records.count == 1)
+    let record = try #require(records.first)
+    #expect(record.isAnalyzed)
+    #expect(record.narrative == "Lucía aprendió a montar en bici.")
+    #expect(record.photoData != nil)
+    #expect(try context.fetch(FetchDescriptor<ElementRecord>()).map(\.displayName) == ["Lucía"])
+    #expect(try await actor.fetchAppearances().count == 1)
+    #expect(state.narrative == "")
+    #expect(state.photoData == nil)
+    #expect(state.extractedSoFar == nil)
+    #expect(state.savedMemoryID == nil)
+    #expect(state.canUnderstand == false)
+  }
+
+  @Test
+  func `Saving a review opened by retry analyzes the memory already saved instead of inserting another`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    var understood: [ExtractedMemory] = []
+    let state = CaptureState(
+      comprehender: SequencedComprehender(
+        scripts: [.fails(.noResponse), .succeeds(partials: [], final: Self.luciaExtraction)]),
+      persistenceActor: actor, interfaceLanguage: "es"
+    ) { extracted, _, _, _ in understood.append(extracted) }
+    state.narrative = "La mudanza al piso de la calle Mayor con Lucía."
+
+    state.understandAndSave()
+    await waitUntil { state.phase == .notAnalyzed(.generic) }
+    let firstSavedID = try #require(state.savedMemoryID)
+    state.retry()
+    await waitUntil { understood.count == 1 }
+    state.reviewConfirmed(
+      try await Self.reviewState(
+        for: try #require(understood.first), actor: actor, excluding: firstSavedID),
+      dateTextAtSave: "")
+    await waitUntil { state.phase == .capturing }
+
+    let records = try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>())
+    #expect(records.count == 1)
+    #expect(records.first?.id == firstSavedID.value)
+    #expect(records.first?.isAnalyzed == true)
+    #expect(try await actor.fetchAppearances().map(\.memoryID) == [firstSavedID])
+    #expect(state.savedMemoryID == nil)
+    #expect(state.narrative == "")
+  }
+
+  // DEC-47: la hoja llama a onSave y despues a dismiss(), asi que onDismiss llega con el guardado en vuelo
+  @Test
+  func `Dismissing right after confirming the save does not bring the narrative back or duplicate the memory`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    var understood: [ExtractedMemory] = []
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(partials: [], final: Self.luciaExtraction)),
+      persistenceActor: actor, interfaceLanguage: "es"
+    ) { extracted, _, _, _ in understood.append(extracted) }
+    state.narrative = "Lucía y el primer diente."
+
+    state.understandAndSave()
+    await waitUntil { understood.count == 1 }
+    let reviewState = try await Self.reviewState(for: try #require(understood.first), actor: actor)
+    state.reviewConfirmed(reviewState, dateTextAtSave: "")
+    state.reviewDismissed()
+
+    #expect(state.phase == .savingReview)
+    #expect(state.canUnderstand == false)
+    await waitUntil { state.phase == .capturing }
+
+    #expect(state.narrative == "")
+    #expect(try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).count == 1)
+  }
+
+  @Test
+  func `A failed save returns to the capture with narrative and photo intact and nothing stored`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    var understood: [ExtractedMemory] = []
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(partials: [], final: Self.luciaExtraction)),
+      persistenceActor: actor, interfaceLanguage: "es"
+    ) { extracted, _, _, _ in understood.append(extracted) }
+    let photo = try PhotoStripperTests.jpegWithGPS()
+    state.narrative = "Lucía en la playa de Laredo."
+    state.photoData = photo
+
+    state.understandAndSave()
+    await waitUntil { understood.count == 1 }
+    // un elemento conocido que no esta en el almacen: la aparicion confirmada no encuentra su elemento
+    let ghost = try #require(Element(displayName: "Lucía", type: .person))
+    state.reviewConfirmed(
+      ReviewState(
+        extracted: try #require(understood.first), knownElements: [ghost], appearances: []),
+      dateTextAtSave: "")
+    await waitUntil { state.phase != .savingReview }
+
+    #expect(state.phase == .capturing)
+    #expect(state.narrative == "Lucía en la playa de Laredo.")
+    #expect(state.photoData == photo)
+    #expect(state.extractedSoFar == nil)
+    #expect(state.canUnderstand)
+
+    // el mismo relato se puede volver a comprender y guardar, sin arrastrar nada del intento fallido
+    state.understandAndSave()
+    await waitUntil { understood.count == 2 }
+    state.reviewConfirmed(
+      try await Self.reviewState(for: try #require(understood.last), actor: actor),
+      dateTextAtSave: "")
+    await waitUntil { state.phase == .capturing }
+
+    let context = ModelContext(container)
+    #expect(try context.fetch(FetchDescriptor<MemoryRecord>()).count == 1)
+    #expect(try context.fetch(FetchDescriptor<ElementRecord>()).map(\.displayName) == ["Lucía"])
+    #expect(try await actor.fetchAppearances().count == 1)
+  }
+
+  // DEC-40: el renombrado pendiente de la revision se aplica al guardar
+  @Test func `A pending rename is applied to the stored element when the review is saved`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let abuelo = try #require(Element(displayName: "el abuelo", type: .person))
+    _ = try await actor.save(abuelo)
+    var understood: [ExtractedMemory] = []
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(
+          partials: [],
+          final: ExtractedMemory(
+            elements: [ExtractedElement(name: "el abuelo", type: .person, role: "")],
+            dateText: nil, deducedYear: nil))),
+      persistenceActor: actor, interfaceLanguage: "es"
+    ) { extracted, _, _, _ in understood.append(extracted) }
+    state.narrative = "El abuelo nos llevó al río."
+
+    state.understandAndSave()
+    await waitUntil { understood.count == 1 }
+    var saved = try await Self.reviewState(for: try #require(understood.first), actor: actor)
+    saved.rename(try #require(saved.items.first?.id), to: "abuelo Ramón")
+    state.reviewConfirmed(saved, dateTextAtSave: "")
+    await waitUntil { state.phase == .capturing }
+
+    #expect(try await actor.fetchElements().map(\.displayName) == ["abuelo Ramón"])
+  }
+
   // MARK: fixtures
 
   private static let emptyExtraction = ExtractedMemory(
     elements: [], dateText: nil, deducedYear: nil)
+
+  private static let luciaExtraction = ExtractedMemory(
+    elements: [ExtractedElement(name: "Lucía", type: .person, role: "mi hija")],
+    dateText: nil, deducedYear: nil)
+
+  // lo mismo que ReviewCoordinator.present lee del almacen antes de abrir la hoja
+  private static func reviewState(
+    for extracted: ExtractedMemory, actor: PersistenceActor, excluding: MemoryID? = nil
+  ) async throws -> ReviewState {
+    ReviewState(
+      extracted: extracted, knownElements: try await actor.fetchElements(),
+      appearances: try await actor.fetchAppearances(), excludingMemoryID: excluding)
+  }
 
   private static func makeState(script: FakeMemoryComprehender.Script) throws -> CaptureState {
     let container = try PersistenceContainer.make(inMemory: true)

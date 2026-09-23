@@ -25,11 +25,7 @@ actor PersistenceActor {
 
   // contrato 1: el canonico lo calcula el dominio, la persistencia solo lo guarda
   func save(_ element: Element) throws -> ElementID {
-    let record = ElementRecord(
-      id: element.id.value, displayName: element.displayName,
-      canonicalName: CanonicalName.of(element.displayName), type: element.type,
-      aliases: element.aliases)
-    modelContext.insert(record)
+    modelContext.insert(Self.elementRecord(from: element))
     try modelContext.save()
     return element.id
   }
@@ -46,6 +42,76 @@ actor PersistenceActor {
       status: appearance.status)
     modelContext.insert(record)
     try modelContext.save()
+  }
+
+  // DEC-40: todo el ReviewOutcome en un unico save; si algo falla a mitad, no queda nada a medias
+  func saveReviewed(_ memory: Memory, photoData: Data?, outcome: ReviewOutcome) throws -> MemoryID {
+    do {
+      // DEC-44: la fecha es siempre la del outcome, la unica que aplica la regla del año
+      let record = MemoryRecord(
+        id: memory.id.value, narrative: memory.narrative, dateText: outcome.date?.text,
+        deducedYear: outcome.date?.deducedYear,
+        photoData: try photoData.map(PhotoStripper.stripMetadata(from:)), savedAt: memory.savedAt,
+        isAnalyzed: true, isExample: false)
+      modelContext.insert(record)
+      try apply(outcome, to: record)
+      try modelContext.save()
+      return memory.id
+    } catch {
+      modelContext.rollback()
+      throw error
+    }
+  }
+
+  // DEC-45 + DEC-35: comprender mas tarde actualiza el mismo recuerdo, sin tocar savedAt ni la foto
+  func completeAnalysis(of id: MemoryID, outcome: ReviewOutcome) throws {
+    do {
+      guard let record = try fetchMemoryRecord(id: id) else { throw WriteError.memoryNotFound }
+      record.dateText = outcome.date?.text
+      record.deducedYear = outcome.date?.deducedYear
+      record.isAnalyzed = true
+      try apply(outcome, to: record)
+      try modelContext.save()
+    } catch {
+      modelContext.rollback()
+      throw error
+    }
+  }
+
+  private func apply(_ outcome: ReviewOutcome, to memoryRecord: MemoryRecord) throws {
+    for created in outcome.elementsToCreate {
+      let elementRecord = Self.elementRecord(from: created.element)
+      modelContext.insert(elementRecord)
+      insertConfirmedAppearance(memory: memoryRecord, element: elementRecord, role: created.role)
+    }
+    for confirmed in outcome.confirmedAppearances {
+      guard let elementRecord = try fetchElementRecord(id: confirmed.elementID) else {
+        throw WriteError.elementNotFound
+      }
+      insertConfirmedAppearance(memory: memoryRecord, element: elementRecord, role: confirmed.role)
+    }
+    for alias in outcome.aliasesToAdd {
+      guard let elementRecord = try fetchElementRecord(id: alias.elementID) else {
+        throw WriteError.elementNotFound
+      }
+      elementRecord.aliases.append(alias.alias)
+    }
+    // regla 10: el elemento es uno solo, asi que renombrarlo lo renombra en todos sus recuerdos
+    for rename in outcome.renamesToApply {
+      guard let elementRecord = try fetchElementRecord(id: rename.elementID) else {
+        throw WriteError.elementNotFound
+      }
+      elementRecord.displayName = rename.newName
+      elementRecord.canonicalName = CanonicalName.of(rename.newName)
+    }
+  }
+
+  private func insertConfirmedAppearance(
+    memory: MemoryRecord, element: ElementRecord, role: ElementRole?
+  ) {
+    modelContext.insert(
+      AppearanceRecord(
+        memory: memory, element: element, role: role?.text, status: .confirmedByUser))
   }
 
   // extraccion de valores Sendable (contrato 2): el dominio nunca ve un @Model
@@ -161,6 +227,13 @@ actor PersistenceActor {
     return Memory(
       id: MemoryID(value: record.id), narrative: record.narrative, date: date,
       savedAt: record.savedAt)
+  }
+
+  private static func elementRecord(from element: Element) -> ElementRecord {
+    ElementRecord(
+      id: element.id.value, displayName: element.displayName,
+      canonicalName: CanonicalName.of(element.displayName), type: element.type,
+      aliases: element.aliases)
   }
 
   private static func element(from record: ElementRecord) -> Element {

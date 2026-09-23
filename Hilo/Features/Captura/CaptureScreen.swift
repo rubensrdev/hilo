@@ -12,7 +12,7 @@ struct CaptureScreen: View {
       ScrollView {
         VStack(alignment: .leading, spacing: Spacing.espacio4) {
           switch state.phase {
-          case .capturing, .comprehending, .reviewing, .savingWithoutAnalyzing:
+          case .capturing, .comprehending, .reviewing, .savingWithoutAnalyzing, .savingReview:
             captureForm
           case .notAnalyzed(let reason):
             errorState(reason)
