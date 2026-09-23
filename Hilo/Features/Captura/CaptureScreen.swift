@@ -328,3 +328,43 @@ private nonisolated struct AddPhotoLabel: View {
       .contentShape(Rectangle())
   }
 }
+
+#if DEBUG
+  #Preview("Empty", traits: .modifier(CaptureScenarios(.empty))) { CapturePreviewScreen() }
+  #Preview("Writing", traits: .modifier(CaptureScenarios(.writing))) { CapturePreviewScreen() }
+  #Preview("With photo", traits: .modifier(CaptureScenarios(.withPhoto))) {
+    CapturePreviewScreen()
+  }
+  #Preview("Comprehending", traits: .modifier(CaptureScenarios(.comprehending))) {
+    CapturePreviewScreen()
+  }
+  #Preview("Not analyzed, retry", traits: .modifier(CaptureScenarios(.notAnalyzedRetryable))) {
+    CapturePreviewScreen()
+  }
+  #Preview("Not analyzed, too long", traits: .modifier(CaptureScenarios(.notAnalyzedTooLong))) {
+    CapturePreviewScreen()
+  }
+  #Preview("Review unavailable", traits: .modifier(CaptureScenarios(.reviewUnavailable))) {
+    CapturePreviewScreen()
+  }
+  #Preview("Saved without analyzing", traits: .modifier(CaptureScenarios(.savedWithoutAnalyzing))) {
+    CapturePreviewScreen()
+  }
+  #Preview("Save failed alert", traits: .modifier(CaptureScenarios(.saveFailed))) {
+    CapturePreviewScreen()
+  }
+  #Preview("Comprehending, dark", traits: .modifier(CaptureScenarios(.comprehending))) {
+    CapturePreviewScreen().preferredColorScheme(.dark)
+  }
+  #Preview("With photo, AX5", traits: .modifier(CaptureScenarios(.withPhoto))) {
+    CapturePreviewScreen().dynamicTypeSize(.accessibility5)
+  }
+  #Preview(
+    "Not analyzed, Spanish",
+    traits: .modifier(CaptureScenarios(.notAnalyzedRetryable, locale: Locale(identifier: "es")))
+  ) { CapturePreviewScreen() }
+  #Preview(
+    "Review unavailable, Spanish",
+    traits: .modifier(CaptureScenarios(.reviewUnavailable, locale: Locale(identifier: "es")))
+  ) { CapturePreviewScreen() }
+#endif

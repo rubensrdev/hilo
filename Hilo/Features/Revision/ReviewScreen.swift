@@ -41,11 +41,32 @@ struct ReviewScreen: View {
   @State private var pendingRenamePrompt: RenamePrompt?
   @FocusState private var isDateFocused: Bool
 
-  init(initial: ReviewState, narrative: String, onSave: @escaping (ReviewState, String) -> Void) {
+  // renaming solo lo usan las previews: arrancan con el alert de renombrar ya abierto
+  init(
+    initial: ReviewState, narrative: String, renaming itemID: ReviewItemID? = nil,
+    onSave: @escaping (ReviewState, String) -> Void
+  ) {
     _reviewState = State(initialValue: initial)
     _dateText = State(initialValue: initial.extractedDateText ?? "")
     self.narrative = narrative
     self.onSave = onSave
+    if let itemID, let prompt = Self.initialRenamePrompt(for: itemID, in: initial.blocks) {
+      _renamePrompt = State(initialValue: prompt)
+      _renameText = State(initialValue: prompt.currentName)
+    }
+  }
+
+  private static func initialRenamePrompt(for itemID: ReviewItemID, in blocks: ReviewBlocks)
+    -> RenamePrompt?
+  {
+    if let understood = blocks.understood.first(where: { $0.id == itemID }) {
+      return RenamePrompt(itemID: itemID, currentName: understood.name, otherMemoriesCount: nil)
+    }
+    if let known = blocks.known.first(where: { $0.id == itemID }) {
+      return RenamePrompt(
+        itemID: itemID, currentName: known.name, otherMemoriesCount: known.otherMemoriesCount)
+    }
+    return nil
   }
 
   var body: some View {
@@ -542,3 +563,57 @@ struct ReviewScreen: View {
     .accessibilityIdentifier("review.save")
   }
 }
+
+#if DEBUG
+  #Preview("Connected") {
+    ReviewScreen(
+      initial: PreviewFixtures.reviewState(.connected), narrative: PreviewFixtures.narrative
+    ) { _, _ in }
+  }
+  #Preview("Beginning") {
+    ReviewScreen(
+      initial: PreviewFixtures.reviewState(.beginning), narrative: PreviewFixtures.narrative
+    ) { _, _ in }
+  }
+  #Preview("Doubts") {
+    ReviewScreen(
+      initial: PreviewFixtures.reviewState(.doubts), narrative: PreviewFixtures.narrative
+    ) { _, _ in }
+  }
+  #Preview("Nothing recognized") {
+    ReviewScreen(
+      initial: PreviewFixtures.reviewState(.nothingRecognized), narrative: PreviewFixtures.narrative
+    ) { _, _ in }
+  }
+  #Preview("Rename everywhere alert") {
+    let state = PreviewFixtures.reviewState(.connected)
+    ReviewScreen(
+      initial: state, narrative: PreviewFixtures.narrative,
+      renaming: PreviewFixtures.itemID(named: "la abuela Carmen", in: state)
+    ) { _, _ in }
+  }
+  #Preview("Connected, dark") {
+    ReviewScreen(
+      initial: PreviewFixtures.reviewState(.connected), narrative: PreviewFixtures.narrative
+    ) { _, _ in }
+    .preferredColorScheme(.dark)
+  }
+  #Preview("Doubts, AX5") {
+    ReviewScreen(
+      initial: PreviewFixtures.reviewState(.doubts), narrative: PreviewFixtures.narrative
+    ) { _, _ in }
+    .dynamicTypeSize(.accessibility5)
+  }
+  #Preview("Doubts, Spanish") {
+    ReviewScreen(
+      initial: PreviewFixtures.reviewState(.doubts), narrative: PreviewFixtures.narrative
+    ) { _, _ in }
+    .environment(\.locale, Locale(identifier: "es"))
+  }
+  #Preview("Beginning, Spanish") {
+    ReviewScreen(
+      initial: PreviewFixtures.reviewState(.beginning), narrative: PreviewFixtures.narrative
+    ) { _, _ in }
+    .environment(\.locale, Locale(identifier: "es"))
+  }
+#endif

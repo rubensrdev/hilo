@@ -143,3 +143,31 @@ struct ConnectionMomentScreen: View {
     .background(Color.fondo)
   }
 }
+
+#if DEBUG
+  #Preview("One connection") {
+    if let moment = PreviewFixtures.connectionMoment(connectedCount: 1) {
+      ConnectionMomentScreen(moment: moment)
+    }
+  }
+  #Preview("Several connections") {
+    if let moment = PreviewFixtures.connectionMoment(connectedCount: 2) {
+      ConnectionMomentScreen(moment: moment)
+    }
+  }
+  #Preview("Several connections, dark") {
+    if let moment = PreviewFixtures.connectionMoment(connectedCount: 2) {
+      ConnectionMomentScreen(moment: moment).preferredColorScheme(.dark)
+    }
+  }
+  #Preview("Several connections, AX5") {
+    if let moment = PreviewFixtures.connectionMoment(connectedCount: 2) {
+      ConnectionMomentScreen(moment: moment).dynamicTypeSize(.accessibility5)
+    }
+  }
+  #Preview("Several connections, Spanish") {
+    if let moment = PreviewFixtures.connectionMoment(connectedCount: 2) {
+      ConnectionMomentScreen(moment: moment).environment(\.locale, Locale(identifier: "es"))
+    }
+  }
+#endif
