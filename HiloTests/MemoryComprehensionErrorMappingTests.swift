@@ -62,85 +62,61 @@ nonisolated struct MemoryComprehensionErrorMappingTests {
 
   // MARK: - LanguageModelError (iOS 27+, excepcion acotada de CLAUDE.md: el simulador activo es 27.0)
 
+  @available(iOS, introduced: 27, message: "requires iOS 27: this error type does not exist on 26.x")
   @Test func `Model guardrail violation maps to guardrailViolation`() {
-    guard #available(iOS 27, *) else {
-      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
-      return
-    }
     let error = LanguageModelError.guardrailViolation(.init(debugDescription: "test"))
 
     #expect(MemoryComprehensionError(mapping: error) == .guardrailViolation)
   }
 
+  @available(iOS, introduced: 27, message: "requires iOS 27: this error type does not exist on 26.x")
   @Test func `Model context size exceeded maps to contextOverflow`() {
-    guard #available(iOS 27, *) else {
-      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
-      return
-    }
     let error = LanguageModelError.contextSizeExceeded(
       .init(contextSize: 4096, tokenCount: 5000, debugDescription: "test"))
 
     #expect(MemoryComprehensionError(mapping: error) == .contextOverflow)
   }
 
+  @available(iOS, introduced: 27, message: "requires iOS 27: this error type does not exist on 26.x")
   @Test func `Model unsupported language or locale maps to unsupportedLanguage`() {
-    guard #available(iOS 27, *) else {
-      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
-      return
-    }
     let error = LanguageModelError.unsupportedLanguageOrLocale(
       .init(languageCode: "xx", debugDescription: "test"))
 
     #expect(MemoryComprehensionError(mapping: error) == .unsupportedLanguage)
   }
 
+  @available(iOS, introduced: 27, message: "requires iOS 27: this error type does not exist on 26.x")
   @Test func `Model refusal maps to refusal`() {
-    guard #available(iOS 27, *) else {
-      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
-      return
-    }
     let error = LanguageModelError.refusal(
       .init(explanation: "test", debugDescription: "test"))
 
     #expect(MemoryComprehensionError(mapping: error) == .refusal)
   }
 
+  @available(iOS, introduced: 27, message: "requires iOS 27: this error type does not exist on 26.x")
   @Test func `Model rate limited maps to noResponse`() {
-    guard #available(iOS 27, *) else {
-      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
-      return
-    }
     let error = LanguageModelError.rateLimited(.init(resetDate: nil, debugDescription: "test"))
 
     #expect(MemoryComprehensionError(mapping: error) == .noResponse)
   }
 
+  @available(iOS, introduced: 27, message: "requires iOS 27: this error type does not exist on 26.x")
   @Test func `Model timeout maps to noResponse`() {
-    guard #available(iOS 27, *) else {
-      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
-      return
-    }
     let error = LanguageModelError.timeout(.init(debugDescription: "test"))
 
     #expect(MemoryComprehensionError(mapping: error) == .noResponse)
   }
 
+  @available(iOS, introduced: 27, message: "requires iOS 27: this error type does not exist on 26.x")
   @Test func `Model unsupported capability maps to noResponse`() {
-    guard #available(iOS 27, *) else {
-      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
-      return
-    }
     let error = LanguageModelError.unsupportedCapability(
       .init(capability: .vision, debugDescription: "test"))
 
     #expect(MemoryComprehensionError(mapping: error) == .noResponse)
   }
 
+  @available(iOS, introduced: 27, message: "requires iOS 27: this error type does not exist on 26.x")
   @Test func `Model unsupported transcript content maps to noResponse`() {
-    guard #available(iOS 27, *) else {
-      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
-      return
-    }
     let error = LanguageModelError.unsupportedTranscriptContent(
       .init(unsupportedContent: [], debugDescription: "test"))
 
@@ -149,21 +125,15 @@ nonisolated struct MemoryComprehensionErrorMappingTests {
 
   // MARK: - SystemLanguageModel.Error, GeneratedContent.ParsingError (iOS 27+)
 
+  @available(iOS, introduced: 27, message: "requires iOS 27: this error type does not exist on 26.x")
   @Test func `System model assets unavailable maps to assetsUnavailable`() {
-    guard #available(iOS 27, *) else {
-      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
-      return
-    }
     let error = SystemLanguageModel.Error.assetsUnavailable(.init(debugDescription: "test"))
 
     #expect(MemoryComprehensionError(mapping: error) == .assetsUnavailable)
   }
 
+  @available(iOS, introduced: 27, message: "requires iOS 27: this error type does not exist on 26.x")
   @Test func `Generated content parsing error maps to decodingFailure`() {
-    guard #available(iOS 27, *) else {
-      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
-      return
-    }
     let error = GeneratedContent.ParsingError(rawContent: "test", debugDescription: "test")
 
     #expect(MemoryComprehensionError(mapping: error) == .decodingFailure)
@@ -191,11 +161,8 @@ nonisolated struct MemoryComprehensionErrorMappingTests {
     }
   }
 
+  @available(iOS, introduced: 27, message: "requires iOS 27: this error type does not exist on 26.x")
   @Test func `Model unsupported generation guide classifies as an own defect`() {
-    guard #available(iOS 27, *) else {
-      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
-      return
-    }
     let error = LanguageModelError.unsupportedGenerationGuide(
       .init(schemaName: nil, debugDescription: "test"))
 
@@ -205,11 +172,8 @@ nonisolated struct MemoryComprehensionErrorMappingTests {
     }
   }
 
+  @available(iOS, introduced: 27, message: "requires iOS 27: this error type does not exist on 26.x")
   @Test func `Session concurrent requests classifies as an own defect`() {
-    guard #available(iOS 27, *) else {
-      Issue.record("este test requiere iOS 27, el simulador activo del proyecto ya lo es")
-      return
-    }
     let error = LanguageModelSession.Error.concurrentRequests
 
     guard case .ownDefect = MemoryComprehensionClassification(classifying: error) else {
