@@ -181,9 +181,11 @@ struct CaptureScreen: View {
 
   private func elementChip(_ element: ExtractedElement) -> some View {
     Label {
-      Text(element.name)
-        .chipElemento()
-        .foregroundStyle(Color.textoPrimario)
+      // color, simbolo y texto siempre juntos, tambien mientras lee
+      ViewThatFits(in: .horizontal) {
+        HStack(alignment: .firstTextBaseline, spacing: Spacing.espacio2) { chipTexts(element) }
+        VStack(alignment: .leading, spacing: Spacing.espacio1) { chipTexts(element) }
+      }
     } icon: {
       Image(systemName: ElementType(element.type).symbolName)
         .foregroundStyle(ElementType(element.type).color)
@@ -193,6 +195,16 @@ struct CaptureScreen: View {
       CaptureCopy.elementAppeared(
         name: element.name, type: ElementType(element.type), locale: interfaceLocale))
     .transition(.opacity)
+  }
+
+  @ViewBuilder
+  private func chipTexts(_ element: ExtractedElement) -> some View {
+    Text(element.name)
+      .chipElemento()
+      .foregroundStyle(Color.textoPrimario)
+    Text(ElementType(element.type).localizedName(locale: interfaceLocale))
+      .metadato()
+      .foregroundStyle(Color.textoSecundario)
   }
 
   // MARK: acciones — contrato 1, "guardar sin analizar" siempre visible
