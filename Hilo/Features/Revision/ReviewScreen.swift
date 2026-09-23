@@ -384,6 +384,7 @@ struct ReviewScreen: View {
     let id: String
     let itemID: ReviewItemID
     let itemName: String
+    let itemType: ElementType
     let candidate: ReviewBlocks.Doubtful.Candidate
   }
 
@@ -394,7 +395,7 @@ struct ReviewScreen: View {
       item.candidates.map { candidate in
         DoubtCard(
           id: "\(item.id.value)-\(candidate.id.value)", itemID: item.id, itemName: item.name,
-          candidate: candidate)
+          itemType: item.type, candidate: candidate)
       }
     }
   }
@@ -434,7 +435,7 @@ struct ReviewScreen: View {
         Button {
           reviewState.rejectDoubt(card.itemID)
         } label: {
-          Text("Someone else")
+          Text(ReviewCopy.doubtRejection(type: card.itemType, locale: interfaceLocale))
             .botonSecundario()
             .frame(maxWidth: .infinity, minHeight: Spacing.objetivoToqueMinimo)
         }

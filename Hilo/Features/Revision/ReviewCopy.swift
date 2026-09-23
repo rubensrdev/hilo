@@ -36,6 +36,15 @@ nonisolated enum ReviewCopy {
         "\(name), \(type.localizedName(locale: locale)), removed from this memory", locale: locale))
   }
 
+  // DEC-49: la respuesta de la duda dice que es otro de su mismo tipo
+  static func doubtRejection(type: ElementType, locale: Locale) -> String {
+    switch type {
+    case .person: String(localized: LocalizedStringResource("Someone else", locale: locale))
+    case .place: String(localized: LocalizedStringResource("Another place", locale: locale))
+    case .object: String(localized: LocalizedStringResource("Another object", locale: locale))
+    }
+  }
+
   // regla 4 del diseño: una conexion siempre enseña su motivo
   static func connectionMotive(names: [String], locale: Locale) -> String {
     String(

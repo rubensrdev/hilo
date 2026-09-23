@@ -79,6 +79,20 @@ nonisolated struct ReviewCopyTests {
         == "el reloj, Objeto, fuera de este recuerdo")
   }
 
+  // MARK: duda de identidad — la respuesta «no es el mismo» nombra el tipo (DEC-49)
+
+  @Test(arguments: [
+    (ElementType.person, "Someone else", "Otra persona"),
+    (ElementType.place, "Another place", "Otro lugar"),
+    (ElementType.object, "Another object", "Otro objeto"),
+  ])
+  func `Declining a doubt names the type of what it is, in both languages`(
+    type: ElementType, english: String, spanish: String
+  ) {
+    #expect(ReviewCopy.doubtRejection(type: type, locale: self.english) == english)
+    #expect(ReviewCopy.doubtRejection(type: type, locale: self.spanish) == spanish)
+  }
+
   // MARK: el momento de la conexion — su motivo y su anuncio
 
   @Test func `A connection motive lists its names in the interface language`() {
