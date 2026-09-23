@@ -35,7 +35,7 @@ nonisolated struct ReviewCopyTests {
   @Test func `Several first-time names in Spanish join with the Spanish conjunction`() {
     #expect(
       ReviewCopy.beginningBody(names: ["José", "la casa del pueblo", "el reloj"], locale: spanish)
-        == "Es la primera vez que aparecen José, la casa del pueblo y el reloj. El próximo recuerdo que comparta cualquiera de ellos se conectará con este."
+        == "Es la primera vez que aparecen José, la casa del pueblo y el reloj. El próximo recuerdo en el que vuelva a aparecer cualquiera se conectará con este."
     )
   }
 

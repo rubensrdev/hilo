@@ -560,7 +560,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "Lo mantiene separado del que ya conoces"
+            "value" : "Queda aparte de lo que ya conoces"
           }
         }
       }
@@ -584,7 +584,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "Lo deja fuera de este recuerdo. Puedes deshacerlo."
+            "value" : "Queda fuera de este recuerdo. Se puede deshacer."
           }
         }
       }
@@ -951,7 +951,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "Es la primera vez que aparecen %@. El próximo recuerdo que comparta cualquiera de ellos se conectará con este."
+            "value" : "Es la primera vez que aparecen %@. El próximo recuerdo en el que vuelva a aparecer cualquiera se conectará con este."
           }
         }
       }
