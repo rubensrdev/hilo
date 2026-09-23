@@ -476,6 +476,7 @@ struct ReviewScreen: View {
       .metadato()
       .foregroundStyle(Color.textoSecundario)
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
     .padding(Spacing.espacio3)
     .background(Color.superficieHundida)
     .clipShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
