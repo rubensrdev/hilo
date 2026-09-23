@@ -11,7 +11,7 @@ nonisolated struct ReviewState: Sendable {
     candidates: [ReviewCandidate], extractedDateText: String?, extractedDeducedYear: Int?,
     knownElements: [Element], appearances: [Appearance], excludingMemoryID: MemoryID? = nil
   ) {
-    self.items = candidates.map { candidate in
+    self.items = Self.firstMentions(of: candidates).map { candidate in
       ReviewItem(
         id: ReviewItemID(), originalName: candidate.name, type: candidate.type,
         role: candidate.role,
@@ -25,6 +25,14 @@ nonisolated struct ReviewState: Sendable {
     self.excludingMemoryID = excludingMemoryID
     self.extractedDateText = extractedDateText
     self.extractedDeducedYear = extractedDeducedYear
+  }
+
+  // DEC-50: dos menciones del mismo elemento en un recuerdo son una fila; manda el papel de la primera
+  private static func firstMentions(of candidates: [ReviewCandidate]) -> [ReviewCandidate] {
+    var seen: Set<String> = []
+    return candidates.filter { candidate in
+      seen.insert("\(candidate.type.rawValue)|\(CanonicalName.of(candidate.name))").inserted
+    }
   }
 
   // MARK: categoria efectiva — de que bloque es un item ahora mismo, no en el momento de extraerlo

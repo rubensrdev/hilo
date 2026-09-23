@@ -163,4 +163,50 @@ nonisolated struct ReviewStateBlocksTests {
     #expect(onlyCandidate.name == jose.displayName)
     #expect(onlyCandidate.otherMemoriesCount == 2)
   }
+
+  // DEC-50 (cierra DEC-36): la misma mencion dos veces en un recuerdo es un solo elemento, una sola fila
+  @Test func `Two mentions of a known element in one memory give one known row with the first role`()
+    throws
+  {
+    let cadiz = try #require(Element(displayName: "Cádiz", type: .place))
+    let state = ReviewState(
+      extracted: ExtractedMemory(
+        elements: [
+          ExtractedElement(name: "Cádiz", type: .place, role: "donde vivía mi tía"),
+          ExtractedElement(name: "cadiz", type: .place, role: "donde aprendí a coser"),
+        ],
+        dateText: nil, deducedYear: nil),
+      knownElements: [cadiz], appearances: [])
+
+    #expect(state.blocks.known.map(\.name) == ["Cádiz"])
+    let outcome = state.outcome(memoryID: MemoryID(), dateTextAtSave: "")
+    #expect(
+      outcome.confirmedAppearances == [
+        .init(elementID: cadiz.id, role: ElementRole(text: "donde vivía mi tía"))
+      ])
+  }
+
+  @Test func `Two mentions that raise the same identity doubt give one doubtful row with the first role`()
+    throws
+  {
+    let singer = try #require(Element(displayName: "máquina Singer", type: .object))
+    let state = ReviewState(
+      extracted: ExtractedMemory(
+        elements: [
+          ExtractedElement(name: "Singer", type: .object, role: "la de la abuela"),
+          ExtractedElement(name: "Singer", type: .object, role: "con la que cosía"),
+        ],
+        dateText: nil, deducedYear: nil),
+      knownElements: [singer], appearances: [])
+
+    #expect(state.blocks.doubtful.map(\.name) == ["Singer"])
+    let doubt = try #require(state.blocks.doubtful.first)
+    var answered = state
+    answered.confirmDoubt(doubt.id, as: singer.id)
+    let outcome = answered.outcome(memoryID: MemoryID(), dateTextAtSave: "")
+    #expect(
+      outcome.confirmedAppearances == [
+        .init(elementID: singer.id, role: ElementRole(text: "la de la abuela"))
+      ])
+  }
 }
