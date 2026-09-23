@@ -37,7 +37,7 @@ nonisolated struct ReviewState: Sendable {
 
   // MARK: categoria efectiva — de que bloque es un item ahora mismo, no en el momento de extraerlo
 
-  private enum Category { case new, known, doubtful, removed }
+  private nonisolated enum Category { case new, known, doubtful, removed }
 
   private func category(of item: ReviewItem) -> Category {
     guard !item.isRemoved else { return .removed }
@@ -303,13 +303,13 @@ extension ElementType {
 
 // contrato 2 + §9.2: los cuatro bloques de la revision, cada uno solo si tiene contenido
 nonisolated struct ReviewBlocks: Sendable, Equatable {
-  struct Understood: Sendable, Equatable, Identifiable {
+  nonisolated struct Understood: Sendable, Equatable, Identifiable {
     let id: ReviewItemID
     let name: String
     let type: ElementType
   }
 
-  struct Known: Sendable, Equatable, Identifiable {
+  nonisolated struct Known: Sendable, Equatable, Identifiable {
     let id: ReviewItemID
     let elementIDs: Set<ElementID>
     let name: String
@@ -317,9 +317,9 @@ nonisolated struct ReviewBlocks: Sendable, Equatable {
     let otherMemoriesCount: Int  // DEC-22
   }
 
-  struct Doubtful: Sendable, Equatable, Identifiable {
+  nonisolated struct Doubtful: Sendable, Equatable, Identifiable {
     // el nombre y el recuento ya salen del dominio (DEC-22): la vista no repite la regla
-    struct Candidate: Sendable, Equatable, Identifiable {
+    nonisolated struct Candidate: Sendable, Equatable, Identifiable {
       let id: ElementID
       let name: String
       let otherMemoriesCount: Int
@@ -345,22 +345,22 @@ nonisolated struct ReviewBlocks: Sendable, Equatable {
 
 // contrato 3+5 (regla 3, regla 7, DEC-40): lo que se guarda al confirmar la revision, sin persistir nada
 nonisolated struct ReviewOutcome: Sendable, Equatable {
-  struct NewElement: Sendable, Equatable {
+  nonisolated struct NewElement: Sendable, Equatable {
     let element: Element
     let role: ElementRole?
   }
 
-  struct ConfirmedAppearance: Sendable, Equatable {
+  nonisolated struct ConfirmedAppearance: Sendable, Equatable {
     let elementID: ElementID
     let role: ElementRole?
   }
 
-  struct AliasToAdd: Sendable, Equatable {
+  nonisolated struct AliasToAdd: Sendable, Equatable {
     let elementID: ElementID
     let alias: String
   }
 
-  struct RenameToApply: Sendable, Equatable {
+  nonisolated struct RenameToApply: Sendable, Equatable {
     let elementID: ElementID
     let newName: String
   }
