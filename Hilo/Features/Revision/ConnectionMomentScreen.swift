@@ -109,9 +109,10 @@ struct ConnectionMomentScreen: View {
       Label {
         Text(
           ReviewCopy.connectionMotive(
-            names: row.motiveNames, locale: interfaceLocale))
-          .motivoConexion()
-          .foregroundStyle(Color.textoSecundario)
+            names: row.motiveNames, locale: interfaceLocale)
+        )
+        .motivoConexion()
+        .foregroundStyle(Color.textoSecundario)
       } icon: {
         Image(systemName: "link")
           .foregroundStyle(Color.acentoHilo)
@@ -137,6 +138,8 @@ struct ConnectionMomentScreen: View {
     .buttonStyle(.bordered)
     .accessibilityIdentifier("moment.done")
     .padding(.horizontal, Spacing.margenPantalla)
-    .padding(.bottom, Spacing.espacio2)
+    .padding(.vertical, Spacing.espacio2)
+    // el relleno de .bordered es translucido: sin fondo opaco se leia el motivo de debajo
+    .background(Color.fondo)
   }
 }
