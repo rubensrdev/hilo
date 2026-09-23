@@ -31,31 +31,54 @@ nonisolated struct ConnectionMomentTests {
       ])
   }
 
-  @Test
-  func
-    `Two shared elements with one memory give one row with both motives in the saved memory's order`()
-    throws
-  {
+  // decision de Rubén (F4.6): el mismo orden que «Lo que ha entendido», nunca el del relato
+  @Test func `The motives of one row go by type, people then places then objects`() throws {
     let earlier = try #require(
-      Memory(narrative: "José me enseñó fotos de Granada.", savedAt: Date()))
+      Memory(narrative: "José me enseñó el reloj en Granada.", savedAt: Date()))
     let saved = try #require(
-      Memory(narrative: "Granada, 1994. Se perdió José en los jardines.", savedAt: Date()))
+      Memory(narrative: "El reloj, Granada, 1994. Se perdió José en los jardines.", savedAt: Date()))
     let jose = try #require(Element(displayName: "José", type: .person))
     let granada = try #require(Element(displayName: "Granada", type: .place))
+    let reloj = try #require(Element(displayName: "el reloj", type: .object))
+    let shared = [reloj, granada, jose]
 
     let moment = try #require(
       ConnectionMoment(
-        savedMemoryID: saved.id, memories: [earlier, saved], elements: [jose, granada],
-        appearances: [
-          Appearance(memoryID: earlier.id, elementID: jose.id, role: nil, status: .confirmedByUser),
-          Appearance(
-            memoryID: earlier.id, elementID: granada.id, role: nil, status: .confirmedByUser),
-          Appearance(
-            memoryID: saved.id, elementID: granada.id, role: nil, status: .confirmedByUser),
-          Appearance(memoryID: saved.id, elementID: jose.id, role: nil, status: .confirmedByUser),
-        ]))
+        savedMemoryID: saved.id, memories: [earlier, saved], elements: shared,
+        appearances: shared.flatMap { element in
+          [saved, earlier].map {
+            Appearance(
+              memoryID: $0.id, elementID: element.id, role: nil, status: .confirmedByUser)
+          }
+        }))
 
-    #expect(moment.rows.map(\.motiveNames) == [["Granada", "José"]])
+    #expect(moment.rows.map(\.motiveNames) == [["José", "Granada", "el reloj"]])
+  }
+
+  @Test func `Rows connected by a person, a place and an object go in that order`() throws {
+    let byObject = try #require(Memory(narrative: "El reloj en la vitrina.", savedAt: Date()))
+    let byPlace = try #require(Memory(narrative: "Una tarde en Granada.", savedAt: Date()))
+    let byPerson = try #require(Memory(narrative: "José y las naranjas.", savedAt: Date()))
+    let saved = try #require(
+      Memory(narrative: "El reloj, Granada y José, en ese orden.", savedAt: Date()))
+    let jose = try #require(Element(displayName: "José", type: .person))
+    let granada = try #require(Element(displayName: "Granada", type: .place))
+    let reloj = try #require(Element(displayName: "el reloj", type: .object))
+    let links: [(Memory, Element)] = [(byObject, reloj), (byPlace, granada), (byPerson, jose)]
+
+    let moment = try #require(
+      ConnectionMoment(
+        savedMemoryID: saved.id, memories: [byObject, byPlace, byPerson, saved],
+        elements: [reloj, granada, jose],
+        appearances: links.flatMap { memory, element in
+          [saved, memory].map {
+            Appearance(
+              memoryID: $0.id, elementID: element.id, role: nil, status: .confirmedByUser)
+          }
+        }))
+
+    #expect(moment.rows.map(\.memoryID) == [byPerson.id, byPlace.id, byObject.id])
+    #expect(moment.rows.map(\.motiveNames) == [["José"], ["Granada"], ["el reloj"]])
   }
 
   @Test func `A saved memory with no appearances has no connection moment`() throws {

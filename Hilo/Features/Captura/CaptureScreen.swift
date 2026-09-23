@@ -28,8 +28,27 @@ struct CaptureScreen: View {
       }
       .navigationTitle("Tell a memory")
       .navigationBarTitleDisplayMode(.inline)
+      // en la barra: con un relato largo siempre esta a la vista, y las fichas no lo desplazan
+      .toolbar {
+        if state.phase == .comprehending {
+          ToolbarItem(placement: .cancellationAction) {
+            Button("Cancel") { state.cancel() }
+          }
+        }
+      }
     }
     .onDisappear { state.cancel() }
+    // bloqueante y con tono de error: aqui no hay ningun recuerdo guardado detras
+    .alert(
+      "Your memory couldn't be saved",
+      isPresented: Binding(
+        get: { state.saveWithoutAnalyzingFailed },
+        set: { isPresented in if !isPresented { state.acknowledgeSaveFailure() } })
+    ) {
+      Button("OK") {}
+    } message: {
+      Text("Nothing has been saved. Your text and photo are still here — you can try again.")
+    }
     .onChange(of: photosPickerItem) { _, newValue in
       Task { state.photoData = try? await newValue?.loadTransferable(type: Data.self) }
     }

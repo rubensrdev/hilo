@@ -110,6 +110,53 @@ struct ReviewCoordinatorTests {
     #expect(narrative == "Otro relato.")
   }
 
+  // decision de Rubén (F4.6): tras «Sí, es …» se ve el nombre del elemento, la mencion queda como alias
+  @Test
+  func
+    `After confirming that abuelo José is José, the connection row says José and keeps the alias`()
+    async throws
+  {
+    let actor = PersistenceActor(modelContainer: try PersistenceContainer.make(inMemory: true))
+    let earlier = try #require(Memory(narrative: "José trajo naranjas.", savedAt: Date()))
+    _ = try await actor.save(earlier, photoData: nil, isAnalyzed: true, isExample: false)
+    let jose = try #require(Element(displayName: "José", type: .person))
+    _ = try await actor.save(jose)
+    try await actor.save(
+      Appearance(memoryID: earlier.id, elementID: jose.id, role: nil, status: .confirmedByUser))
+    let coordinator = ReviewCoordinator(persistenceActor: actor)
+    let capture = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(
+          partials: [],
+          final: ExtractedMemory(
+            elements: [ExtractedElement(name: "abuelo José", type: .person, role: "mi abuelo")],
+            dateText: nil, deducedYear: nil))),
+      persistenceActor: actor, interfaceLanguage: "es"
+    ) { extracted, narrative, _, savedMemoryID in
+      coordinator.present(extracted: extracted, narrative: narrative, savedMemoryID: savedMemoryID)
+    }
+    capture.onReviewSaved = { coordinator.showConnections(savedMemoryID: $0) }
+    capture.narrative = "El abuelo José nos llevó al río."
+
+    capture.understandAndSave()
+    await waitUntil { coordinator.presentation != nil }
+    guard case .review(var reviewState, _) = coordinator.presentation?.stage else {
+      Issue.record("la hoja deberia abrir en la revision")
+      return
+    }
+    let doubt = try #require(reviewState.blocks.doubtful.first)
+    reviewState.confirmDoubt(doubt.id, as: jose.id)
+    capture.reviewConfirmed(reviewState, dateTextAtSave: "")
+    await waitUntil { Self.moment(in: coordinator) != nil }
+
+    let moment = try #require(Self.moment(in: coordinator))
+    #expect(moment.rows.map(\.motiveNames) == [["José"]])
+    #expect(moment.narrative == "El abuelo José nos llevó al río.")
+    let stored = try #require(try await actor.fetchElements().first { $0.id == jose.id })
+    #expect(stored.displayName == "José")
+    #expect(stored.aliases.contains("abuelo José"))
+  }
+
   // MARK: fixtures
 
   private static let luciaExtraction = ExtractedMemory(

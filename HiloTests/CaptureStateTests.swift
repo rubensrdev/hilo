@@ -925,6 +925,133 @@ struct CaptureStateTests {
     #expect(state.narrative == "La tarde que Diego aprendió a nadar.")
   }
 
+  // MARK: cancelar al comprender — sin tiempo limite, el usuario decide
+
+  @Test
+  func
+    `Cancelling while comprehending returns at once with narrative and photo intact and nothing stored`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let photo = try PhotoStripperTests.jpegWithGPS()
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(
+          partials: [Self.luciaExtraction], final: Self.luciaExtraction,
+          delayBetweenPartials: .seconds(30))),
+      persistenceActor: PersistenceActor(modelContainer: container), interfaceLanguage: "es"
+    ) { _, _, _, _ in }
+    state.narrative = "Lucía en la playa de Laredo."
+    state.photoData = photo
+
+    state.understandAndSave()
+    await waitUntil { state.extractedSoFar != nil }
+    state.cancel()
+
+    // al instante: sin esperar a que el modelo responda
+    #expect(state.phase == .capturing)
+    #expect(state.narrative == "Lucía en la playa de Laredo.")
+    #expect(state.photoData == photo)
+    #expect(state.extractedSoFar == nil)
+    #expect(state.canUnderstand)
+    #expect(try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).isEmpty)
+  }
+
+  // DEC-45: cancelar un reintento vuelve al error, con el recuerdo ya guardado al que apunta
+  @Test func `Cancelling a retry returns to the error with the same saved memory`() async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let state = CaptureState(
+      comprehender: SequencedComprehender(
+        scripts: [
+          .fails(.noResponse),
+          .succeeds(
+            partials: [Self.luciaExtraction], final: Self.luciaExtraction,
+            delayBetweenPartials: .seconds(30)),
+        ]),
+      persistenceActor: PersistenceActor(modelContainer: container), interfaceLanguage: "es"
+    ) { _, _, _, _ in }
+    state.narrative = "Lucía en la playa de Laredo."
+    state.understandAndSave()
+    await waitUntil { state.phase != .comprehending }
+    let savedID = try #require(state.savedMemoryID)
+
+    state.retry()
+    await waitUntil { state.extractedSoFar != nil }
+    state.cancel()
+
+    #expect(state.phase == .notAnalyzed(.generic))
+    #expect(state.savedMemoryID == savedID)
+    #expect(try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).count == 1)
+  }
+
+  @Test func `A comprehension cancelled by the user never opens the review afterwards`()
+    async throws
+  {
+    var understoodCallCount = 0
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(
+          partials: [Self.luciaExtraction], final: Self.luciaExtraction,
+          delayBetweenPartials: .milliseconds(50))),
+      persistenceActor: PersistenceActor(
+        modelContainer: try PersistenceContainer.make(inMemory: true)),
+      interfaceLanguage: "es"
+    ) { _, _, _, _ in understoodCallCount += 1 }
+    state.narrative = "Lucía en la playa de Laredo."
+
+    state.understandAndSave()
+    await waitUntil { state.extractedSoFar != nil }
+    state.cancel()
+    try await Task.sleep(for: .milliseconds(200))
+
+    #expect(understoodCallCount == 0)
+    #expect(state.phase == .capturing)
+  }
+
+  // MARK: fallo del guardado directo — aqui no hay recuerdo guardado detras, es un error de verdad
+
+  @Test
+  func
+    `A failed save without analyzing reports the failure, stores nothing and keeps text and photo`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(script: .fails(.noResponse)),
+      persistenceActor: PersistenceActor(modelContainer: container), interfaceLanguage: "es"
+    ) { _, _, _, _ in }
+    // una foto que no es una imagen: el actor lanza al quitarle los metadatos, antes de insertar
+    let brokenPhoto = Data("no es una imagen".utf8)
+    state.narrative = "Un paseo que prefiero guardar tal cual."
+    state.photoData = brokenPhoto
+
+    await state.saveWithoutAnalyzing()
+
+    #expect(state.saveWithoutAnalyzingFailed)
+    #expect(state.notice == nil)
+    #expect(state.phase == .capturing)
+    #expect(state.narrative == "Un paseo que prefiero guardar tal cual.")
+    #expect(state.photoData == brokenPhoto)
+    #expect(try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).isEmpty)
+  }
+
+  @Test func `Acknowledging the save failure keeps text and photo and allows saving again`()
+    async throws
+  {
+    let state = try Self.makeState(script: .fails(.noResponse))
+    let brokenPhoto = Data("no es una imagen".utf8)
+    state.narrative = "Un paseo que prefiero guardar tal cual."
+    state.photoData = brokenPhoto
+    await state.saveWithoutAnalyzing()
+
+    state.acknowledgeSaveFailure()
+
+    #expect(state.saveWithoutAnalyzingFailed == false)
+    #expect(state.narrative == "Un paseo que prefiero guardar tal cual.")
+    #expect(state.photoData == brokenPhoto)
+    #expect(state.canSaveWithoutAnalyzing)
+  }
+
   // MARK: fixtures
 
   private static let emptyExtraction = ExtractedMemory(

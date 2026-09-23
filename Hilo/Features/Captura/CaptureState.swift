@@ -19,6 +19,8 @@ final class CaptureState {
   private(set) var phase: Phase = .capturing
   private(set) var extractedSoFar: ExtractedMemory?
   private(set) var notice: ReviewNotice?
+  // aqui no hay recuerdo guardado detras: es un error de verdad, no un aviso (DEC-43 no aplica)
+  private(set) var saveWithoutAnalyzingFailed = false
   // DEC-45: una vez fijado por el guardado automatico del error, sigue apuntando al
   // mismo recuerdo hasta que la captura se vacia — asi el reintento actualiza
   // en vez de insertar
@@ -33,6 +35,7 @@ final class CaptureState {
   private let interfaceLanguage: String
   private let onUnderstood: (ExtractedMemory, String, Data?, MemoryID?) -> Void
   private var comprehensionTask: Task<Void, Never>?
+  @ObservationIgnored private var isSavingFailedNarrative = false
   private let logger = Logger(subsystem: "com.hilo.app", category: "captura")
 
   private enum ReviewSaveError: Error {
@@ -91,11 +94,20 @@ final class CaptureState {
         "No se pudo guardar sin analizar: \(String(describing: type(of: error)), privacy: .public)"
       )
       phase = .capturing
+      saveWithoutAnalyzingFailed = true
     }
   }
 
+  func acknowledgeSaveFailure() {
+    saveWithoutAnalyzingFailed = false
+  }
+
+  // sin tiempo limite: el usuario decide cuando parar, y vuelve al instante a donde estaba
   func cancel() {
     comprehensionTask?.cancel()
+    guard phase == .comprehending, !isSavingFailedNarrative else { return }
+    phase = phaseBeforeComprehension
+    extractedSoFar = nil
   }
 
   // DEC-47: el guard lo hace inocuo si onDismiss llega despues de guardar
@@ -157,6 +169,8 @@ final class CaptureState {
   }
 
   private func runComprehension() {
+    // un doble toque no deja una comprension huerfana que cancelar ya no podria parar
+    guard phase != .comprehending else { return }
     phaseBeforeComprehension = phase
     phase = .comprehending
     notice = nil
@@ -167,7 +181,11 @@ final class CaptureState {
       guard let self else { return }
       let outcome = await self.comprehender.outcome(
         narrative: text, interfaceLanguage: language
-      ) { self.extractedSoFar = $0 }
+      ) { partial in
+        if !Task.isCancelled { self.extractedSoFar = partial }
+      }
+      // cancel() ya ha devuelto la captura: un resultado tardio no abre la revision
+      guard !Task.isCancelled else { return }
       await self.handle(outcome)
     }
   }
@@ -178,16 +196,17 @@ final class CaptureState {
       phase = .reviewing
       onUnderstood(extracted, narrative, photoData, savedMemoryID)
     case .notAnalyzed(let text, let reason):
-      // contrato 1 + DEC-43: el texto ya esta a salvo en cuanto aparece el estado de error.
-      // este guardado se completa a proposito aunque cancel() llegue mientras esta en vuelo:
-      // el texto del usuario nunca se pierde, no hay nada que deshacer aqui.
+      // contrato 1 + DEC-43: con el texto guardandose, cancelar ya no puede devolver al formulario
+      isSavingFailedNarrative = true
       // DEC-45: en el reintento el relato ya esta guardado, no se inserta otra copia
       if savedMemoryID == nil, let id = try? await persist(narrative: text) {
         savedMemoryID = id
       }
+      isSavingFailedNarrative = false
       phase = .notAnalyzed(reason)
     case .cancelled:
-      phase = .capturing
+      phase = phaseBeforeComprehension
+      extractedSoFar = nil
     }
   }
 
