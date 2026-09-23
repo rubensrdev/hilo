@@ -4,7 +4,7 @@
 - **Estado**: Draft
 - **Origen**: Idea v2.3 §7.5, §8.3, §9.1, §9.2, §10.2 (S2 y S3), §13 (reglas 3, 5, 6, 7, 9, 10), §15
 - **Capacidades**: 1, 2, 3, 4
-- **Decisiones**: DEC-12, DEC-16, DEC-17, DEC-18, DEC-19, DEC-22, DEC-26, DEC-27, DEC-35, DEC-37, DEC-40, DEC-41, DEC-42, DEC-43, DEC-44, DEC-45, DEC-46
+- **Decisiones**: DEC-12, DEC-16, DEC-17, DEC-18, DEC-19, DEC-22, DEC-26, DEC-27, DEC-35, DEC-37, DEC-40, DEC-41, DEC-42, DEC-43, DEC-44, DEC-45, DEC-46, DEC-47
 - **Depende de**: F1, F2, F3
 
 ## Objetivo
@@ -40,7 +40,7 @@ Las dos pantallas donde ocurre el producto: contar un recuerdo y validar lo ente
 | reglas 5, 6 y 7 · unir, rechazar y confirmar identidades | Contratos 3 y 4 |
 | reglas 9 y 10 · alcance de quitar y de renombrar | Contrato 4 |
 | regla 3 · nada entra sin confirmación | Contrato 4 (DEC-40) |
-| §15 · el texto nunca se pierde | Contratos 1 y 5 |
+| §15 · el texto nunca se pierde | Contratos 1, 2 y 5 |
 | DEC-17 · deshacer al quitar | Contrato 4 |
 | DEC-22 · «en N recuerdos» no cuenta el actual | Contratos 2, 4 y 5 |
 | DEC-16 y DEC-18 · comprender más tarde y reintentar | Contrato 5 (DEC-45) |
@@ -67,6 +67,7 @@ Una sola superficie con cuatro bloques, y **cada bloque aparece solo si tiene co
 4. **La fecha entendida**, editable como texto.
 
 - **El camino feliz es una sola confirmación.** Guardar está siempre disponible: ninguna duda bloquea el guardado.
+- **Cerrar la revisión sin guardar**, deslizando la hoja o cancelando, devuelve a la captura con el relato y la foto intactos, y no persiste nada (DEC-47). Guardar deja la captura lista para un recuerdo nuevo.
 - **Sin conexiones, la pantalla se enmarca como el comienzo**, nunca como un fallo. El estado se recalcula en vivo: si el usuario rechaza todos los reconocimientos, la pantalla pasa a ser el comienzo.
 - Sin nada reconocido, el recuerdo se guarda igual, y la pantalla no dice que ya está guardado antes de guardar.
 - **La fecha y su año (DEC-44).** El año deducido solo se guarda si el texto de la fecha al guardar, sin espacios en los extremos, es idéntico al que devolvió la comprensión:
@@ -129,6 +130,7 @@ Una sola superficie con cuatro bloques, y **cada bloque aparece solo si tiene co
 - **Dado** un error genérico de comprensión, **cuando** ocurre, **entonces** el relato está guardado sin analizar y se ofrece reintentar.
 - **Dado** un desbordamiento de contexto o un idioma no soportado, **cuando** ocurre, **entonces** el relato está guardado sin analizar y no se ofrece reintentar.
 - **Dado** un recuerdo guardado sin analizar, **cuando** se comprende más tarde y se guarda, **entonces** es el mismo recuerdo, con el mismo `savedAt` y la misma foto, y analizado.
+- **Dado** una revisión abierta, **cuando** se cierra sin guardar, **entonces** la captura muestra el relato y la foto intactos, con la acción principal disponible, y se puede volver a comprender.
 
 ## Criterios de aceptación
 
@@ -136,6 +138,7 @@ Una sola superficie con cuatro bloques, y **cada bloque aparece solo si tiene co
 - [ ] El estado de la revisión se calcula a partir de lo extraído y lo existente: qué bloques aparecen y con qué contenido, y cuándo es el comienzo.
 - [ ] Rechazar, confirmar, quitar, deshacer y renombrar producen el conjunto de apariciones esperado.
 - [ ] El renombrado solo se aplica al guardar; cancelar no deja rastro.
+- [ ] Cerrar la revisión sin guardar devuelve la captura a un estado válido con el relato intacto, y no persiste nada; guardar la deja vacía.
 - [ ] La colisión de un elemento existente se bloquea y nombra el elemento en conflicto; la de un elemento nuevo lo convierte en reconocimiento.
 - [ ] La regla de la fecha: sin cambiar, editado, escrito a mano y borrado.
 - [ ] La invariante: un recuerdo sin analizar no tiene apariciones.
@@ -178,6 +181,7 @@ Una sola superficie con cuatro bloques, y **cada bloque aparece solo si tiene co
 | Fecha añadida a mano sin nada reconocido | Aceptado, dentro de una regla única para toda fecha editada (DEC-44) |
 | Aviso previo a renombrar: diálogo o bloque | Alert del sistema, con renombrado pendiente hasta guardar (DEC-40). Colisiones: DEC-26 y DEC-41 |
 | Alcance de «comprender más tarde» | Parte siempre de cero por invariante; actualiza el mismo recuerdo (DEC-45) |
+| Salida de la revisión sin guardar | Vuelve a la captura con relato y foto intactos, sin persistir nada (DEC-47) |
 
 ## Anexo · Textos provisionales (DEC-46)
 
