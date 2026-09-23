@@ -198,11 +198,22 @@ final class CaptureState {
     case .notAnalyzed(let text, let reason):
       // contrato 1 + DEC-43: con el texto guardandose, cancelar ya no puede devolver al formulario
       isSavingFailedNarrative = true
+      defer { isSavingFailedNarrative = false }
       // DEC-45: en el reintento el relato ya esta guardado, no se inserta otra copia
-      if savedMemoryID == nil, let id = try? await persist(narrative: text) {
-        savedMemoryID = id
+      if savedMemoryID == nil {
+        do {
+          savedMemoryID = try await persist(narrative: text)
+        } catch {
+          // sin recuerdo guardado detras no se puede decir «guardado»: mismo error que el guardado directo
+          logger.error(
+            "No se pudo guardar el relato tras el error de comprension: \(String(describing: type(of: error)), privacy: .public)"
+          )
+          phase = .capturing
+          extractedSoFar = nil
+          saveWithoutAnalyzingFailed = true
+          return
+        }
       }
-      isSavingFailedNarrative = false
       phase = .notAnalyzed(reason)
     case .cancelled:
       phase = phaseBeforeComprehension

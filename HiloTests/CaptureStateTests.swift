@@ -1035,6 +1035,34 @@ struct CaptureStateTests {
     #expect(try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).isEmpty)
   }
 
+  @Test(arguments: [MemoryComprehensionError.noResponse, .contextOverflow])
+  func
+    `A failed comprehension whose automatic save also fails reports the save failure instead of claiming it was saved`(
+      error: MemoryComprehensionError
+    ) async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(script: .fails(error)),
+      persistenceActor: PersistenceActor(modelContainer: container), interfaceLanguage: "es"
+    ) { _, _, _, _ in }
+    // la foto rota hace lanzar el guardado automatico del error, igual que el directo
+    let brokenPhoto = Data("no es una imagen".utf8)
+    state.narrative = "Un relato que el modelo no pudo analizar."
+    state.photoData = brokenPhoto
+
+    state.understandAndSave()
+    await waitUntil { state.phase != .comprehending }
+
+    #expect(state.saveWithoutAnalyzingFailed)
+    #expect(state.phase == .capturing)
+    #expect(state.savedMemoryID == nil)
+    #expect(state.extractedSoFar == nil)
+    #expect(state.narrative == "Un relato que el modelo no pudo analizar.")
+    #expect(state.photoData == brokenPhoto)
+    #expect(try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).isEmpty)
+  }
+
   @Test func `Acknowledging the save failure keeps text and photo and allows saving again`()
     async throws
   {
