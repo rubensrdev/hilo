@@ -1,4 +1,5 @@
 #if DEBUG
+  import ImageIO
   import SwiftUI
 
   // solo previews: cada estado se alcanza por el camino real de CaptureState, sin abrir setters
@@ -14,13 +15,24 @@
       }
     }
 
-    static let photoData: Data = UIGraphicsImageRenderer(size: CGSize(width: 600, height: 400))
-      .pngData { context in
-        UIColor.systemTeal.setFill()
-        context.fill(CGRect(x: 0, y: 0, width: 600, height: 400))
-        UIColor.systemYellow.setFill()
-        context.cgContext.fillEllipse(in: CGRect(x: 380, y: 60, width: 140, height: 140))
-      }
+    // ADR-000 §4: nunca UIKit, tampoco en DEBUG; un PNG dibujado con Core Graphics
+    static let photoData: Data = {
+      guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
+        let context = CGContext(
+          data: nil, width: 600, height: 400, bitsPerComponent: 8, bytesPerRow: 0,
+          space: colorSpace, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)
+      else { return Data() }
+      context.setFillColor(red: 0.19, green: 0.69, blue: 0.78, alpha: 1)
+      context.fill(CGRect(x: 0, y: 0, width: 600, height: 400))
+      context.setFillColor(red: 1, green: 0.8, blue: 0, alpha: 1)
+      context.fillEllipse(in: CGRect(x: 380, y: 200, width: 140, height: 140))
+      let output = NSMutableData()
+      guard let image = context.makeImage(),
+        let destination = CGImageDestinationCreateWithData(output, "public.png" as CFString, 1, nil)
+      else { return Data() }
+      CGImageDestinationAddImage(destination, image, nil)
+      return CGImageDestinationFinalize(destination) ? output as Data : Data()
+    }()
 
     static let extracted = ExtractedMemory(
       elements: [
