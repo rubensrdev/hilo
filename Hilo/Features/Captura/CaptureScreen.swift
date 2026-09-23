@@ -98,7 +98,7 @@ struct CaptureScreen: View {
       TextEditor(text: $state.narrative)
         .relato()
         .scrollContentBackground(.hidden)
-        .frame(minHeight: 160)
+        .frame(minHeight: Spacing.altoMinimoCampoCaptura)
         .padding(Spacing.espacio2)
         .accessibilityLabel("Your memory")
         .accessibilityIdentifier("capture.narrative")
@@ -121,13 +121,13 @@ struct CaptureScreen: View {
   private var photoSection: some View {
     if let photoData = state.photoData,
       let thumbnail = PhotoThumbnail.image(
-        from: photoData, maxPixelSize: Int((120 * Spacing.proporcionFotoTarjeta * displayScale).rounded(.up)))
+        from: photoData, maxPixelSize: Int((Spacing.altoFotoCaptura * Spacing.proporcionFotoTarjeta * displayScale).rounded(.up)))
     {
       HStack(alignment: .top, spacing: Spacing.espacio3) {
         // el hueco fija el tamaño visible; la foto lo llena sin desbordar el marco de VoiceOver
         Color.clear
           .aspectRatio(Spacing.proporcionFotoTarjeta, contentMode: .fit)
-          .frame(height: 120)
+          .frame(height: Spacing.altoFotoCaptura)
           .overlay {
             Image(decorative: thumbnail, scale: displayScale)
               .resizable()
