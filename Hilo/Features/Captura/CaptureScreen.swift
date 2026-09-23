@@ -33,6 +33,8 @@ struct CaptureScreen: View {
         if state.phase == .comprehending {
           ToolbarItem(placement: .cancellationAction) {
             Button("Cancel") { state.cancel() }
+              .accessibilityHint("Stops reading. Your text and photo stay here.")
+              .accessibilityIdentifier("capture.cancel")
           }
         }
       }
@@ -98,6 +100,7 @@ struct CaptureScreen: View {
         .frame(minHeight: 160)
         .padding(Spacing.espacio2)
         .accessibilityLabel("Your memory")
+        .accessibilityIdentifier("capture.narrative")
       if state.narrative.isEmpty {
         Text(Self.placeholder(locale: interfaceLocale))
           .relato()
@@ -117,12 +120,21 @@ struct CaptureScreen: View {
   private var photoSection: some View {
     if let photoData = state.photoData, let uiImage = UIImage(data: photoData) {
       HStack(alignment: .top, spacing: Spacing.espacio3) {
-        Image(uiImage: uiImage)
-          .resizable()
-          .aspectRatio(3 / 2, contentMode: .fill)
+        // el hueco fija el tamaño visible; la foto lo llena sin desbordar el marco de VoiceOver
+        Color.clear
+          .aspectRatio(3 / 2, contentMode: .fit)
           .frame(height: 120)
+          .overlay {
+            Image(uiImage: uiImage)
+              .resizable()
+              .scaledToFill()
+          }
           .clipShape(RoundedRectangle(cornerRadius: Spacing.radioFoto, style: .continuous))
-          .accessibilityHidden(true)
+          // no es decorativa: el usuario tiene que saber que hay foto
+          .accessibilityElement(children: .ignore)
+          .accessibilityLabel("Attached photo")
+          .accessibilityAddTraits(.isImage)
+          .accessibilityIdentifier("capture.photo")
         Spacer()
         Button {
           state.photoData = nil
@@ -130,25 +142,19 @@ struct CaptureScreen: View {
         } label: {
           Image(systemName: "xmark")
             .frame(minWidth: Spacing.objetivoToqueMinimo, minHeight: Spacing.objetivoToqueMinimo)
+            .contentShape(Rectangle())
         }
         .accessibilityLabel("Remove photo")
+        .accessibilityIdentifier("capture.removePhoto")
         .disabled(state.phase != .capturing)
       }
     } else {
       PhotosPicker(selection: $photosPickerItem, matching: .images) {
-        addPhotoLabel
+        AddPhotoLabel()
       }
-      .frame(minHeight: Spacing.objetivoToqueMinimo, alignment: .leading)
+      .accessibilityIdentifier("capture.addPhoto")
       .disabled(state.phase != .capturing)
     }
-  }
-
-  // nonisolated: el init de PhotosPicker es nonisolated y su label corre fuera del
-  // main actor, asi que no puede leer state.botonSecundario() (MainActor); font(.body)
-  // es el mismo valor que boton-secundario en tokens.md §2.2, aplicado aqui a mano
-  private nonisolated var addPhotoLabel: some View {
-    Label("Add a photo", systemImage: "photo")
-      .font(.body)
   }
 
   // MARK: comprendiendo — mov-aparicion-elemento (tokens.md §5)
@@ -194,23 +200,25 @@ struct CaptureScreen: View {
     } label: {
       Text("Understand & save")
         .botonPrincipal()
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, minHeight: Spacing.objetivoToqueMinimo)
     }
     .buttonStyle(.borderedProminent)
     .tint(Color.acentoHilo)
     .foregroundStyle(Color.textoSobreAcento)
     .disabled(!state.canUnderstand)
-    .frame(minHeight: Spacing.objetivoToqueMinimo)
+    .accessibilityIdentifier("capture.understand")
 
     Button {
       Task { await state.saveWithoutAnalyzing() }
     } label: {
       Text("Save without analyzing")
         .botonSecundario()
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, minHeight: Spacing.objetivoToqueMinimo)
+        .contentShape(Rectangle())
     }
     .disabled(!state.canSaveWithoutAnalyzing)
-    .frame(minHeight: Spacing.objetivoToqueMinimo)
+    .accessibilityHint("Saves your words without looking for people, places or objects")
+    .accessibilityIdentifier("capture.saveWithoutAnalyzing")
   }
 
   // MARK: error de comprension — DEC-43 (estado-aviso) + anexo DEC-46
@@ -228,11 +236,13 @@ struct CaptureScreen: View {
     } icon: {
       Image(systemName: "exclamationmark.triangle.fill")
         .foregroundStyle(Color.estadoAviso)
+        .accessibilityHidden(true)
     }
     .padding(Spacing.espacio3)
     .background(Color.superficieHundida)
     .clipShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
     .accessibilityElement(children: .combine)
+    .accessibilityIdentifier("capture.comprehensionNotice")
 
     switch notice.actions {
     case .retryOrLeave:
@@ -241,19 +251,31 @@ struct CaptureScreen: View {
       } label: {
         Text("Try reading it again")
           .botonPrincipal()
-          .frame(maxWidth: .infinity)
+          .frame(maxWidth: .infinity, minHeight: Spacing.objetivoToqueMinimo)
       }
       .buttonStyle(.borderedProminent)
       .tint(Color.acentoHilo)
       .foregroundStyle(Color.textoSobreAcento)
-      .frame(minHeight: Spacing.objetivoToqueMinimo)
+      .accessibilityIdentifier("capture.retry")
 
-      Button("Leave it as it is") { state.acknowledgeNotAnalyzed() }
-        .frame(minHeight: Spacing.objetivoToqueMinimo)
+      acknowledgeButton("Leave it as it is")
     case .done:
-      Button("Done") { state.acknowledgeNotAnalyzed() }
-        .frame(minHeight: Spacing.objetivoToqueMinimo)
+      acknowledgeButton("Done")
     }
+  }
+
+  // DEC-18: el recuerdo ya esta guardado, estos botones solo vacian la captura
+  private func acknowledgeButton(_ title: LocalizedStringKey) -> some View {
+    Button {
+      state.acknowledgeNotAnalyzed()
+    } label: {
+      Text(title)
+        .botonSecundario()
+        .frame(maxWidth: .infinity, minHeight: Spacing.objetivoToqueMinimo)
+        .contentShape(Rectangle())
+    }
+    .accessibilityHint("Clears the form to tell another memory")
+    .accessibilityIdentifier("capture.acknowledge")
   }
 
   // MARK: aviso de la revision y confirmacion del guardado — punto 3 de F4.6
@@ -272,6 +294,7 @@ struct CaptureScreen: View {
     .background(Color.superficieHundida)
     .clipShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
     .accessibilityElement(children: .combine)
+    .accessibilityIdentifier("capture.notice")
   }
 
   @ViewBuilder
@@ -293,5 +316,15 @@ struct CaptureScreen: View {
     let language: ExampleMemoryLanguage =
       locale.language.languageCode?.identifier == "es" ? .spanish : .english
     return ExampleMemoryContent.seeds(for: language).first?.narrative ?? ""
+  }
+}
+
+// nonisolated: el label de PhotosPicker se construye fuera del main actor; su body si corre en el
+private nonisolated struct AddPhotoLabel: View {
+  var body: some View {
+    Label("Add a photo", systemImage: "photo")
+      .botonSecundario()
+      .frame(minHeight: Spacing.objetivoToqueMinimo, alignment: .leading)
+      .contentShape(Rectangle())
   }
 }

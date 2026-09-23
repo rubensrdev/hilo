@@ -60,6 +60,7 @@ struct ConnectionMomentScreen: View {
     .background(Color.superficieTarjeta)
     .clipShape(RoundedRectangle(cornerRadius: Spacing.radioTarjeta, style: .continuous))
     .accessibilityElement(children: .combine)
+    .accessibilityIdentifier("moment.memory")
   }
 
   private var connectionsSection: some View {
@@ -70,7 +71,9 @@ struct ConnectionMomentScreen: View {
       } icon: {
         Image(systemName: "link")
           .foregroundStyle(Color.acentoHilo)
+          .accessibilityHidden(true)
       }
+      .accessibilityAddTraits(.isHeader)
 
       HStack(spacing: 0) {
         // con Reducir movimiento el trazo ya esta completo: solo funde el conjunto
@@ -116,7 +119,10 @@ struct ConnectionMomentScreen: View {
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(Spacing.rellenoTarjeta)
-    .accessibilityElement(children: .combine)
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel(
+      ReviewCopy.connectionRowLabel(
+        names: row.motiveNames, narrative: row.narrative, locale: interfaceLocale))
   }
 
   // «Done» no es acento: la accion ya ha ocurrido
@@ -129,6 +135,7 @@ struct ConnectionMomentScreen: View {
         .frame(maxWidth: .infinity, minHeight: Spacing.objetivoToqueMinimo)
     }
     .buttonStyle(.bordered)
+    .accessibilityIdentifier("moment.done")
     .padding(.horizontal, Spacing.margenPantalla)
     .padding(.bottom, Spacing.espacio2)
   }

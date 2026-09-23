@@ -90,6 +90,18 @@ nonisolated struct ReviewCopyTests {
         == "Por José y el reloj")
   }
 
+  // guia de accesibilidad: una conexion anuncia su motivo antes que el recuerdo, que va entero
+  @Test func `A connection row announces its motive first and then the whole memory`() {
+    let narrative = "José trajo naranjas del pueblo. Fue el último verano."
+    #expect(
+      ReviewCopy.connectionRowLabel(names: ["José"], narrative: narrative, locale: english)
+        == "By José. José trajo naranjas del pueblo. Fue el último verano.")
+    #expect(
+      ReviewCopy.connectionRowLabel(
+        names: ["José", "el pueblo"], narrative: narrative, locale: spanish)
+        == "Por José y el pueblo. José trajo naranjas del pueblo. Fue el último verano.")
+  }
+
   @Test func `The connection moment announces the save and how many memories connect`() {
     #expect(
       ReviewCopy.momentAnnouncement(connectedCount: 1, locale: english)

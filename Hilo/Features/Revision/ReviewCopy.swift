@@ -46,6 +46,11 @@ nonisolated enum ReviewCopy {
       ))
   }
 
+  // el extracto se corta en pantalla, pero VoiceOver lee el recuerdo entero tras el motivo
+  static func connectionRowLabel(names: [String], narrative: String, locale: Locale) -> String {
+    "\(connectionMotive(names: names, locale: locale)). \(narrative)"
+  }
+
   static func momentAnnouncement(connectedCount: Int, locale: Locale) -> String {
     let saved = String(localized: LocalizedStringResource("Memory saved", locale: locale))
     let connected = String(

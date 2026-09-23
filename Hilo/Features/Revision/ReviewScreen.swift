@@ -172,6 +172,7 @@ struct ReviewScreen: View {
         .foregroundStyle(Color.textoSecundario)
       Text(narrative)
         .relato()
+        .accessibilityIdentifier("review.narrative")
     }
   }
 
@@ -181,6 +182,7 @@ struct ReviewScreen: View {
     VStack(alignment: .leading, spacing: Spacing.espacio1) {
       Text("No names this time")
         .tituloSeccion()
+        .accessibilityAddTraits(.isHeader)
       Text(
         "Hilo didn't find named people, places or objects. It's still a memory, and it will be saved in your words."
       )
@@ -227,11 +229,17 @@ struct ReviewScreen: View {
     VStack(alignment: .leading, spacing: Spacing.espacio3) {
       Text("What Hilo understood")
         .tituloSeccion()
+        .accessibilityAddTraits(.isHeader)
       ForEach(understoodGroups, id: \.type) { group in
         VStack(alignment: .leading, spacing: Spacing.espacio2) {
-          Label(group.type.localizedPluralName(locale: interfaceLocale), systemImage: group.type.symbolName)
-            .foregroundStyle(group.type.color)
-            .metadato()
+          Label {
+            Text(group.type.localizedPluralName(locale: interfaceLocale))
+          } icon: {
+            Image(systemName: group.type.symbolName)
+              .accessibilityHidden(true)
+          }
+          .foregroundStyle(group.type.color)
+          .metadato()
           ForEach(group.rows) { row in
             understoodChip(row)
           }
@@ -268,9 +276,10 @@ struct ReviewScreen: View {
             Image(systemName: row.type.symbolName)
               .foregroundStyle(row.type.color)
           }
+          .frame(minHeight: Spacing.objetivoToqueMinimo)
+          .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .frame(minHeight: Spacing.objetivoToqueMinimo)
         .accessibilityLabel(
           ReviewCopy.elementLabel(
             name: row.name, type: row.type, otherMemories: nil, locale: interfaceLocale))
@@ -278,11 +287,19 @@ struct ReviewScreen: View {
       }
 
       if row.isRemoved {
+        // ya lo dice la etiqueta del chip: VoiceOver no lo lee dos veces
         Text("Removed from this memory")
           .metadato()
           .foregroundStyle(Color.textoSecundario)
-        Button("Undo") { reviewState.restore(row.id) }
-          .frame(minHeight: Spacing.objetivoToqueMinimo)
+          .accessibilityHidden(true)
+        Button {
+          reviewState.restore(row.id)
+        } label: {
+          Text("Undo")
+            .frame(minWidth: Spacing.objetivoToqueMinimo, minHeight: Spacing.objetivoToqueMinimo)
+            .contentShape(Rectangle())
+        }
+        .accessibilityLabel("Undo removing \(row.name)")
       } else {
         Button {
           reviewState.remove(row.id)
@@ -291,6 +308,7 @@ struct ReviewScreen: View {
             .frame(minWidth: Spacing.objetivoToqueMinimo, minHeight: Spacing.objetivoToqueMinimo)
         }
         .accessibilityLabel("Remove \(row.name)")
+        .accessibilityHint("Leaves it out of this memory. You can undo it.")
       }
     }
     .padding(.horizontal, Spacing.espacio3)
@@ -305,6 +323,7 @@ struct ReviewScreen: View {
     VStack(alignment: .leading, spacing: Spacing.espacio3) {
       Text("Already in your memory")
         .tituloSeccion()
+        .accessibilityAddTraits(.isHeader)
       ForEach(reviewState.blocks.known) { known in
         knownRow(known)
       }
@@ -312,9 +331,11 @@ struct ReviewScreen: View {
   }
 
   private func knownRow(_ known: ReviewBlocks.Known) -> some View {
-    HStack(alignment: .top, spacing: Spacing.espacio3) {
+    // por la linea base: el nombre crece a 44pt de toque y el simbolo debe seguir a su altura
+    HStack(alignment: .firstTextBaseline, spacing: Spacing.espacio3) {
       Image(systemName: known.type.symbolName)
         .foregroundStyle(known.type.color)
+        .accessibilityHidden(true)
       VStack(alignment: .leading, spacing: Spacing.espacio1) {
         Button {
           startRenaming(
@@ -324,9 +345,10 @@ struct ReviewScreen: View {
           Text(known.name)
             .nombreElemento()
             .foregroundStyle(Color.textoPrimario)
+            .frame(minHeight: Spacing.objetivoToqueMinimo, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .frame(minHeight: Spacing.objetivoToqueMinimo, alignment: .leading)
         .accessibilityLabel(
           ReviewCopy.elementLabel(
             name: known.name, type: known.type, otherMemories: known.otherMemoriesCount,
@@ -346,8 +368,10 @@ struct ReviewScreen: View {
       } label: {
         Text("Not the same \(known.name)")
           .metadato()
+          .frame(minHeight: Spacing.objetivoToqueMinimo)
+          .contentShape(Rectangle())
       }
-      .frame(minHeight: Spacing.objetivoToqueMinimo)
+      .accessibilityHint("Keeps it apart from the one you already know")
     }
     .padding(Spacing.espacio3)
     .background(Color.superficieHundida)
@@ -380,6 +404,7 @@ struct ReviewScreen: View {
     VStack(alignment: .leading, spacing: Spacing.espacio3) {
       Text("Hilo is not sure")
         .tituloSeccion()
+        .accessibilityAddTraits(.isHeader)
       ForEach(doubtCards) { card in
         doubtCard(card)
       }
@@ -402,20 +427,18 @@ struct ReviewScreen: View {
         } label: {
           Text("Same \(card.candidate.name)")
             .botonSecundario()
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, minHeight: Spacing.objetivoToqueMinimo)
         }
         .buttonStyle(.bordered)
-        .frame(minHeight: Spacing.objetivoToqueMinimo)
 
         Button {
           reviewState.rejectDoubt(card.itemID)
         } label: {
           Text("Someone else")
             .botonSecundario()
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, minHeight: Spacing.objetivoToqueMinimo)
         }
         .buttonStyle(.bordered)
-        .frame(minHeight: Spacing.objetivoToqueMinimo)
       }
     }
     .padding(Spacing.espacio3)
@@ -429,6 +452,7 @@ struct ReviewScreen: View {
     VStack(alignment: .leading, spacing: Spacing.espacio1) {
       Text("These are the first threads")
         .tituloSeccion()
+        .accessibilityAddTraits(.isHeader)
       Text(
         ReviewCopy.beginningBody(
           names: reviewState.blocks.beginningNames,
@@ -448,12 +472,14 @@ struct ReviewScreen: View {
     VStack(alignment: .leading, spacing: Spacing.espacio1) {
       Text("Date")
         .tituloSeccion()
+        .accessibilityAddTraits(.isHeader)
       TextField("Add a date in your words", text: $dateText)
         .fechaUsuario()
         .padding(Spacing.espacio2)
         .background(Color.superficieHundida)
         .clipShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
         .accessibilityLabel("Date")
+        .accessibilityIdentifier("review.date")
     }
   }
 
@@ -466,11 +492,11 @@ struct ReviewScreen: View {
     } label: {
       Text("Save memory")
         .botonPrincipal()
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, minHeight: Spacing.objetivoToqueMinimo)
     }
     .buttonStyle(.borderedProminent)
     .tint(Color.acentoHilo)
     .foregroundStyle(Color.textoSobreAcento)
-    .frame(minHeight: Spacing.objetivoToqueMinimo)
+    .accessibilityIdentifier("review.save")
   }
 }
