@@ -61,12 +61,12 @@ struct CaptureScreen: View {
       if newValue == nil { photosPickerItem = nil }
     }
     // contrato 6: el mismo anuncio con o sin Reducir movimiento, solo cambia la animacion
-    .onChange(of: state.extractedSoFar?.elements.count) { _, _ in
-      guard let element = state.extractedSoFar?.elements.last else { return }
-      AccessibilityNotification.Announcement(
-        CaptureCopy.elementAppeared(
-          name: element.name, type: ElementType(element.type), locale: interfaceLocale)
-      ).post()
+    .onChange(of: state.extractedSoFar?.elements.map(\.name) ?? []) { previousNames, _ in
+      guard
+        let announcement = CaptureCopy.elementsAppeared(
+          state.extractedSoFar?.elements ?? [], after: previousNames, locale: interfaceLocale)
+      else { return }
+      AccessibilityNotification.Announcement(announcement).post()
     }
     .onChange(of: state.notice) { _, newNotice in
       guard let newNotice else { return }

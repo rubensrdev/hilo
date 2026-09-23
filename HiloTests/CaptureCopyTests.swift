@@ -107,4 +107,46 @@ nonisolated struct CaptureCopyTests {
       CaptureCopy.elementAppeared(name: "la casa del pueblo", type: .place, locale: Self.spanish)
         == "la casa del pueblo, Lugar")
   }
+
+  // MARK: anuncio progresivo — cada elemento nuevo se anuncia una vez, aunque lleguen juntos
+
+  @Test func `Two elements arriving in the same snapshot are both announced, in English`() {
+    let current = [
+      ExtractedElement(name: "José", type: .person, role: "mi abuelo"),
+      ExtractedElement(name: "Cádiz", type: .place, role: "el destino"),
+    ]
+
+    #expect(
+      CaptureCopy.elementsAppeared(current, after: [], locale: Self.english)
+        == "José, Person and Cádiz, Place")
+  }
+
+  @Test func `Two elements arriving in the same snapshot are both announced, in Spanish`() {
+    let current = [
+      ExtractedElement(name: "José", type: .person, role: "mi abuelo"),
+      ExtractedElement(name: "el reloj", type: .object, role: "el regalo"),
+    ]
+
+    #expect(
+      CaptureCopy.elementsAppeared(current, after: [], locale: Self.spanish)
+        == "José, Persona y el reloj, Objeto")
+  }
+
+  @Test func `Only the element that is new in this snapshot is announced`() {
+    let current = [
+      ExtractedElement(name: "José", type: .person, role: "mi abuelo"),
+      ExtractedElement(name: "Cádiz", type: .place, role: "el destino"),
+    ]
+
+    #expect(
+      CaptureCopy.elementsAppeared(current, after: ["José"], locale: Self.english)
+        == "Cádiz, Place")
+  }
+
+  @Test func `A snapshot that loses an element announces nothing again`() {
+    let current = [ExtractedElement(name: "José", type: .person, role: "mi abuelo")]
+
+    #expect(
+      CaptureCopy.elementsAppeared(current, after: ["José", "Cádiz"], locale: Self.english) == nil)
+  }
 }

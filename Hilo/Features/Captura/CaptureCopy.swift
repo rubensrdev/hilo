@@ -50,6 +50,17 @@ nonisolated enum CaptureCopy {
         "\(name), \(type.localizedName(locale: locale))", locale: locale))
   }
 
+  // contrato 6: se anuncia cada elemento nuevo una vez, aunque lleguen varios en la misma tanda
+  static func elementsAppeared(
+    _ current: [ExtractedElement], after previousNames: [String], locale: Locale
+  ) -> String? {
+    let appeared = current.filter { !previousNames.contains($0.name) }
+    guard !appeared.isEmpty else { return nil }
+    return appeared.map {
+      elementAppeared(name: $0.name, type: ElementType($0.type), locale: locale)
+    }.joinedAsList(locale: locale)
+  }
+
   // anexo DEC-46: guardarrail y rechazo usan el texto generico, nunca insinuan nada del recuerdo
   private static func body(_ reason: MemoryComprehensionReason, locale: Locale) -> String {
     switch reason {
