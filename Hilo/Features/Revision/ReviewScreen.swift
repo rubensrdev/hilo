@@ -9,8 +9,18 @@ struct ReviewScreen: View {
   let onSave: (ReviewState, String) -> Void
   @Environment(\.dismiss) private var dismiss
   @Environment(\.locale) private var environmentLocale
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   private var interfaceLocale: Locale { InterfaceLocale.resolve(environmentLocale) }
+
+  // P2: en tamaños de accesibilidad lo que va en fila se apila
+  private func rowLayout(
+    alignment: VerticalAlignment = .center, spacing: CGFloat
+  ) -> AnyLayout {
+    dynamicTypeSize.isAccessibilitySize
+      ? AnyLayout(VStackLayout(alignment: .leading, spacing: spacing))
+      : AnyLayout(HStackLayout(alignment: alignment, spacing: spacing))
+  }
 
   // MARK: renombrar — contrato 4, DEC-40/DEC-26/DEC-41/DEC-48: un unico alert del sistema con
   // campo de texto, para cualquier elemento; el aviso de alcance solo si ya existia (DEC-22)
@@ -29,6 +39,7 @@ struct ReviewScreen: View {
   @State private var renameText = ""
   @State private var renameConflict: RenameConflict?
   @State private var pendingRenamePrompt: RenamePrompt?
+  @FocusState private var isDateFocused: Bool
 
   init(initial: ReviewState, narrative: String, onSave: @escaping (ReviewState, String) -> Void) {
     _reviewState = State(initialValue: initial)
@@ -249,7 +260,8 @@ struct ReviewScreen: View {
   }
 
   private func understoodChip(_ row: UnderstoodRow) -> some View {
-    HStack(spacing: Spacing.espacio2) {
+    let layout = rowLayout(spacing: Spacing.espacio2)
+    return layout {
       if row.isRemoved {
         // quitado: no se ofrece renombrar hasta deshacer (regla del proyecto, F4.1 rename())
         Label {
@@ -282,7 +294,8 @@ struct ReviewScreen: View {
         .buttonStyle(.plain)
         .accessibilityLabel(
           ReviewCopy.elementLabel(
-            name: row.name, type: row.type, otherMemories: nil, locale: interfaceLocale))
+            name: row.name, type: row.type, otherMemories: nil, locale: interfaceLocale)
+        )
         .accessibilityHint("Double tap to rename")
       }
 
@@ -313,7 +326,14 @@ struct ReviewScreen: View {
     }
     .padding(.horizontal, Spacing.espacio3)
     .padding(.vertical, Spacing.espacio2)
-    .background(Color.superficieHundida, in: Capsule())
+    .background(Color.superficieHundida, in: chipShape)
+  }
+
+  // apilado, la capsula se come las esquinas del texto: pasa a la forma de las tarjetas
+  private var chipShape: AnyShape {
+    dynamicTypeSize.isAccessibilitySize
+      ? AnyShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
+      : AnyShape(Capsule())
   }
 
   // MARK: bloque 2 — ya conocia, reconocimiento rechazable con un toque, sin dialogo (DEC-22)
@@ -332,7 +352,8 @@ struct ReviewScreen: View {
 
   private func knownRow(_ known: ReviewBlocks.Known) -> some View {
     // por la linea base: el nombre crece a 44pt de toque y el simbolo debe seguir a su altura
-    HStack(alignment: .firstTextBaseline, spacing: Spacing.espacio3) {
+    let layout = rowLayout(alignment: .firstTextBaseline, spacing: Spacing.espacio3)
+    return layout {
       Image(systemName: known.type.symbolName)
         .foregroundStyle(known.type.color)
         .accessibilityHidden(true)
@@ -352,7 +373,8 @@ struct ReviewScreen: View {
         .accessibilityLabel(
           ReviewCopy.elementLabel(
             name: known.name, type: known.type, otherMemories: known.otherMemoriesCount,
-            locale: interfaceLocale))
+            locale: interfaceLocale)
+        )
         .accessibilityHint("Double tap to rename")
         // ya lo dice la etiqueta del nombre: VoiceOver no lo lee dos veces
         Text(
@@ -362,7 +384,7 @@ struct ReviewScreen: View {
         .foregroundStyle(Color.textoSecundario)
         .accessibilityHidden(true)
       }
-      Spacer()
+      .frame(maxWidth: .infinity, alignment: .leading)
       Button {
         reviewState.rejectRecognition(known.id)
       } label: {
@@ -422,7 +444,9 @@ struct ReviewScreen: View {
       Text("\(card.candidate.name) appears in \(card.candidate.otherMemoriesCount) memories")
         .metadato()
         .foregroundStyle(Color.textoSecundario)
-      HStack(spacing: Spacing.espacio2) {
+      // tokens §2.2: en AX las dos respuestas se apilan, con el mismo peso
+      let answersLayout = rowLayout(spacing: Spacing.espacio2)
+      answersLayout {
         Button {
           reviewState.confirmDoubt(card.itemID, as: card.candidate.id)
         } label: {
@@ -474,13 +498,30 @@ struct ReviewScreen: View {
       Text("Date")
         .tituloSeccion()
         .accessibilityAddTraits(.isHeader)
-      TextField("Add a date in your words", text: $dateText)
-        .fechaUsuario()
-        .padding(Spacing.espacio2)
-        .background(Color.superficieHundida)
-        .clipShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
-        .accessibilityLabel("Date")
-        .accessibilityIdentifier("review.date")
+      // la fecha es texto del usuario: a AX5 crece hacia abajo en vez de desplazarse de lado
+      ZStack(alignment: .topLeading) {
+        TextField(text: $dateText, axis: .vertical) { EmptyView() }
+          .fechaUsuario()
+          .focused($isDateFocused)
+          .accessibilityLabel("Date")
+          .accessibilityHint("Add a date in your words")
+          .accessibilityIdentifier("review.date")
+        // el placeholder del sistema no reparte lineas y a AX5 se cortaba
+        if dateText.isEmpty {
+          Text("Add a date in your words")
+            .fechaUsuario()
+            .foregroundStyle(Color.textoDeshabilitado)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+      }
+      .frame(minHeight: Spacing.objetivoToqueMinimo, alignment: .leading)
+      .padding(Spacing.espacio2)
+      .background(Color.superficieHundida)
+      .clipShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
+      // el campo mide una linea: todo el fondo enfoca, para que el toque llegue a 44pt
+      .contentShape(Rectangle())
+      .onTapGesture { isDateFocused = true }
     }
   }
 
