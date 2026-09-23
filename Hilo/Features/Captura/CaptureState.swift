@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 // contrato 1: toda la logica de S2 Captura vive aqui, la vista solo lee y emite intencion
 @Observable
@@ -7,6 +8,7 @@ final class CaptureState {
     case capturing
     case comprehending
     case reviewing
+    case savingWithoutAnalyzing
     case notAnalyzed(MemoryComprehensionReason)
   }
 
@@ -15,7 +17,7 @@ final class CaptureState {
   private(set) var phase: Phase = .capturing
   private(set) var extractedSoFar: ExtractedMemory?
   // DEC-45: una vez fijado por el guardado automatico del error, sigue apuntando al
-  // mismo recuerdo durante toda la vida de la pantalla — asi el reintento actualiza
+  // mismo recuerdo hasta que la captura se vacia — asi el reintento actualiza
   // en vez de insertar
   private(set) var savedMemoryID: MemoryID?
   // DEC-47: cerrar la revision vuelve aqui; en el reintento es el error, nunca el formulario
@@ -26,6 +28,7 @@ final class CaptureState {
   private let interfaceLanguage: String
   private let onUnderstood: (ExtractedMemory, String, Data?, MemoryID?) -> Void
   private var comprehensionTask: Task<Void, Never>?
+  private let logger = Logger(subsystem: "com.hilo.app", category: "captura")
 
   init(
     comprehender: MemoryComprehending, persistenceActor: PersistenceActor,
@@ -69,8 +72,18 @@ final class CaptureState {
 
   func saveWithoutAnalyzing() async {
     guard canSaveWithoutAnalyzing else { return }
-    if let id = try? await persist(narrative: narrative) {
-      savedMemoryID = id
+    // la fase cambia antes del await: un segundo toque durante el guardado no puede duplicar
+    phase = .savingWithoutAnalyzing
+    do {
+      _ = try await persist(narrative: narrative)
+      // mismo camino que guardar desde la revision: vaciar es lo que impide un segundo guardado
+      resetForNewMemory()
+    } catch {
+      // solo el tipo: el error no debe arrastrar al log nada del usuario
+      logger.error(
+        "No se pudo guardar sin analizar: \(String(describing: type(of: error)), privacy: .public)"
+      )
+      phase = .capturing
     }
   }
 

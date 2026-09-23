@@ -217,7 +217,7 @@ struct CaptureStateTests {
 
   @Test
   func
-    `Saving without analyzing persists the narrative unanalyzed, fixes savedMemoryID and never calls onUnderstood`()
+    `Saving without analyzing persists the narrative unanalyzed and never calls onUnderstood`()
     async throws
   {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -234,12 +234,10 @@ struct CaptureStateTests {
     await state.saveWithoutAnalyzing()
 
     #expect(understoodCallCount == 0)
-    let savedID = try #require(state.savedMemoryID)
     let context = ModelContext(container)
     let record = try #require(try context.fetch(FetchDescriptor<MemoryRecord>()).first)
     #expect(record.isAnalyzed == false)
     #expect(record.narrative == "Un paseo que prefiero guardar tal cual.")
-    #expect(MemoryID(value: record.id) == savedID)
   }
 
   @Test func `Saving without analyzing does nothing for a blank narrative`() async throws {
@@ -257,6 +255,66 @@ struct CaptureStateTests {
 
     #expect(state.savedMemoryID == nil)
     #expect(try await actor.fetchMemories().isEmpty)
+  }
+
+  @Test
+  func `Saving without analyzing empties the capture so saving again cannot duplicate the memory`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(script: .fails(.noResponse)),
+      persistenceActor: actor, interfaceLanguage: "es"
+    ) { _, _, _, _ in
+      Issue.record("onUnderstood should never be called")
+    }
+    state.narrative = "La tarde que llovió en la verbena."
+    state.photoData = try PhotoStripperTests.jpegWithGPS()
+
+    await state.saveWithoutAnalyzing()
+
+    #expect(state.narrative == "")
+    #expect(state.photoData == nil)
+    #expect(state.savedMemoryID == nil)
+    #expect(state.phase == .capturing)
+    #expect(state.canSaveWithoutAnalyzing == false)
+
+    await state.saveWithoutAnalyzing()
+
+    let context = ModelContext(container)
+    let records = try context.fetch(FetchDescriptor<MemoryRecord>())
+    #expect(records.count == 1)
+    let record = try #require(records.first)
+    #expect(record.narrative == "La tarde que llovió en la verbena.")
+    // la foto se guarda sin metadatos, asi que basta con que no se haya perdido al vaciar
+    #expect(record.photoData != nil)
+    #expect(record.isAnalyzed == false)
+  }
+
+  @Test
+  func
+    `A second tap on save without analyzing while the first is still saving cannot duplicate the memory`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(script: .fails(.noResponse)),
+      persistenceActor: actor, interfaceLanguage: "es"
+    ) { _, _, _, _ in
+      Issue.record("onUnderstood should never be called")
+    }
+    state.narrative = "El verano que aprendimos a nadar en el río."
+
+    async let firstTap: Void = state.saveWithoutAnalyzing()
+    async let secondTap: Void = state.saveWithoutAnalyzing()
+    _ = await (firstTap, secondTap)
+
+    let memories = try await actor.fetchMemories()
+    #expect(memories.count == 1)
+    #expect(memories.first?.narrative == "El verano que aprendimos a nadar en el río.")
+    #expect(state.narrative == "")
   }
 
   // MARK: cancelacion — hueco de auditoria de concurrencia que F3 dejo sin cubrir
