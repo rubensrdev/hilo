@@ -1080,6 +1080,85 @@ struct CaptureStateTests {
     #expect(state.canSaveWithoutAnalyzing)
   }
 
+  // MARK: carga de la foto — una carga tardia nunca cae en otro recuerdo ni en otra eleccion
+
+  @Test
+  func
+    `A photo that finishes loading after saving without analyzing never lands on the empty capture`()
+    async throws
+  {
+    let state = try Self.makeState(script: .fails(.noResponse))
+    let gate = PhotoLoadGate()
+    state.narrative = "Un paseo por el puerto."
+
+    let load = state.loadPhoto(gate.load)
+    await state.saveWithoutAnalyzing()
+    gate.finish(Data("foto".utf8))
+    await load.value
+
+    #expect(state.narrative.isEmpty)
+    #expect(state.photoData == nil)
+  }
+
+  @Test func `A photo removed while it was still loading does not come back`() async throws {
+    let state = try Self.makeState(script: .fails(.noResponse))
+    let gate = PhotoLoadGate()
+
+    let load = state.loadPhoto(gate.load)
+    state.removePhoto()
+    gate.finish(Data("foto".utf8))
+    await load.value
+
+    #expect(state.photoData == nil)
+  }
+
+  @Test func `Picking a second photo wins even if the first one finishes loading later`()
+    async throws
+  {
+    let state = try Self.makeState(script: .fails(.noResponse))
+    let first = PhotoLoadGate()
+    let second = PhotoLoadGate()
+
+    let firstLoad = state.loadPhoto(first.load)
+    let secondLoad = state.loadPhoto(second.load)
+    second.finish(Data("segunda".utf8))
+    await secondLoad.value
+    first.finish(Data("primera".utf8))
+    await firstLoad.value
+
+    #expect(state.photoData == Data("segunda".utf8))
+  }
+
+  @Test
+  func `A photo that finishes loading while comprehending does not change what is being read`()
+    async throws
+  {
+    let state = try Self.makeState(
+      script: .succeeds(
+        partials: [Self.luciaExtraction], final: Self.luciaExtraction,
+        delayBetweenPartials: .milliseconds(50)))
+    let gate = PhotoLoadGate()
+    state.narrative = "Lucía en la playa de Laredo."
+
+    let load = state.loadPhoto(gate.load)
+    state.understandAndSave()
+    gate.finish(Data("foto".utf8))
+    await load.value
+
+    #expect(state.photoData == nil)
+  }
+
+  @Test func `A photo that finishes loading while capturing is attached`() async throws {
+    let state = try Self.makeState(script: .fails(.noResponse))
+    let gate = PhotoLoadGate()
+
+    let load = state.loadPhoto(gate.load)
+    gate.finish(Data("foto".utf8))
+    await load.value
+
+    #expect(state.photoData == Data("foto".utf8))
+  }
+
   // MARK: fixtures
 
   private static let emptyExtraction = ExtractedMemory(
@@ -1116,5 +1195,26 @@ private func waitUntil(
   while !condition(), remaining > 0 {
     try? await Task.sleep(for: sleepEach)
     remaining -= 1
+  }
+}
+
+// el test decide cuando termina la carga: sin esperas por tiempo
+@MainActor
+private final class PhotoLoadGate {
+  private var continuation: CheckedContinuation<Data?, Never>?
+  private var pending: Data??
+
+  func load() async -> Data? {
+    if let pending { return pending }
+    return await withCheckedContinuation { continuation = $0 }
+  }
+
+  func finish(_ data: Data?) {
+    if let continuation {
+      continuation.resume(returning: data)
+      self.continuation = nil
+    } else {
+      pending = .some(data)
+    }
   }
 }

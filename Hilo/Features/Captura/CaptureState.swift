@@ -35,6 +35,7 @@ final class CaptureState {
   private let interfaceLanguage: String
   private let onUnderstood: (ExtractedMemory, String, Data?, MemoryID?) -> Void
   private var comprehensionTask: Task<Void, Never>?
+  private var photoLoadTask: Task<Void, Never>?
   @ObservationIgnored private var isSavingFailedNarrative = false
   private let logger = Logger(subsystem: "com.hilo.app", category: "captura")
 
@@ -83,6 +84,7 @@ final class CaptureState {
     notice = nil
     // la fase cambia antes del await: un segundo toque durante el guardado no puede duplicar
     phase = .savingWithoutAnalyzing
+    photoLoadTask?.cancel()
     do {
       _ = try await persist(narrative: narrative)
       // mismo camino que guardar desde la revision: vaciar es lo que impide un segundo guardado
@@ -96,6 +98,24 @@ final class CaptureState {
       phase = .capturing
       saveWithoutAnalyzingFailed = true
     }
+  }
+
+  // la carga termina cuando quiere: solo cuenta la ultima eleccion, y solo mientras se captura
+  @discardableResult
+  func loadPhoto(_ load: @escaping @MainActor () async -> Data?) -> Task<Void, Never> {
+    photoLoadTask?.cancel()
+    let task = Task {
+      let data = await load()
+      guard !Task.isCancelled, phase == .capturing else { return }
+      photoData = data
+    }
+    photoLoadTask = task
+    return task
+  }
+
+  func removePhoto() {
+    photoLoadTask?.cancel()
+    photoData = nil
   }
 
   func acknowledgeSaveFailure() {
@@ -159,6 +179,7 @@ final class CaptureState {
   }
 
   private func resetForNewMemory() {
+    photoLoadTask?.cancel()
     narrative = ""
     photoData = nil
     extractedSoFar = nil
@@ -173,6 +194,8 @@ final class CaptureState {
     guard phase != .comprehending else { return }
     phaseBeforeComprehension = phase
     phase = .comprehending
+    // lo que se lee es lo que habia al tocar: una foto que llegue despues no entra
+    photoLoadTask?.cancel()
     notice = nil
     extractedSoFar = nil
     let text = narrative

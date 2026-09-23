@@ -53,7 +53,8 @@ struct CaptureScreen: View {
       Text("Nothing has been saved. Your text and photo are still here — you can try again.")
     }
     .onChange(of: photosPickerItem) { _, newValue in
-      Task { state.photoData = try? await newValue?.loadTransferable(type: Data.self) }
+      guard let newValue else { return }
+      state.loadPhoto { try? await newValue.loadTransferable(type: Data.self) }
     }
     // al vaciarse la captura, la misma foto debe poder elegirse otra vez
     .onChange(of: state.photoData) { _, newValue in
@@ -141,7 +142,7 @@ struct CaptureScreen: View {
           .accessibilityIdentifier("capture.photo")
         Spacer()
         Button {
-          state.photoData = nil
+          state.removePhoto()
           photosPickerItem = nil
         } label: {
           Image(systemName: "xmark")
