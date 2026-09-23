@@ -27,6 +27,23 @@ nonisolated enum CaptureCopy {
       actions: reason.allowsRetry ? .retryOrLeave : .done)
   }
 
+  static func notice(_ notice: ReviewNotice, locale: Locale) -> String {
+    switch notice {
+    case .reviewUnavailable:
+      String(
+        localized: LocalizedStringResource(
+          "Hilo couldn't open the review. Your memory is still here — you can try again.",
+          locale: locale))
+    case .reviewNotSaved:
+      String(
+        localized: LocalizedStringResource(
+          "Hilo couldn't save the review. Your memory is still here — you can try again.",
+          locale: locale))
+    case .savedWithoutAnalyzing:
+      String(localized: LocalizedStringResource("Memory saved", locale: locale))
+    }
+  }
+
   static func elementAppeared(name: String, type: ElementType, locale: Locale) -> String {
     String(
       localized: LocalizedStringResource(

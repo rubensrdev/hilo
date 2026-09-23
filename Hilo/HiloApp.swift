@@ -28,7 +28,7 @@ struct HiloApp: App {
       coordinator.present(
         extracted: extracted, narrative: narrative, savedMemoryID: savedMemoryID)
     }
-    coordinator.onPreparationFailed = { capture.reviewDismissed() }
+    coordinator.onPreparationFailed = { capture.reviewPreparationFailed() }
     capture.onReviewSaved = { coordinator.showConnections(savedMemoryID: $0) }
     capture.onReviewSaveFailed = { coordinator.closeAfterFailedSave() }
     _reviewCoordinator = State(initialValue: coordinator)

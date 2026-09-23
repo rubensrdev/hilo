@@ -14,6 +14,9 @@ struct CaptureScreen: View {
     NavigationStack {
       ScrollView {
         VStack(alignment: .leading, spacing: Spacing.espacio4) {
+          if let notice = state.notice {
+            noticeBanner(notice)
+          }
           switch state.phase {
           case .capturing, .comprehending, .reviewing, .savingWithoutAnalyzing, .savingReview:
             captureForm
@@ -30,12 +33,22 @@ struct CaptureScreen: View {
     .onChange(of: photosPickerItem) { _, newValue in
       Task { state.photoData = try? await newValue?.loadTransferable(type: Data.self) }
     }
+    // al vaciarse la captura, la misma foto debe poder elegirse otra vez
+    .onChange(of: state.photoData) { _, newValue in
+      if newValue == nil { photosPickerItem = nil }
+    }
     // contrato 6: el mismo anuncio con o sin Reducir movimiento, solo cambia la animacion
     .onChange(of: state.extractedSoFar?.elements.count) { _, _ in
       guard let element = state.extractedSoFar?.elements.last else { return }
       AccessibilityNotification.Announcement(
         CaptureCopy.elementAppeared(
           name: element.name, type: ElementType(element.type), locale: interfaceLocale)
+      ).post()
+    }
+    .onChange(of: state.notice) { _, newNotice in
+      guard let newNotice else { return }
+      AccessibilityNotification.Announcement(
+        CaptureCopy.notice(newNotice, locale: interfaceLocale)
       ).post()
     }
     .onChange(of: state.phase) { _, newPhase in
@@ -202,8 +215,6 @@ struct CaptureScreen: View {
     .clipShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
     .accessibilityElement(children: .combine)
 
-    // "Leave it as it is"/"Done" solo reconocen el aviso: el texto ya esta a salvo.
-    // Su salida de esta pantalla es de F5 (aun no hay lista a la que volver).
     switch notice.actions {
     case .retryOrLeave:
       Button {
@@ -218,11 +229,41 @@ struct CaptureScreen: View {
       .foregroundStyle(Color.textoSobreAcento)
       .frame(minHeight: Spacing.objetivoToqueMinimo)
 
-      Button("Leave it as it is") {}
+      Button("Leave it as it is") { state.acknowledgeNotAnalyzed() }
         .frame(minHeight: Spacing.objetivoToqueMinimo)
     case .done:
-      Button("Done") {}
+      Button("Done") { state.acknowledgeNotAnalyzed() }
         .frame(minHeight: Spacing.objetivoToqueMinimo)
+    }
+  }
+
+  // MARK: aviso de la revision y confirmacion del guardado — punto 3 de F4.6
+
+  private func noticeBanner(_ notice: ReviewNotice) -> some View {
+    Label {
+      Text(CaptureCopy.notice(notice, locale: interfaceLocale))
+        .metadato()
+        .foregroundStyle(Color.textoPrimario)
+    } icon: {
+      noticeSymbol(notice)
+        .accessibilityHidden(true)
+    }
+    .padding(Spacing.espacio3)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color.superficieHundida)
+    .clipShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
+    .accessibilityElement(children: .combine)
+  }
+
+  @ViewBuilder
+  private func noticeSymbol(_ notice: ReviewNotice) -> some View {
+    switch notice {
+    case .reviewUnavailable, .reviewNotSaved:
+      Image(systemName: "exclamationmark.triangle.fill")
+        .foregroundStyle(Color.estadoAviso)
+    case .savedWithoutAnalyzing:
+      Image(systemName: "checkmark.circle.fill")
+        .foregroundStyle(Color.estadoExito)
     }
   }
 

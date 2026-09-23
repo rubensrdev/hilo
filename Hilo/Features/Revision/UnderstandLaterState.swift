@@ -13,6 +13,7 @@ final class UnderstandLaterState {
   }
 
   private(set) var phase: Phase = .idle
+  private(set) var notice: ReviewNotice?
   var onReviewSaved: (MemoryID) -> Void = { _ in }
   var onReviewSaveFailed: () -> Void = {}
 
@@ -42,6 +43,7 @@ final class UnderstandLaterState {
     }
     // la fase cambia antes del await: un segundo toque no abre otra comprension
     phase = .comprehending
+    notice = nil
     let memory: Memory?
     do {
       memory = try await persistenceActor.unanalyzedMemory(id: memoryID)
@@ -82,6 +84,12 @@ final class UnderstandLaterState {
     phase = .idle
   }
 
+  func reviewPreparationFailed() {
+    guard phase == .reviewing else { return }
+    reviewDismissed()
+    notice = .reviewUnavailable
+  }
+
   func reviewConfirmed(_ reviewState: ReviewState, dateTextAtSave: String) {
     guard phase == .reviewing, let memoryID = reviewingMemoryID else { return }
     phase = .saving
@@ -99,6 +107,7 @@ final class UnderstandLaterState {
           "No se pudo guardar la revision: \(String(describing: type(of: error)), privacy: .public)"
         )
         self.phase = .idle
+        self.notice = .reviewNotSaved
         self.onReviewSaveFailed()
       }
     }

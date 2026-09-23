@@ -18,7 +18,7 @@ final class ReviewCoordinator {
   }
 
   var presentation: Presentation?
-  // DEC-47: si la hoja no llega a abrirse, la captura vuelve igual que al cerrarla sin guardar
+  // DEC-47 + punto 3 de F4.6: si la hoja no llega a abrirse, se vuelve como al cerrarla y se avisa
   var onPreparationFailed: () -> Void = {}
 
   private let persistenceActor: PersistenceActor

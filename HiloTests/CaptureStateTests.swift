@@ -768,6 +768,163 @@ struct CaptureStateTests {
     #expect(savedReports == 0)
   }
 
+  // MARK: avisos — punto 3 de F4.6, al primer fallo y sin contar intentos
+
+  @Test func `A review that cannot be prepared returns to the capture with a notice`()
+    async throws
+  {
+    let state = try Self.makeState(script: .succeeds(partials: [], final: Self.luciaExtraction))
+    state.narrative = "Lucía y el primer diente."
+
+    state.understandAndSave()
+    await waitUntil { state.phase == .reviewing }
+    state.reviewPreparationFailed()
+
+    #expect(state.phase == .capturing)
+    #expect(state.notice == .reviewUnavailable)
+    #expect(state.narrative == "Lucía y el primer diente.")
+    #expect(state.extractedSoFar == nil)
+    #expect(state.canUnderstand)
+  }
+
+  // DEC-47: igual que al cerrar la revision, el reintento vuelve al error, no al formulario
+  @Test func `A review that cannot be prepared after a retry returns to the error with a notice`()
+    async throws
+  {
+    let state = CaptureState(
+      comprehender: SequencedComprehender(
+        scripts: [.fails(.noResponse), .succeeds(partials: [], final: Self.luciaExtraction)]),
+      persistenceActor: PersistenceActor(
+        modelContainer: try PersistenceContainer.make(inMemory: true)),
+      interfaceLanguage: "es"
+    ) { _, _, _, _ in }
+    state.narrative = "Lucía y el primer diente."
+
+    state.understandAndSave()
+    await waitUntil { state.phase != .comprehending }
+    state.retry()
+    await waitUntil { state.phase == .reviewing }
+    state.reviewPreparationFailed()
+
+    #expect(state.phase == .notAnalyzed(.generic))
+    #expect(state.notice == .reviewUnavailable)
+  }
+
+  @Test func `A preparation failure outside the review changes nothing`() throws {
+    let state = try Self.makeState(script: .fails(.noResponse))
+    state.narrative = "Lucía y el primer diente."
+
+    state.reviewPreparationFailed()
+
+    #expect(state.phase == .capturing)
+    #expect(state.notice == nil)
+  }
+
+  @Test func `Editing the narrative clears the notice`() async throws {
+    let state = try Self.makeState(script: .succeeds(partials: [], final: Self.luciaExtraction))
+    state.narrative = "Lucía y el primer diente."
+    state.understandAndSave()
+    await waitUntil { state.phase == .reviewing }
+    state.reviewPreparationFailed()
+
+    state.narrative += " En casa."
+
+    #expect(state.notice == nil)
+  }
+
+  @Test func `Understanding again clears the notice`() async throws {
+    let state = try Self.makeState(script: .succeeds(partials: [], final: Self.luciaExtraction))
+    state.narrative = "Lucía y el primer diente."
+    state.understandAndSave()
+    await waitUntil { state.phase == .reviewing }
+    state.reviewPreparationFailed()
+
+    state.understandAndSave()
+
+    #expect(state.notice == nil)
+  }
+
+  @Test func `A failed review save returns to the capture with a notice`() async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    var understood: [ExtractedMemory] = []
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(partials: [], final: Self.luciaExtraction)),
+      persistenceActor: PersistenceActor(modelContainer: container), interfaceLanguage: "es"
+    ) { extracted, _, _, _ in understood.append(extracted) }
+    state.narrative = "Lucía en la playa de Laredo."
+
+    state.understandAndSave()
+    await waitUntil { understood.count == 1 }
+    // un elemento conocido que no esta en el almacen: la aparicion confirmada no encuentra su elemento
+    let ghost = try #require(Element(displayName: "Lucía", type: .person))
+    state.reviewConfirmed(
+      ReviewState(
+        extracted: try #require(understood.first), knownElements: [ghost], appearances: []),
+      dateTextAtSave: "")
+    await waitUntil { state.phase != .savingReview }
+
+    #expect(state.phase == .capturing)
+    #expect(state.notice == .reviewNotSaved)
+  }
+
+  @Test func `Saving without analyzing confirms the save once the capture is empty`()
+    async throws
+  {
+    let state = try Self.makeState(script: .fails(.noResponse))
+    state.narrative = "La tarde que Diego aprendió a nadar."
+
+    await state.saveWithoutAnalyzing()
+
+    #expect(state.narrative == "")
+    #expect(state.notice == .savedWithoutAnalyzing)
+  }
+
+  // DEC-18: el recuerdo ya se guardo sin analizar; «Leave it as it is» y «Done» solo vacian la captura
+  @Test(arguments: [MemoryComprehensionError.noResponse, .contextOverflow])
+  func `Acknowledging the error empties the capture and leaves the saved memory intact`(
+    error: MemoryComprehensionError
+  ) async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(script: .fails(error)),
+      persistenceActor: PersistenceActor(modelContainer: container), interfaceLanguage: "es"
+    ) { _, _, _, _ in }
+    state.narrative = "La tarde que Diego aprendió a nadar."
+    state.photoData = try PhotoStripperTests.jpegWithGPS()
+    state.understandAndSave()
+    await waitUntil { state.phase != .comprehending }
+    let before = try #require(
+      try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).first)
+    let savedBefore = (before.id, before.narrative, before.savedAt, before.photoData)
+
+    state.acknowledgeNotAnalyzed()
+
+    #expect(state.phase == .capturing)
+    #expect(state.narrative == "")
+    #expect(state.photoData == nil)
+    #expect(state.savedMemoryID == nil)
+    #expect(state.notice == nil)
+    let records = try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>())
+    #expect(records.count == 1)
+    let after = try #require(records.first)
+    #expect(after.id == savedBefore.0)
+    #expect(after.narrative == savedBefore.1)
+    #expect(after.savedAt == savedBefore.2)
+    #expect(after.photoData == savedBefore.3)
+    #expect(after.photoData != nil)
+    #expect(after.isAnalyzed == false)
+  }
+
+  @Test func `Acknowledging outside the error changes nothing`() throws {
+    let state = try Self.makeState(script: .fails(.noResponse))
+    state.narrative = "La tarde que Diego aprendió a nadar."
+
+    state.acknowledgeNotAnalyzed()
+
+    #expect(state.narrative == "La tarde que Diego aprendió a nadar.")
+  }
+
   // MARK: fixtures
 
   private static let emptyExtraction = ExtractedMemory(

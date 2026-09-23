@@ -76,6 +76,27 @@ nonisolated struct CaptureCopyTests {
       copy.announcement == "Tu recuerdo está guardado tal como lo contaste. \(Self.overflowES)")
   }
 
+  // MARK: avisos de la revision y del guardado — un fallo nunca es silencioso (DEC-43)
+
+  @Test func `Each review notice has its text in both languages`() {
+    #expect(
+      CaptureCopy.notice(.reviewUnavailable, locale: Self.english)
+        == "Hilo couldn't open the review. Your memory is still here — you can try again.")
+    #expect(
+      CaptureCopy.notice(.reviewUnavailable, locale: Self.spanish)
+        == "Hilo no ha podido abrir la revisión. Tu recuerdo sigue aquí; puedes volver a intentarlo."
+    )
+    #expect(
+      CaptureCopy.notice(.reviewNotSaved, locale: Self.english)
+        == "Hilo couldn't save the review. Your memory is still here — you can try again.")
+    #expect(
+      CaptureCopy.notice(.reviewNotSaved, locale: Self.spanish)
+        == "Hilo no ha podido guardar la revisión. Tu recuerdo sigue aquí; puedes volver a intentarlo."
+    )
+    #expect(CaptureCopy.notice(.savedWithoutAnalyzing, locale: Self.english) == "Memory saved")
+    #expect(CaptureCopy.notice(.savedWithoutAnalyzing, locale: Self.spanish) == "Recuerdo guardado")
+  }
+
   // MARK: aparicion progresiva — nombre y tipo, igual con Reducir movimiento (contrato 6)
 
   @Test func `A progressively appearing element announces its name and type in both languages`() {

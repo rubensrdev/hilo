@@ -13,10 +13,12 @@ final class CaptureState {
     case notAnalyzed(MemoryComprehensionReason)
   }
 
-  var narrative: String = ""
+  // editar el relato es la siguiente intencion: el aviso anterior ya no aplica
+  var narrative: String = "" { didSet { notice = nil } }
   var photoData: Data?
   private(set) var phase: Phase = .capturing
   private(set) var extractedSoFar: ExtractedMemory?
+  private(set) var notice: ReviewNotice?
   // DEC-45: una vez fijado por el guardado automatico del error, sigue apuntando al
   // mismo recuerdo hasta que la captura se vacia — asi el reintento actualiza
   // en vez de insertar
@@ -75,12 +77,14 @@ final class CaptureState {
 
   func saveWithoutAnalyzing() async {
     guard canSaveWithoutAnalyzing else { return }
+    notice = nil
     // la fase cambia antes del await: un segundo toque durante el guardado no puede duplicar
     phase = .savingWithoutAnalyzing
     do {
       _ = try await persist(narrative: narrative)
       // mismo camino que guardar desde la revision: vaciar es lo que impide un segundo guardado
       resetForNewMemory()
+      notice = .savedWithoutAnalyzing
     } catch {
       // solo el tipo: el error no debe arrastrar al log nada del usuario
       logger.error(
@@ -99,6 +103,19 @@ final class CaptureState {
     guard phase == .reviewing else { return }
     phase = phaseBeforeComprehension
     extractedSoFar = nil
+  }
+
+  // DEC-47: vuelve como al cerrar la revision, pero diciendo que no se pudo abrir
+  func reviewPreparationFailed() {
+    guard phase == .reviewing else { return }
+    reviewDismissed()
+    notice = .reviewUnavailable
+  }
+
+  // DEC-18: el recuerdo ya esta guardado sin analizar, reconocer el aviso solo vacia la captura
+  func acknowledgeNotAnalyzed() {
+    guard case .notAnalyzed = phase else { return }
+    resetForNewMemory()
   }
 
   // DEC-47: salir de .reviewing antes de que la hoja se cierre deja inocuo su onDismiss
@@ -123,6 +140,7 @@ final class CaptureState {
         )
         self.phase = self.phaseBeforeComprehension
         self.extractedSoFar = nil
+        self.notice = .reviewNotSaved
         self.onReviewSaveFailed()
       }
     }
@@ -132,6 +150,7 @@ final class CaptureState {
     narrative = ""
     photoData = nil
     extractedSoFar = nil
+    notice = nil
     savedMemoryID = nil
     phase = .capturing
     phaseBeforeComprehension = .capturing
@@ -140,6 +159,7 @@ final class CaptureState {
   private func runComprehension() {
     phaseBeforeComprehension = phase
     phase = .comprehending
+    notice = nil
     extractedSoFar = nil
     let text = narrative
     let language = interfaceLanguage

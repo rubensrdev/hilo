@@ -118,7 +118,8 @@ struct UnderstandLaterStateTests {
   }
 
   @Test
-  func `A failed comprehension on this path tells why, inserts nothing and leaves the memory as it was`()
+  func
+    `A failed comprehension on this path tells why, inserts nothing and leaves the memory as it was`()
     async throws
   {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -141,7 +142,8 @@ struct UnderstandLaterStateTests {
   }
 
   @Test
-  func `Cancelling while the model is comprehending returns to idle and leaves the memory untouched`()
+  func
+    `Cancelling while the model is comprehending returns to idle and leaves the memory untouched`()
     async throws
   {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -214,6 +216,57 @@ struct UnderstandLaterStateTests {
     #expect(state.phase == .idle)
   }
 
+  // MARK: avisos — punto 3 de F4.6, la misma regla que en la captura
+
+  @Test func `A review that cannot be prepared returns to idle with a notice`() async throws {
+    let actor = PersistenceActor(modelContainer: try PersistenceContainer.make(inMemory: true))
+    let memoryID = try await Self.saveUnanalyzed("Lucía y el primer diente.", actor: actor)
+    let (state, _) = Self.wired(actor: actor)
+
+    await state.start(memoryID: memoryID)
+    state.reviewPreparationFailed()
+
+    #expect(state.phase == .idle)
+    #expect(state.notice == .reviewUnavailable)
+  }
+
+  @Test func `Starting again clears the notice`() async throws {
+    let actor = PersistenceActor(modelContainer: try PersistenceContainer.make(inMemory: true))
+    let memoryID = try await Self.saveUnanalyzed("Lucía y el primer diente.", actor: actor)
+    let (state, _) = Self.wired(actor: actor)
+    await state.start(memoryID: memoryID)
+    state.reviewPreparationFailed()
+
+    await state.start(memoryID: memoryID)
+
+    #expect(state.notice == nil)
+    #expect(state.phase == .reviewing)
+  }
+
+  @Test func `A failed review save returns to idle with a notice and the memory unanalyzed`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memoryID = try await Self.saveUnanalyzed("Lucía en la playa de Laredo.", actor: actor)
+    let (state, _) = Self.wired(actor: actor)
+    var failedReports = 0
+    state.onReviewSaveFailed = { failedReports += 1 }
+
+    await state.start(memoryID: memoryID)
+    // un elemento conocido que no esta en el almacen: la aparicion confirmada no encuentra su elemento
+    let ghost = try #require(Element(displayName: "Lucía", type: .person))
+    state.reviewConfirmed(
+      ReviewState(extracted: Self.luciaExtraction, knownElements: [ghost], appearances: []),
+      dateTextAtSave: "")
+    await waitUntil { failedReports == 1 }
+
+    #expect(state.phase == .idle)
+    #expect(state.notice == .reviewNotSaved)
+    let records = try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>())
+    #expect(records.first?.isAnalyzed == false)
+  }
+
   // MARK: fixtures
 
   private static let luciaExtraction = ExtractedMemory(
@@ -243,7 +296,7 @@ struct UnderstandLaterStateTests {
       coordinator.present(extracted: extracted, narrative: narrative, savedMemoryID: savedMemoryID)
     }
     // weak: estado y coordinador se apuntan mutuamente; F5.3 los crea en cada detalle
-    coordinator.onPreparationFailed = { [weak state] in state?.reviewDismissed() }
+    coordinator.onPreparationFailed = { [weak state] in state?.reviewPreparationFailed() }
     state.onReviewSaved = { coordinator.showConnections(savedMemoryID: $0) }
     state.onReviewSaveFailed = { coordinator.closeAfterFailedSave() }
     return (state, coordinator)

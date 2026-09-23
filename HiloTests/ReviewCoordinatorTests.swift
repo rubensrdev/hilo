@@ -126,7 +126,7 @@ struct ReviewCoordinatorTests {
     ) { extracted, narrative, _, savedMemoryID in
       coordinator.present(extracted: extracted, narrative: narrative, savedMemoryID: savedMemoryID)
     }
-    coordinator.onPreparationFailed = { capture.reviewDismissed() }
+    coordinator.onPreparationFailed = { capture.reviewPreparationFailed() }
     capture.onReviewSaved = { coordinator.showConnections(savedMemoryID: $0) }
     capture.onReviewSaveFailed = { coordinator.closeAfterFailedSave() }
     return (capture, coordinator)
