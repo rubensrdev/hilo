@@ -109,6 +109,7 @@ El término encontrado en un extracto se marca con **peso semibold**, sin color 
 |---|---|
 | `foto-tarjeta` | Proporción 3:2, recorte para rellenar, dentro de `relleno-tarjeta` (no a sangre), encima del extracto, `radio-foto` |
 | `foto-detalle` | Proporción original, **sin recorte**, ancho completo menos `margen-pantalla`, `radio-foto` |
+| `alto-foto-captura` | Miniatura de la foto adjunta en la captura: 120 pt de alto, proporción de `foto-tarjeta`, recorte para rellenar, `radio-foto` |
 
 Los valores de translucidez y desenfoque del vidrio los pone el sistema: no son tokens y no se juzgan sobre una imagen de referencia.
 
@@ -181,6 +182,7 @@ Un número suelto en una vista es un token que falta.
 | `separacion-chips` | `espacio-2` |
 | `alto-fila-minimo` | 44 |
 | `objetivo-toque-minimo` | 44 × 44 |
+| `alto-minimo-campo-captura` | 160. El campo crece con el texto y no tiene scroll propio, así que no escala con Dynamic Type |
 
 ### 3.3 Radios
 
@@ -272,6 +274,7 @@ Direcciones: **leading / trailing**, nunca izquierda / derecha.
 ## Histórico
 
 - **1.0** — Redacción inicial.
+- **1.5** — Cierre de F4 (DEC-53): `alto-minimo-campo-captura` y `alto-foto-captura`, que la captura usaba como números sueltos.
 - **1.4** — Apertura de F4 (DEC-43): el error de comprensión pasa a `estado-aviso` con su símbolo; `estado-error` queda solo como base de `destructivo`.
 - **1.3** — Cierre de la 0.4: foto de tarjeta dentro del relleno, estilo del botón de contar, extracto centrado en la coincidencia.
 - **1.2** — Tras el segundo handoff: `trazo-conexion` separado de `trazo-vinculo`; ubicación única de la acción de contar en todos los tamaños.
