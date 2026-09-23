@@ -149,29 +149,10 @@ final class CaptureState {
     let language = interfaceLanguage
     comprehensionTask = Task { [weak self] in
       guard let self else { return }
-      var lastResult: Result<ExtractedMemory, MemoryComprehensionError>?
-      do {
-        for try await snapshot in self.comprehender.comprehend(
-          narrative: text, interfaceLanguage: language)
-        {
-          guard !Task.isCancelled else {
-            self.phase = .capturing
-            return
-          }
-          self.extractedSoFar = snapshot
-          lastResult = .success(snapshot)
-        }
-      } catch let error as MemoryComprehensionError {
-        lastResult = .failure(error)
-      } catch {
-        self.phase = .capturing  // cancelacion: contrato 3 de F3, no es un estado de producto
-        return
-      }
-      guard !Task.isCancelled else {
-        self.phase = .capturing
-        return
-      }
-      await self.handle(MemoryComprehensionOutcome(lastResult, narrative: text))
+      let outcome = await self.comprehender.outcome(
+        narrative: text, interfaceLanguage: language
+      ) { self.extractedSoFar = $0 }
+      await self.handle(outcome)
     }
   }
 

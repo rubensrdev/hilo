@@ -728,6 +728,38 @@ struct PersistenceActorReviewTests {
     #expect(appearances.map(\.elementID) == [elena.id])
   }
 
+  // captura y detalle pueden analizar el mismo recuerdo: el segundo no debe duplicar nada
+  @Test
+  func `Completing the analysis of a memory already analyzed throws alreadyAnalyzed and changes nothing`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(
+      Memory(narrative: "La boda de Elena en el pueblo.", savedAt: Self.fixedSavedAt))
+    let savedID = try await actor.save(memory, isAnalyzed: false, isExample: false)
+    let elena = try #require(Element(displayName: "Elena", type: .person))
+    let pueblo = try #require(Element(displayName: "el pueblo", type: .place))
+    try await actor.completeAnalysis(
+      of: savedID,
+      outcome: Self.outcome(
+        elementsToCreate: [.init(element: elena, role: nil)],
+        date: try #require(MemoryDate(text: "en mayo", deducedYear: nil))))
+
+    await #expect(throws: PersistenceActor.WriteError.alreadyAnalyzed) {
+      try await actor.completeAnalysis(
+        of: savedID,
+        outcome: Self.outcome(
+          elementsToCreate: [.init(element: pueblo, role: nil)],
+          date: try #require(MemoryDate(text: "en junio", deducedYear: nil))))
+    }
+
+    let record = try #require(try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).first)
+    #expect(record.dateText == "en mayo")
+    #expect(try await actor.fetchAppearances().map(\.elementID) == [elena.id])
+    #expect(try await actor.fetchElements().map(\.id) == [elena.id])
+  }
+
   @Test func `Completing the analysis of a memory that was never saved throws memoryNotFound`()
     async throws
   {

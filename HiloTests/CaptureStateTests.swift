@@ -1,6 +1,5 @@
 import Foundation
 import SwiftData
-import Synchronization
 import Testing
 
 @testable import Hilo
@@ -743,31 +742,6 @@ struct CaptureStateTests {
     return CaptureState(
       comprehender: fake, persistenceActor: actor, interfaceLanguage: "es"
     ) { _, _, _, _ in }
-  }
-}
-
-// necesario para DEC-45: el mismo comprehender debe fallar la primera vez y acertar en el reintento;
-// Mutex en vez de nonisolated(unsafe) (prohibido sin excepcion en este proyecto), aunque las
-// llamadas del test son estrictamente secuenciales, nunca concurrentes
-private nonisolated final class SequencedComprehender: MemoryComprehending, Sendable {
-  private let scripts: [FakeMemoryComprehender.Script]
-  private let callIndex = Mutex(0)
-
-  init(scripts: [FakeMemoryComprehender.Script]) {
-    self.scripts = scripts
-  }
-
-  func comprehend(narrative: String, interfaceLanguage: String) -> AsyncThrowingStream<
-    ExtractedMemory, Error
-  > {
-    let index = callIndex.withLock { value -> Int in
-      let current = value
-      value += 1
-      return current
-    }
-    let script = scripts[min(index, scripts.count - 1)]
-    return FakeMemoryComprehender(script: script).comprehend(
-      narrative: narrative, interfaceLanguage: interfaceLanguage)
   }
 }
 

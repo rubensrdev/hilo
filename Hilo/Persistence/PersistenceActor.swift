@@ -6,6 +6,7 @@ actor PersistenceActor {
   enum WriteError: Error, Equatable {
     case memoryNotFound
     case elementNotFound
+    case alreadyAnalyzed
   }
 
   // unico punto de escritura (contrato 2): las vistas nunca insertan, borran ni guardan
@@ -67,6 +68,8 @@ actor PersistenceActor {
   func completeAnalysis(of id: MemoryID, outcome: ReviewOutcome) throws {
     do {
       guard let record = try fetchMemoryRecord(id: id) else { throw WriteError.memoryNotFound }
+      // comprobar y escribir en el mismo salto al actor: captura y detalle no pueden analizarlo dos veces
+      guard !record.isAnalyzed else { throw WriteError.alreadyAnalyzed }
       record.dateText = outcome.date?.text
       record.deducedYear = outcome.date?.deducedYear
       record.isAnalyzed = true
@@ -132,6 +135,12 @@ actor PersistenceActor {
     try ConnectionMoment(
       savedMemoryID: id, memories: fetchMemories(), elements: fetchElements(),
       appearances: fetchAppearances())
+  }
+
+  // DEC-16: solo un recuerdo sin analizar se comprende mas tarde
+  func unanalyzedMemory(id: MemoryID) throws -> Memory? {
+    guard let record = try fetchMemoryRecord(id: id), !record.isAnalyzed else { return nil }
+    return Self.memory(from: record)
   }
 
   // la foto no es del dominio (F1); sale como Data simple, ya Sendable por si misma
