@@ -562,7 +562,8 @@ struct PersistenceActorReviewTests {
     let actor = PersistenceActor(modelContainer: container)
     let date = try #require(MemoryDate(text: "el verano del 87", deducedYear: 1987))
     let memory = try #require(
-      Memory(narrative: "Aquel verano en la playa de Cádiz.", date: date, savedAt: Self.fixedSavedAt))
+      Memory(
+        narrative: "Aquel verano en la playa de Cádiz.", date: date, savedAt: Self.fixedSavedAt))
     let originalPhoto = try PhotoStripperTests.jpegWithGPS()
 
     let savedID = try await actor.saveReviewed(
@@ -583,7 +584,8 @@ struct PersistenceActorReviewTests {
   }
 
   @Test
-  func `A new element in the outcome is created with its canonical name and a confirmed appearance with its role`()
+  func
+    `A new element in the outcome is created with its canonical name and a confirmed appearance with its role`()
     async throws
   {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -694,7 +696,8 @@ struct PersistenceActorReviewTests {
 
   // DEC-45 + DEC-35: comprender mas tarde actualiza el mismo recuerdo, sin tocar savedAt ni la foto
   @Test
-  func `Completing the analysis updates the same memory without touching savedAt, photo or narrative`()
+  func
+    `Completing the analysis updates the same memory without touching savedAt, photo or narrative`()
     async throws
   {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -730,7 +733,8 @@ struct PersistenceActorReviewTests {
 
   // captura y detalle pueden analizar el mismo recuerdo: el segundo no debe duplicar nada
   @Test
-  func `Completing the analysis of a memory already analyzed throws alreadyAnalyzed and changes nothing`()
+  func
+    `Completing the analysis of a memory already analyzed throws alreadyAnalyzed and changes nothing`()
     async throws
   {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -754,7 +758,8 @@ struct PersistenceActorReviewTests {
           date: try #require(MemoryDate(text: "en junio", deducedYear: nil))))
     }
 
-    let record = try #require(try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).first)
+    let record = try #require(
+      try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).first)
     #expect(record.dateText == "en mayo")
     #expect(try await actor.fetchAppearances().map(\.elementID) == [elena.id])
     #expect(try await actor.fetchElements().map(\.id) == [elena.id])
@@ -772,7 +777,8 @@ struct PersistenceActorReviewTests {
 
   // DEC-40: "en la misma operacion que el resto" — un fallo a mitad no deja nada a medias
   @Test
-  func `A failure halfway through saving leaves neither the memory nor the new element in the store`()
+  func
+    `A failure halfway through saving leaves neither the memory nor the new element in the store`()
     async throws
   {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -800,7 +806,8 @@ struct PersistenceActorReviewTests {
   }
 
   @Test
-  func `A failure halfway through completing the analysis leaves the memory unanalyzed and untouched`()
+  func
+    `A failure halfway through completing the analysis leaves the memory unanalyzed and untouched`()
     async throws
   {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -828,6 +835,30 @@ struct PersistenceActorReviewTests {
     #expect(record.dateText == nil)
     #expect(try context.fetch(FetchDescriptor<ElementRecord>()).map(\.id) == [later.id.value])
     #expect(try context.fetch(FetchDescriptor<AppearanceRecord>()).isEmpty)
+  }
+
+  // corrección sobre ae9034a: «No se ha guardado nada» es cierto también si falla la escritura final
+  @Test func `A failed final write of an unanalyzed memory leaves nothing pending in the actor`()
+    async throws
+  {
+    // un almacen de solo lectura: la insercion ya esta hecha cuando save() lanza
+    let storeURL = URL.temporaryDirectory.appending(path: "\(UUID().uuidString).store")
+    defer { try? FileManager.default.removeItem(at: storeURL) }
+    _ = try ModelContainer(
+      for: PersistenceContainer.schema, configurations: [ModelConfiguration(url: storeURL)])
+    let container = try ModelContainer(
+      for: PersistenceContainer.schema,
+      configurations: [ModelConfiguration(url: storeURL, allowsSave: false)])
+    let actor = PersistenceActor(modelContainer: container)
+    let memory = try #require(Memory(narrative: "Un paseo por el río.", savedAt: Date()))
+
+    await #expect(throws: (any Error).self) {
+      try await actor.save(memory, isAnalyzed: false, isExample: false)
+    }
+
+    // lo pendiente en el contexto del actor es lo que el siguiente guardado escribiria
+    #expect(try await actor.fetchMemories().isEmpty)
+    #expect(try await actor.fetchAppearances().isEmpty)
   }
 
   private static func outcome(

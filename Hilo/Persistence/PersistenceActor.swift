@@ -20,7 +20,13 @@ actor PersistenceActor {
       deducedYear: memory.date?.deducedYear, photoData: strippedPhotoData, savedAt: memory.savedAt,
       isAnalyzed: isAnalyzed, isExample: isExample)
     modelContext.insert(record)
-    try modelContext.save()
+    do {
+      try modelContext.save()
+    } catch {
+      // igual que saveReviewed: un guardado fallido no deja nada pendiente para la siguiente escritura
+      modelContext.rollback()
+      throw error
+    }
     return memory.id
   }
 
