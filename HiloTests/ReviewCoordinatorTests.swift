@@ -72,7 +72,7 @@ struct ReviewCoordinatorTests {
     coordinator.presentation = nil
     capture.reviewDismissed()
     await waitUntil { connectionsTask != nil }
-    await try #require(connectionsTask).value
+    try await #require(connectionsTask).value
 
     #expect(coordinator.presentation == nil)
     #expect(capture.narrative == "")
