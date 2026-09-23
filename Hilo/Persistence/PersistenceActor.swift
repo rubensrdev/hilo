@@ -127,6 +127,13 @@ actor PersistenceActor {
     try modelContext.fetch(FetchDescriptor<AppearanceRecord>()).compactMap(Self.appearance(from:))
   }
 
+  // se calcula aqui: un solo salto al actor, todo leido del mismo estado del almacen
+  func connectionMoment(for id: MemoryID) throws -> ConnectionMoment? {
+    try ConnectionMoment(
+      savedMemoryID: id, memories: fetchMemories(), elements: fetchElements(),
+      appearances: fetchAppearances())
+  }
+
   // la foto no es del dominio (F1); sale como Data simple, ya Sendable por si misma
   func photoData(for id: MemoryID) throws -> Data? {
     try fetchMemoryRecord(id: id)?.photoData

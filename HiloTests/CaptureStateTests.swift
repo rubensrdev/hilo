@@ -515,7 +515,8 @@ struct CaptureStateTests {
   }
 
   @Test
-  func `Saving a review opened by retry analyzes the memory already saved instead of inserting another`()
+  func
+    `Saving a review opened by retry analyzes the memory already saved instead of inserting another`()
     async throws
   {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -548,9 +549,10 @@ struct CaptureStateTests {
     #expect(state.narrative == "")
   }
 
-  // DEC-47: la hoja llama a onSave y despues a dismiss(), asi que onDismiss llega con el guardado en vuelo
+  // DEC-47: deslizar con el guardado en vuelo dispara onDismiss
   @Test
-  func `Dismissing right after confirming the save does not bring the narrative back or duplicate the memory`()
+  func
+    `Dismissing right after confirming the save does not bring the narrative back or duplicate the memory`()
     async throws
   {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -651,6 +653,69 @@ struct CaptureStateTests {
     await waitUntil { state.phase == .capturing }
 
     #expect(try await actor.fetchElements().map(\.displayName) == ["abuelo Ramón"])
+  }
+
+  // MARK: aviso del guardado — F4.5.3, el coordinador decide si hay momento de la conexion
+
+  @Test
+  func `A saved review reports the stored memory's id once the capture is already empty`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    var understood: [ExtractedMemory] = []
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(partials: [], final: Self.luciaExtraction)),
+      persistenceActor: actor, interfaceLanguage: "es"
+    ) { extracted, _, _, _ in understood.append(extracted) }
+    var reported: [MemoryID] = []
+    var narrativeWhenReported: String?
+    state.onReviewSaved = { id in
+      reported.append(id)
+      narrativeWhenReported = state.narrative
+    }
+    state.narrative = "Lucía y el primer diente."
+
+    state.understandAndSave()
+    await waitUntil { understood.count == 1 }
+    state.reviewConfirmed(
+      try await Self.reviewState(for: try #require(understood.first), actor: actor),
+      dateTextAtSave: "")
+    await waitUntil { reported.count == 1 }
+
+    let records = try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>())
+    #expect(reported.map(\.value) == records.map(\.id))
+    #expect(narrativeWhenReported == "")
+  }
+
+  @Test func `A failed save reports the failure and never a saved memory`() async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    var understood: [ExtractedMemory] = []
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(partials: [], final: Self.luciaExtraction)),
+      persistenceActor: actor, interfaceLanguage: "es"
+    ) { extracted, _, _, _ in understood.append(extracted) }
+    var savedReports = 0
+    var failedReports = 0
+    state.onReviewSaved = { _ in savedReports += 1 }
+    state.onReviewSaveFailed = { failedReports += 1 }
+    state.narrative = "Lucía en la playa de Laredo."
+
+    state.understandAndSave()
+    await waitUntil { understood.count == 1 }
+    // un elemento conocido que no esta en el almacen: la aparicion confirmada no encuentra su elemento
+    let ghost = try #require(Element(displayName: "Lucía", type: .person))
+    state.reviewConfirmed(
+      ReviewState(
+        extracted: try #require(understood.first), knownElements: [ghost], appearances: []),
+      dateTextAtSave: "")
+    await waitUntil { failedReports == 1 }
+
+    #expect(failedReports == 1)
+    #expect(savedReports == 0)
   }
 
   // MARK: fixtures

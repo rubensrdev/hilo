@@ -23,6 +23,8 @@ final class CaptureState {
   private(set) var savedMemoryID: MemoryID?
   // DEC-47: cerrar la revision vuelve aqui; en el reintento es el error, nunca el formulario
   private var phaseBeforeComprehension: Phase = .capturing
+  var onReviewSaved: (MemoryID) -> Void = { _ in }
+  var onReviewSaveFailed: () -> Void = {}
 
   private let comprehender: MemoryComprehending
   private let persistenceActor: PersistenceActor
@@ -113,10 +115,11 @@ final class CaptureState {
     // self fuerte: un guardado del texto del usuario no se salta aunque la captura desaparezca
     Task {
       do {
-        try await self.persistReview(
+        let savedID = try await self.persistReview(
           reviewState, dateTextAtSave: dateTextAtSave, narrative: text, photoData: photo,
           existingID: existingID)
         self.resetForNewMemory()
+        self.onReviewSaved(savedID)
       } catch {
         // solo el tipo: el error no debe arrastrar al log nada del usuario
         self.logger.error(
@@ -124,6 +127,7 @@ final class CaptureState {
         )
         self.phase = self.phaseBeforeComprehension
         self.extractedSoFar = nil
+        self.onReviewSaveFailed()
       }
     }
   }
@@ -193,17 +197,17 @@ final class CaptureState {
   private func persistReview(
     _ reviewState: ReviewState, dateTextAtSave: String, narrative text: String, photoData: Data?,
     existingID: MemoryID?
-  ) async throws {
+  ) async throws -> MemoryID {
     if let existingID {
       try await persistenceActor.completeAnalysis(
         of: existingID,
         outcome: reviewState.outcome(memoryID: existingID, dateTextAtSave: dateTextAtSave))
-      return
+      return existingID
     }
     guard let memory = Memory(narrative: text, savedAt: Date()) else {
       throw ReviewSaveError.blankNarrative
     }
-    _ = try await persistenceActor.saveReviewed(
+    return try await persistenceActor.saveReviewed(
       memory, photoData: photoData,
       outcome: reviewState.outcome(memoryID: memory.id, dateTextAtSave: dateTextAtSave))
   }

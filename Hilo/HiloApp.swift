@@ -29,6 +29,8 @@ struct HiloApp: App {
         extracted: extracted, narrative: narrative, savedMemoryID: savedMemoryID)
     }
     coordinator.onPreparationFailed = { capture.reviewDismissed() }
+    capture.onReviewSaved = { coordinator.showConnections(savedMemoryID: $0) }
+    capture.onReviewSaveFailed = { coordinator.closeAfterFailedSave() }
     _reviewCoordinator = State(initialValue: coordinator)
     _captureState = State(initialValue: capture)
   }
@@ -39,9 +41,13 @@ struct HiloApp: App {
         // DEC-47: deslizar y Cancel pasan los dos por aqui; guardar ya ha salido de .reviewing y esto queda inocuo
         .sheet(item: $reviewCoordinator.presentation, onDismiss: captureState.reviewDismissed) {
           presentation in
-          ReviewScreen(initial: presentation.reviewState, narrative: presentation.narrative) {
-            reviewState, dateText in
-            captureState.reviewConfirmed(reviewState, dateTextAtSave: dateText)
+          switch presentation.stage {
+          case .review(let reviewState, let narrative):
+            ReviewScreen(initial: reviewState, narrative: narrative) { reviewState, dateText in
+              captureState.reviewConfirmed(reviewState, dateTextAtSave: dateText)
+            }
+          case .connected(let moment):
+            ConnectionMomentScreen(moment: moment)
           }
         }
     }

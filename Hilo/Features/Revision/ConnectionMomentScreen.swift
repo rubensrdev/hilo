@@ -1,0 +1,126 @@
+import SwiftUI
+
+// contrato 5: el recuerdo ya guardado y sus conexiones formandose, cada una con su motivo
+struct ConnectionMomentScreen: View {
+  let moment: ConnectionMoment
+  @Environment(\.dismiss) private var dismiss
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @State private var isFormed = false
+
+  var body: some View {
+    NavigationStack {
+      ScrollView {
+        VStack(alignment: .leading, spacing: Spacing.separacionSecciones) {
+          savedLabel
+          memoryCard
+          connectionsSection
+        }
+        .padding(Spacing.margenPantalla)
+      }
+      .background(Color.fondo)
+      .safeAreaInset(edge: .bottom) { doneButton }
+    }
+    .onAppear {
+      withAnimation(reduceMotion ? Motion.conexionReducida : Motion.conexion) {
+        isFormed = true
+      }
+    }
+  }
+
+  // P1: el color semantico va en el simbolo, nunca en el texto
+  private var savedLabel: some View {
+    Label {
+      Text("Memory saved")
+        .metadato()
+    } icon: {
+      Image(systemName: "checkmark.circle.fill")
+        .foregroundStyle(Color.estadoExito)
+    }
+  }
+
+  private var memoryCard: some View {
+    VStack(alignment: .leading, spacing: Spacing.espacio2) {
+      Text(moment.narrative)
+        .relato()
+      if let dateText = moment.dateText {
+        Text(dateText)
+          .fechaUsuario()
+          .foregroundStyle(Color.textoSecundario)
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(Spacing.rellenoTarjeta)
+    .background(Color.superficieTarjeta)
+    .clipShape(RoundedRectangle(cornerRadius: Spacing.radioTarjeta, style: .continuous))
+    .accessibilityElement(children: .combine)
+  }
+
+  private var connectionsSection: some View {
+    VStack(alignment: .leading, spacing: Spacing.espacio2) {
+      Label {
+        Text("Connected with \(moment.rows.count) memories")
+          .tituloSeccion()
+      } icon: {
+        Image(systemName: "link")
+          .foregroundStyle(Color.acentoHilo)
+      }
+
+      HStack(spacing: 0) {
+        // con Reducir movimiento el trazo ya esta completo: solo funde el conjunto
+        Rectangle()
+          .fill(Color.acentoHilo)
+          .frame(width: Spacing.trazoConexion)
+          .scaleEffect(y: isFormed || reduceMotion ? 1 : 0, anchor: .top)
+          .accessibilityHidden(true)
+        VStack(alignment: .leading, spacing: 0) {
+          ForEach(Array(moment.rows.enumerated()), id: \.element.memoryID) { index, row in
+            if index > 0 {
+              Rectangle()
+                .fill(Color.separador)
+                .trazoSeparador()
+            }
+            connectedRow(row)
+          }
+        }
+        .opacity(isFormed ? 1 : 0)
+      }
+      .background(Color.superficieTarjeta)
+      .clipShape(RoundedRectangle(cornerRadius: Spacing.radioTarjeta, style: .continuous))
+      .opacity(reduceMotion && !isFormed ? 0 : 1)
+    }
+  }
+
+  private func connectedRow(_ row: ConnectionMoment.Row) -> some View {
+    VStack(alignment: .leading, spacing: Spacing.espacio1) {
+      Text(row.narrative)
+        .relatoExtracto()
+        .lineLimit(2)
+      // regla 4 del diseño: una conexion siempre ensena su motivo; los nombres, sin traducir
+      Label {
+        Text("By \(row.motiveNames.formatted(.list(type: .and)))")
+          .motivoConexion()
+          .foregroundStyle(Color.textoSecundario)
+      } icon: {
+        Image(systemName: "link")
+          .foregroundStyle(Color.acentoHilo)
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(Spacing.rellenoTarjeta)
+    .accessibilityElement(children: .combine)
+  }
+
+  // «Done» no es acento: la accion ya ha ocurrido
+  private var doneButton: some View {
+    Button {
+      dismiss()
+    } label: {
+      Text("Done")
+        .botonSecundario()
+        .frame(maxWidth: .infinity, minHeight: Spacing.objetivoToqueMinimo)
+    }
+    .buttonStyle(.bordered)
+    .padding(.horizontal, Spacing.margenPantalla)
+    .padding(.bottom, Spacing.espacio2)
+  }
+}

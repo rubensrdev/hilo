@@ -460,8 +460,8 @@ struct ReviewScreen: View {
 
   private var saveButton: some View {
     Button {
+      // la hoja no se cierra aqui: pasa al momento de la conexion o la cierra el coordinador
       onSave(reviewState, dateText)
-      dismiss()
     } label: {
       Text("Save memory")
         .botonPrincipal()
