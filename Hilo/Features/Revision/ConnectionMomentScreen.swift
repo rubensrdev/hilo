@@ -5,6 +5,9 @@ struct ConnectionMomentScreen: View {
   let moment: ConnectionMoment
   @Environment(\.dismiss) private var dismiss
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @Environment(\.locale) private var environmentLocale
+
+  private var interfaceLocale: Locale { InterfaceLocale.resolve(environmentLocale) }
   @State private var isFormed = false
 
   var body: some View {
@@ -21,6 +24,10 @@ struct ConnectionMomentScreen: View {
       .safeAreaInset(edge: .bottom) { doneButton }
     }
     .onAppear {
+      // tokens §5: el anuncio no cambia con Reducir movimiento, solo el trazo
+      AccessibilityNotification.Announcement(
+        ReviewCopy.momentAnnouncement(connectedCount: moment.rows.count, locale: interfaceLocale)
+      ).post()
       withAnimation(reduceMotion ? Motion.conexionReducida : Motion.conexion) {
         isFormed = true
       }
@@ -97,7 +104,9 @@ struct ConnectionMomentScreen: View {
         .lineLimit(2)
       // regla 4 del diseño: una conexion siempre ensena su motivo; los nombres, sin traducir
       Label {
-        Text("By \(row.motiveNames.formatted(.list(type: .and)))")
+        Text(
+          ReviewCopy.connectionMotive(
+            names: row.motiveNames, locale: interfaceLocale))
           .motivoConexion()
           .foregroundStyle(Color.textoSecundario)
       } icon: {

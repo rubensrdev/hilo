@@ -52,6 +52,19 @@ struct StringCatalogTests {
     "estado-aviso",
     "estado-error",
     "separador",
+    // anexo DEC-46 (F4): los textos provisionales entran en los dos idiomas
+    "Your memory is saved just as you told it",
+    "Hilo couldn't read it this time. It's saved without people, places or objects — you can try again now, or later from the memory.",
+    "Try reading it again",
+    "Leave it as it is",
+    "This memory is too long for Hilo to read in one go. It's saved without people, places or objects. If you shorten it, you can ask Hilo to read it from the memory.",
+    "Hilo can't read memories in this language. It's saved without people, places or objects.",
+    "Done",
+    "These are the first threads",
+    "This is the first time %@ appears. The next memory that mentions %@ will connect to this one.",
+    "This is the first time %@ appear. The next memory that shares any of them will connect to this one.",
+    "No names this time",
+    "Hilo didn't find named people, places or objects. It's still a memory, and it will be saved in your words.",
   ]
 
   // se lee el fichero fuente directamente: el oraculo no puede ser Bundle,

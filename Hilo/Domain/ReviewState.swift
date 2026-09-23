@@ -288,6 +288,11 @@ nonisolated enum RenameOutcome: Sendable, Equatable {
   case becameRecognized(Set<ElementID>)
 }
 
+// contrato 2: la revision agrupa siempre personas, lugares y objetos, en este orden
+extension ElementType {
+  nonisolated static let reviewOrder: [ElementType] = [.person, .place, .object]
+}
+
 // contrato 2 + §9.2: los cuatro bloques de la revision, cada uno solo si tiene contenido
 nonisolated struct ReviewBlocks: Sendable, Equatable {
   struct Understood: Sendable, Equatable, Identifiable {
@@ -323,6 +328,11 @@ nonisolated struct ReviewBlocks: Sendable, Equatable {
   let known: [Known]  // bloque 2
   let doubtful: [Doubtful]  // bloque 3
   let isBeginning: Bool  // contrato 2: known vacio y understood no vacio
+
+  // el comienzo nombra en el orden de los bloques de arriba, estable dentro de cada tipo
+  var beginningNames: [String] {
+    ElementType.reviewOrder.flatMap { type in understood.filter { $0.type == type }.map(\.name) }
+  }
 }
 
 // contrato 3+5 (regla 3, regla 7, DEC-40): lo que se guarda al confirmar la revision, sin persistir nada

@@ -6,6 +6,9 @@ struct CaptureScreen: View {
   @Bindable var state: CaptureState
   @State private var photosPickerItem: PhotosPickerItem?
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @Environment(\.locale) private var environmentLocale
+
+  private var interfaceLocale: Locale { InterfaceLocale.resolve(environmentLocale) }
 
   var body: some View {
     NavigationStack {
@@ -27,15 +30,19 @@ struct CaptureScreen: View {
     .onChange(of: photosPickerItem) { _, newValue in
       Task { state.photoData = try? await newValue?.loadTransferable(type: Data.self) }
     }
+    // contrato 6: el mismo anuncio con o sin Reducir movimiento, solo cambia la animacion
     .onChange(of: state.extractedSoFar?.elements.count) { _, _ in
       guard let element = state.extractedSoFar?.elements.last else { return }
       AccessibilityNotification.Announcement(
-        "\(element.name), \(ElementType(element.type).displayName)"
+        CaptureCopy.elementAppeared(
+          name: element.name, type: ElementType(element.type), locale: interfaceLocale)
       ).post()
     }
     .onChange(of: state.phase) { _, newPhase in
-      guard case .notAnalyzed = newPhase else { return }
-      AccessibilityNotification.Announcement(Self.errorTitle).post()
+      guard case .notAnalyzed(let reason) = newPhase else { return }
+      AccessibilityNotification.Announcement(
+        CaptureCopy.comprehensionNotice(reason, locale: interfaceLocale).announcement
+      ).post()
     }
   }
 
@@ -60,7 +67,7 @@ struct CaptureScreen: View {
         .padding(Spacing.espacio2)
         .accessibilityLabel("Your memory")
       if state.narrative.isEmpty {
-        Text(Self.placeholder)
+        Text(Self.placeholder(locale: interfaceLocale))
           .relato()
           .foregroundStyle(Color.textoDeshabilitado)
           .lineLimit(3)
@@ -140,7 +147,9 @@ struct CaptureScreen: View {
         .foregroundStyle(ElementType(element.type).color)
     }
     .accessibilityElement(children: .combine)
-    .accessibilityLabel("\(element.name), \(ElementType(element.type).displayName)")
+    .accessibilityLabel(
+      CaptureCopy.elementAppeared(
+        name: element.name, type: ElementType(element.type), locale: interfaceLocale))
     .transition(.opacity)
   }
 
@@ -174,15 +183,14 @@ struct CaptureScreen: View {
 
   // MARK: error de comprension — DEC-43 (estado-aviso) + anexo DEC-46
 
-  private static let errorTitle = "Your memory is saved just as you told it"
-
   @ViewBuilder
   private func errorState(_ reason: MemoryComprehensionReason) -> some View {
+    let notice = CaptureCopy.comprehensionNotice(reason, locale: interfaceLocale)
     Label {
       VStack(alignment: .leading, spacing: Spacing.espacio1) {
-        Text(Self.errorTitle)
+        Text(notice.title)
           .tituloSeccion()
-        Text(Self.errorBody(reason))
+        Text(notice.body)
           .metadato()
       }
     } icon: {
@@ -196,7 +204,8 @@ struct CaptureScreen: View {
 
     // "Leave it as it is"/"Done" solo reconocen el aviso: el texto ya esta a salvo.
     // Su salida de esta pantalla es de F5 (aun no hay lista a la que volver).
-    if state.canRetry {
+    switch notice.actions {
+    case .retryOrLeave:
       Button {
         state.retry()
       } label: {
@@ -211,29 +220,18 @@ struct CaptureScreen: View {
 
       Button("Leave it as it is") {}
         .frame(minHeight: Spacing.objetivoToqueMinimo)
-    } else {
+    case .done:
       Button("Done") {}
         .frame(minHeight: Spacing.objetivoToqueMinimo)
-    }
-  }
-
-  private static func errorBody(_ reason: MemoryComprehensionReason) -> String {
-    switch reason {
-    case .generic, .guardrail:
-      "Hilo couldn't read it this time. It's saved without people, places or objects — you can try again now, or later from the memory."
-    case .contextOverflow:
-      "This memory is too long for Hilo to read in one go. It's saved without people, places or objects. If you shorten it, you can ask Hilo to read it from the memory."
-    case .unsupportedLanguage:
-      "Hilo can't read memories in this language. It's saved without people, places or objects."
     }
   }
 
   // MARK: ayudas — placeholder de contrato 1 (simbolo/color/nombre por tipo: DesignSystem)
 
   // contrato 1: el texto de ayuda enseña con un recuerdo de ejemplo real, nunca una instruccion
-  private static var placeholder: String {
+  private static func placeholder(locale: Locale) -> String {
     let language: ExampleMemoryLanguage =
-      Locale.current.language.languageCode?.identifier == "es" ? .spanish : .english
+      locale.language.languageCode?.identifier == "es" ? .spanish : .english
     return ExampleMemoryContent.seeds(for: language).first?.narrative ?? ""
   }
 }

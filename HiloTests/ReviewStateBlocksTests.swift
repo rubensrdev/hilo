@@ -42,6 +42,22 @@ nonisolated struct ReviewStateBlocksTests {
     #expect(state.blocks.isBeginning)
   }
 
+  // el defecto de F4.5.1: la tarjeta seguia el orden de extraccion, no el de los bloques
+  @Test func `beginningNames follow the block order: people, then places, then objects`() throws {
+    let state = ReviewState(
+      candidates: [
+        try candidate("José", .person),
+        try candidate("el reloj", .object),
+        try candidate("la casa del pueblo", .place),
+        try candidate("Carmen", .person),
+      ],
+      extractedDateText: nil, extractedDeducedYear: nil,
+      knownElements: [], appearances: [])
+
+    #expect(
+      state.blocks.beginningNames == ["José", "Carmen", "la casa del pueblo", "el reloj"])
+  }
+
   @Test func `isBeginning is false as soon as something is known`() throws {
     let jose = try #require(Element(displayName: "José", type: .person))
     let state = ReviewState(

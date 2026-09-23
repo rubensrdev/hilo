@@ -8,6 +8,9 @@ struct ReviewScreen: View {
   let narrative: String
   let onSave: (ReviewState, String) -> Void
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.locale) private var environmentLocale
+
+  private var interfaceLocale: Locale { InterfaceLocale.resolve(environmentLocale) }
 
   // MARK: renombrar — contrato 4, DEC-40/DEC-26/DEC-41/DEC-48: un unico alert del sistema con
   // campo de texto, para cualquier elemento; el aviso de alcance solo si ya existia (DEC-22)
@@ -213,7 +216,7 @@ struct ReviewScreen: View {
 
   private var understoodGroups: [(type: ElementType, rows: [UnderstoodRow])] {
     let grouped = Dictionary(grouping: understoodRows, by: \.type)
-    return [ElementType.person, .place, .object].compactMap { type in
+    return ElementType.reviewOrder.compactMap { type in
       guard let rows = grouped[type], !rows.isEmpty else { return nil }
       return (type, rows)
     }
@@ -226,7 +229,7 @@ struct ReviewScreen: View {
         .tituloSeccion()
       ForEach(understoodGroups, id: \.type) { group in
         VStack(alignment: .leading, spacing: Spacing.espacio2) {
-          Label(group.type.pluralDisplayName, systemImage: group.type.symbolName)
+          Label(group.type.localizedPluralName(locale: interfaceLocale), systemImage: group.type.symbolName)
             .foregroundStyle(group.type.color)
             .metadato()
           ForEach(group.rows) { row in
@@ -250,7 +253,9 @@ struct ReviewScreen: View {
           Image(systemName: row.type.symbolName)
             .foregroundStyle(Color.textoSecundario)
         }
-        .accessibilityLabel("\(row.name), \(row.type.displayName), removed from this memory")
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+          ReviewCopy.removedElementLabel(name: row.name, type: row.type, locale: interfaceLocale))
       } else {
         Button {
           startRenaming(itemID: row.id, currentName: row.name, otherMemoriesCount: nil)
@@ -266,7 +271,9 @@ struct ReviewScreen: View {
         }
         .buttonStyle(.plain)
         .frame(minHeight: Spacing.objetivoToqueMinimo)
-        .accessibilityLabel("\(row.name), \(row.type.displayName)")
+        .accessibilityLabel(
+          ReviewCopy.elementLabel(
+            name: row.name, type: row.type, otherMemories: nil, locale: interfaceLocale))
         .accessibilityHint("Double tap to rename")
       }
 
@@ -320,11 +327,18 @@ struct ReviewScreen: View {
         }
         .buttonStyle(.plain)
         .frame(minHeight: Spacing.objetivoToqueMinimo, alignment: .leading)
-        .accessibilityLabel("\(known.name), \(known.type.displayName)")
+        .accessibilityLabel(
+          ReviewCopy.elementLabel(
+            name: known.name, type: known.type, otherMemories: known.otherMemoriesCount,
+            locale: interfaceLocale))
         .accessibilityHint("Double tap to rename")
-        Text("\(known.type.displayName) · in \(known.otherMemoriesCount) memories")
-          .metadato()
-          .foregroundStyle(Color.textoSecundario)
+        // ya lo dice la etiqueta del nombre: VoiceOver no lo lee dos veces
+        Text(
+          "\(known.type.localizedName(locale: interfaceLocale)) · in \(known.otherMemoriesCount) memories"
+        )
+        .metadato()
+        .foregroundStyle(Color.textoSecundario)
+        .accessibilityHidden(true)
       }
       Spacer()
       Button {
@@ -412,33 +426,20 @@ struct ReviewScreen: View {
   // MARK: sin conexiones — el comienzo, nunca un fallo (anexo DEC-46)
 
   private var beginningSection: some View {
-    let names = reviewState.blocks.understood.map(\.name)
-    return VStack(alignment: .leading, spacing: Spacing.espacio1) {
+    VStack(alignment: .leading, spacing: Spacing.espacio1) {
       Text("These are the first threads")
         .tituloSeccion()
-      Text(Self.beginningBody(names: names))
-        .metadato()
-        .foregroundStyle(Color.textoSecundario)
+      Text(
+        ReviewCopy.beginningBody(
+          names: reviewState.blocks.beginningNames,
+          locale: interfaceLocale)
+      )
+      .metadato()
+      .foregroundStyle(Color.textoSecundario)
     }
     .padding(Spacing.espacio3)
     .background(Color.superficieHundida)
     .clipShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
-  }
-
-  // los nombres van tal como el usuario los confirmo, sin traducir (anexo DEC-46);
-  // solo la union de la lista se localiza (ListFormatter, nunca comas a mano)
-  private static func beginningBody(names: [String]) -> String {
-    let joined = ListFormatter.localizedString(byJoining: names)
-    if names.count == 1 {
-      return String(
-        localized:
-          "This is the first time \(joined) appears. The next memory that mentions \(joined) will connect to this one."
-      )
-    }
-    return String(
-      localized:
-        "This is the first time \(joined) appear. The next memory that shares any of them will connect to this one."
-    )
   }
 
   // MARK: bloque 4 — la fecha, editable como texto, nunca reanalizada (contrato 2)

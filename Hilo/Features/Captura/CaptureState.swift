@@ -57,14 +57,10 @@ final class CaptureState {
   // el guardado automatico del error
   var canSaveWithoutAnalyzing: Bool { canUnderstand }
 
-  // DEC-42 + anexo DEC-46: guardarraíl y rechazo comparten texto y botones con el
-  // caso generico, reintentar incluido — solo desbordamiento e idioma cierran con
-  // un unico boton, porque reintentar sin cambiar nada fallaria igual
+  // DEC-42: la misma regla que decide los botones del aviso (CaptureCopy)
   var canRetry: Bool {
-    switch phase {
-    case .notAnalyzed(.generic), .notAnalyzed(.guardrail): true
-    default: false
-    }
+    guard case .notAnalyzed(let reason) = phase else { return false }
+    return reason.allowsRetry
   }
 
   func understandAndSave() {
