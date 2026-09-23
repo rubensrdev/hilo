@@ -23,22 +23,25 @@ struct HiloApp: App {
   init() {
     let persistenceActor = PersistenceActor(modelContainer: Self.container)
     let coordinator = ReviewCoordinator(persistenceActor: persistenceActor)
+    let capture = CaptureState(
+      comprehender: FoundationModelsMemoryComprehender(),
+      persistenceActor: persistenceActor,
+      interfaceLanguage: Locale.current.language.languageCode?.identifier ?? "en"
+    ) { extracted, narrative, _, savedMemoryID in
+      coordinator.present(
+        extracted: extracted, narrative: narrative, savedMemoryID: savedMemoryID)
+    }
+    coordinator.onPreparationFailed = { capture.reviewDismissed() }
     _reviewCoordinator = State(initialValue: coordinator)
-    _captureState = State(
-      initialValue: CaptureState(
-        comprehender: FoundationModelsMemoryComprehender(),
-        persistenceActor: persistenceActor,
-        interfaceLanguage: Locale.current.language.languageCode?.identifier ?? "en"
-      ) { extracted, narrative, _, savedMemoryID in
-        coordinator.present(
-          extracted: extracted, narrative: narrative, savedMemoryID: savedMemoryID)
-      })
+    _captureState = State(initialValue: capture)
   }
 
   var body: some Scene {
     WindowGroup {
       CaptureScreen(state: captureState)
-        .sheet(item: $reviewCoordinator.presentation) { presentation in
+        // DEC-47: deslizar y Cancel pasan los dos por aqui; guardar (F4.5.2) avisa antes y esto queda inocuo
+        .sheet(item: $reviewCoordinator.presentation, onDismiss: captureState.reviewDismissed) {
+          presentation in
           ReviewScreen(initial: presentation.reviewState, narrative: presentation.narrative) {
             _, _ in
             // F4.5 sustituye este registro por el guardado real y el momento de la conexion

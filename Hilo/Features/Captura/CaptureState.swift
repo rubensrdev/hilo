@@ -6,6 +6,7 @@ final class CaptureState {
   enum Phase: Equatable {
     case capturing
     case comprehending
+    case reviewing
     case notAnalyzed(MemoryComprehensionReason)
   }
 
@@ -17,6 +18,8 @@ final class CaptureState {
   // mismo recuerdo durante toda la vida de la pantalla — asi el reintento actualiza
   // en vez de insertar
   private(set) var savedMemoryID: MemoryID?
+  // DEC-47: cerrar la revision vuelve aqui; en el reintento es el error, nunca el formulario
+  private var phaseBeforeComprehension: Phase = .capturing
 
   private let comprehender: MemoryComprehending
   private let persistenceActor: PersistenceActor
@@ -75,7 +78,29 @@ final class CaptureState {
     comprehensionTask?.cancel()
   }
 
+  // DEC-47: el guard lo hace inocuo si onDismiss llega despues de guardar
+  func reviewDismissed() {
+    guard phase == .reviewing else { return }
+    phase = phaseBeforeComprehension
+    extractedSoFar = nil
+  }
+
+  func reviewSaved() {
+    guard phase == .reviewing else { return }
+    resetForNewMemory()
+  }
+
+  private func resetForNewMemory() {
+    narrative = ""
+    photoData = nil
+    extractedSoFar = nil
+    savedMemoryID = nil
+    phase = .capturing
+    phaseBeforeComprehension = .capturing
+  }
+
   private func runComprehension() {
+    phaseBeforeComprehension = phase
     phase = .comprehending
     extractedSoFar = nil
     let text = narrative
@@ -111,6 +136,7 @@ final class CaptureState {
   private func handle(_ outcome: MemoryComprehensionOutcome) async {
     switch outcome {
     case .understood(let extracted):
+      phase = .reviewing
       onUnderstood(extracted, narrative, photoData, savedMemoryID)
     case .notAnalyzed(let text, let reason):
       // contrato 1 + DEC-43: el texto ya esta a salvo en cuanto aparece el estado de error.

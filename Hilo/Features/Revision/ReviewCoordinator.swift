@@ -13,6 +13,8 @@ final class ReviewCoordinator {
   }
 
   var presentation: Presentation?
+  // DEC-47: si la hoja no llega a abrirse, la captura vuelve igual que al cerrarla sin guardar
+  var onPreparationFailed: () -> Void = {}
 
   private let persistenceActor: PersistenceActor
   private let logger = Logger(subsystem: "com.hilo.app", category: "revision")
@@ -35,7 +37,11 @@ final class ReviewCoordinator {
             excludingMemoryID: savedMemoryID),
           narrative: narrative)
       } catch {
-        logger.error("No se pudo preparar la revision: \(error)")
+        // solo el tipo: el error no debe arrastrar al log nada del usuario
+        logger.error(
+          "No se pudo preparar la revision: \(String(describing: type(of: error)), privacy: .public)"
+        )
+        onPreparationFailed()
       }
     }
   }

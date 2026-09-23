@@ -301,6 +301,176 @@ struct CaptureStateTests {
     #expect(try await actor.fetchMemories().isEmpty)
   }
 
+  // MARK: salir de la revision — DEC-47, contrato 2
+
+  @Test func `A successful comprehension leaves the capture reviewing instead of comprehending`()
+    async throws
+  {
+    var understoodCallCount = 0
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(partials: [], final: Self.emptyExtraction)),
+      persistenceActor: PersistenceActor(
+        modelContainer: try PersistenceContainer.make(inMemory: true)),
+      interfaceLanguage: "es"
+    ) { _, _, _, _ in understoodCallCount += 1 }
+    state.narrative = "Una tarde en el río con mi hermano."
+
+    state.understandAndSave()
+    await waitUntil { understoodCallCount == 1 }
+
+    #expect(understoodCallCount == 1)
+    #expect(state.phase == .reviewing)
+  }
+
+  @Test
+  func
+    `Dismissing the review returns to capturing with narrative and photo intact, persists nothing and can understand again`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    var understoodCallCount = 0
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(partials: [], final: Self.emptyExtraction)),
+      persistenceActor: actor, interfaceLanguage: "es"
+    ) { _, _, _, _ in understoodCallCount += 1 }
+    let photo = Data([0x01, 0x02, 0x03])
+    state.narrative = "La feria de agosto con los primos."
+    state.photoData = photo
+
+    state.understandAndSave()
+    await waitUntil { understoodCallCount == 1 }
+    state.reviewDismissed()
+
+    #expect(state.phase == .capturing)
+    #expect(state.narrative == "La feria de agosto con los primos.")
+    #expect(state.photoData == photo)
+    #expect(state.canUnderstand)
+    #expect(state.savedMemoryID == nil)
+    #expect(try await actor.fetchMemories().isEmpty)
+
+    state.understandAndSave()
+    await waitUntil { understoodCallCount == 2 }
+
+    #expect(understoodCallCount == 2)
+  }
+
+  @Test
+  func
+    `Dismissing a review opened by retry returns to the generic error with the same unanalyzed memory and no new one`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    var understoodCallCount = 0
+    let state = CaptureState(
+      comprehender: SequencedComprehender(
+        scripts: [.fails(.noResponse), .succeeds(partials: [], final: Self.emptyExtraction)]),
+      persistenceActor: actor, interfaceLanguage: "es"
+    ) { _, _, _, _ in understoodCallCount += 1 }
+    state.narrative = "El primer día de colegio de Lucía."
+
+    state.understandAndSave()
+    await waitUntil { state.phase == .notAnalyzed(.generic) }
+    let firstSavedID = try #require(state.savedMemoryID)
+    state.retry()
+    await waitUntil { understoodCallCount == 1 }
+    state.reviewDismissed()
+
+    #expect(state.phase == .notAnalyzed(.generic))
+    #expect(state.canRetry)
+    #expect(state.savedMemoryID == firstSavedID)
+    #expect(state.narrative == "El primer día de colegio de Lucía.")
+    let records = try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>())
+    #expect(records.count == 1)
+    #expect(records.first?.isAnalyzed == false)
+  }
+
+  @Test
+  func `Saving the review empties the capture for a new memory without persisting anything itself`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    var understoodCallCount = 0
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(
+          partials: [],
+          final: ExtractedMemory(
+            elements: [ExtractedElement(name: "Lucía", type: .person, role: "mi hija")],
+            dateText: nil, deducedYear: nil))),
+      persistenceActor: actor, interfaceLanguage: "es"
+    ) { _, _, _, _ in understoodCallCount += 1 }
+    state.narrative = "Lucía aprendió a montar en bici."
+    state.photoData = Data([0x0A])
+
+    state.understandAndSave()
+    await waitUntil { understoodCallCount == 1 }
+    state.reviewSaved()
+
+    #expect(state.narrative == "")
+    #expect(state.photoData == nil)
+    #expect(state.extractedSoFar == nil)
+    #expect(state.savedMemoryID == nil)
+    #expect(state.phase == .capturing)
+    #expect(state.canUnderstand == false)
+    #expect(try await actor.fetchMemories().isEmpty)
+  }
+
+  @Test
+  func `Saving a review opened by retry releases the saved id so the next memory is not an update`()
+    async throws
+  {
+    var understoodCallCount = 0
+    let state = CaptureState(
+      comprehender: SequencedComprehender(
+        scripts: [.fails(.noResponse), .succeeds(partials: [], final: Self.emptyExtraction)]),
+      persistenceActor: PersistenceActor(
+        modelContainer: try PersistenceContainer.make(inMemory: true)),
+      interfaceLanguage: "es"
+    ) { _, _, _, _ in understoodCallCount += 1 }
+    state.narrative = "La mudanza al piso de la calle Mayor."
+
+    state.understandAndSave()
+    await waitUntil { state.phase == .notAnalyzed(.generic) }
+    _ = try #require(state.savedMemoryID)
+    state.retry()
+    await waitUntil { understoodCallCount == 1 }
+    state.reviewSaved()
+
+    #expect(state.savedMemoryID == nil)
+    #expect(state.phase == .capturing)
+  }
+
+  @Test func `Dismissing when no review is open changes nothing`() async throws {
+    var understoodCallCount = 0
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(partials: [], final: Self.emptyExtraction)),
+      persistenceActor: PersistenceActor(
+        modelContainer: try PersistenceContainer.make(inMemory: true)),
+      interfaceLanguage: "es"
+    ) { _, _, _, _ in understoodCallCount += 1 }
+
+    state.narrative = "Un relato a medio escribir."
+    state.reviewDismissed()
+
+    #expect(state.narrative == "Un relato a medio escribir.")
+    #expect(state.phase == .capturing)
+
+    state.understandAndSave()
+    await waitUntil { understoodCallCount == 1 }
+    state.reviewSaved()
+    // onDismiss llega tambien despues de guardar: no debe devolver nada a la captura vacia
+    state.reviewDismissed()
+
+    #expect(state.narrative == "")
+    #expect(state.phase == .capturing)
+  }
+
   // MARK: fixtures
 
   private static let emptyExtraction = ExtractedMemory(

@@ -4,11 +4,17 @@ Memoria entre sesiones. Se lee al empezar y se actualiza al cerrar cada fase.
 
 ## Checkpoint F4 (en curso)
 
-- **F4.4 (identidad y renombrado)**, verificada por `verificador-ui`: 6 de 7 criterios en verde, en vivo. El criterio 2 (botón "Rename" deshabilitado con el campo vacío) está pendiente de validación manual por Rubén — se comprobó en vivo el caso "sin cambios", pero no el de campo totalmente vacío.
-- **Infraestructura**: añadida la Skill oficial de Apple `device-interaction` en `.claude/skills/`, exportada de Xcode 27. `verificador-ui` tiene ahora `Skill` en su `tools:` y la carga como primer paso de su Loop.
-- **Defecto conocido, alcance de F4.5**: tras `.understood`, `CaptureState.handle(_:)` (`CaptureState.swift:111-126`) no cambia `phase`, y la Captura queda en `.comprehending` para siempre. Todavía no existe la vuelta de la Revisión a la Captura. Guardar desde la Revisión hoy solo escribe en el log — no persiste nada.
-- **Hueco abierto, lo decide Rubén**: qué pasa al cerrar la Revisión sin guardar. La propuesta es volver a la Captura con relato y foto intactos, sin persistir nada.
-- **Próxima tarea**: F4.5, que empieza por esos dos requisitos, con Plan Mode y test primero.
+- **F4.4 (identidad y renombrado)** cerrada: 6 de 7 criterios verificados en vivo por `verificador-ui`; el criterio 2 (campo vacío) lo validó Rubén a mano en el iPhone.
+- **Infraestructura**: Skill oficial de Apple `device-interaction` en `.claude/skills/` (DEC-48, la duodécima). `verificador-ui` la carga como primer paso de su Loop.
+- **F4.5 se parte en tareas atómicas**: F4.5.1 salir de la revisión, F4.5.1b guardar sin analizar sin duplicar, F4.5.2 guardado real del `ReviewOutcome`, F4.5.3 momento de la conexión, F4.5.4 comprender más tarde. Plan de F4.5.1 en `~/.claude/plans/soft-weaving-pearl.md`.
+- **F4.5.1 (salir de la revisión, DEC-47)**: `CaptureState` gana `.reviewing` y vuelve a la fase previa a comprender al cerrar sin guardar — `.capturing` en el camino principal, `.notAnalyzed(.generic)` en el del reintento (decisión de Rubén: el recuerdo ya está guardado, volver al formulario invitaría a duplicarlo). `reviewSaved()` vacía la captura, probado pero **sin conectar a la hoja hasta F4.5.2**, para no borrar un relato que aún no se persiste. Un fallo al preparar la revisión vuelve igual y solo registra el tipo del error.
+- **Pendientes heredados**:
+  - F4.5.1b, justo después: guardar sin analizar dos veces no duplica; decisión de Rubén: tras guardar sin analizar la captura se vacía (reutiliza `resetForNewMemory()`).
+  - Verificación de F4.5.2: "tras guardar desde la revisión, la captura queda vacía" con `verificador-ui`.
+  - F4.6: aviso en la captura cuando falla la preparación de la revisión (`estado-aviso`, símbolo, texto provisional en los dos idiomas, anuncio); allí se decide si hace falta contador.
+  - F4.6: confirmación visible de "guardado" tras guardar sin analizar.
+- **Documentación de diseño**: vive en `docs/design/reference/README-design.md` y viaja con la rama de fase; la ruta `docs/design/README.md` que da `CLAUDE.md` no existe.
+- **Destino de tests**: el simulador activo del proyecto es iOS 27 (iPhone 18 Pro). En uno de 26.5 fallan 12 tests de mapeo de errores que exigen iOS 27, pese a que la skill `xcode` pide un simulador 26.x.
 
 ## Decisiones tomadas
 
