@@ -7,6 +7,7 @@ struct CaptureScreen: View {
   @State private var photosPickerItem: PhotosPickerItem?
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @Environment(\.locale) private var environmentLocale
+  @Environment(\.displayScale) private var displayScale
 
   private var interfaceLocale: Locale { InterfaceLocale.resolve(environmentLocale) }
 
@@ -118,14 +119,17 @@ struct CaptureScreen: View {
 
   @ViewBuilder
   private var photoSection: some View {
-    if let photoData = state.photoData, let uiImage = UIImage(data: photoData) {
+    if let photoData = state.photoData,
+      let thumbnail = PhotoThumbnail.image(
+        from: photoData, maxPixelSize: Int((120 * 3 / 2 * displayScale).rounded(.up)))
+    {
       HStack(alignment: .top, spacing: Spacing.espacio3) {
         // el hueco fija el tamaño visible; la foto lo llena sin desbordar el marco de VoiceOver
         Color.clear
           .aspectRatio(3 / 2, contentMode: .fit)
           .frame(height: 120)
           .overlay {
-            Image(uiImage: uiImage)
+            Image(decorative: thumbnail, scale: displayScale)
               .resizable()
               .scaledToFill()
           }
