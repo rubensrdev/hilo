@@ -31,6 +31,7 @@ Folders in a single target. The boundary is enforced by review and by a hook, no
 | `Domain` | Value types and pure rules | Standard library and `Foundation` only |
 | `Persistence` | Schema and data access | `Domain`, SwiftData |
 | `Intelligence` | Protocols for comprehension, question interpretation and writing, plus their implementation | `Domain`, FoundationModels |
+| `Shared` | Types used by more than one screen — banners, locale helpers. `Shared/Previews/` holds DEBUG-only preview fixtures, never shipped code | `Domain`, SwiftUI |
 | `Features` | One folder per screen | All of the above, SwiftUI |
 | `DesignSystem` | Typed access to the tokens | SwiftUI |
 
@@ -38,6 +39,14 @@ Folders in a single target. The boundary is enforced by review and by a hook, no
 - Every type and function in `Domain` is declared `nonisolated`, and its value types are `Sendable`.
 - **Never** put a product rule inside a view. Views read state and emit intent; every rule lives in a testable type outside SwiftUI.
 - The language model is injected through protocols so every test is deterministic.
+
+### Folders inside a zone
+
+- `Domain`, `Persistence` and `Intelligence` group their files into subfolders **by concept** — what the type represents in the product — never by technical nature ("protocols here, structs there").
+- A `Features` screen folder stays flat until a role repeats inside it. Once two files share a role, split that role out: `Screen/`, `State/`, `Copy/`, `Coordinator/`. A role with a single file stays loose in the screen folder — **never** create a subfolder for one file.
+- The vocabulary is `Screen` / `State` / `Copy` / `Coordinator`. **Never** `ViewModel`, **never** a generic `Components/`: this project has no MVVM layer (`ADR-000` §5, no ceremonial layers).
+- A type shared by two or more screens moves to `Shared`; it does not live inside one screen's folder. DEBUG-only preview fixtures go to `Shared/Previews/`, wrapped in `#if DEBUG`, never mixed with shipped types.
+- Groups in Xcode are folder-backed and mirror the file system exactly. **Never** a virtual group, and **never** move a file with `mv` or by editing `project.pbxproj` — use the Xcode MCP.
 
 ## Non-negotiable rules
 
@@ -47,6 +56,13 @@ Folders in a single target. The boundary is enforced by review and by a hook, no
 - **Never** use XCTest. Swift Testing only.
 - Test-first: red, green, refactor. If a rule cannot be tested without building a view, the design is wrong — say so instead of writing the view.
 - Announceable strings (composed VoiceOver labels, the over-the-cap notice, the honest acknowledgement) are produced by pure functions and tested in both languages without opening the app.
+
+### Previews
+
+- Every SwiftUI view ships with at least one `#Preview` using representative state, written in the same atomic task that creates the view — never left for later, never for "the phase that needs it".
+- One more `#Preview` per visually distinct state driven by the view's `State` — error, empty, loading. Distinct means the layout changes, not every possible combination of values.
+- Preview data comes from the example memory or from fixtures that already exist; **never** invent new sample content to fill a preview.
+- No hook can enforce this — a hook checks the destination path, never the content. `revisor-constitucion` checks it on every task that touches UI.
 
 ### Language & APIs
 
@@ -196,5 +212,6 @@ When the work reveals a rule worth keeping — a repeating pattern, a mistake wo
 | `swiftdata` | Schema, identity across actors, external storage | Available |
 | `foundation-models` | On-device generation: generable types, streaming, error paths | Available |
 | `design` | Apply `tokens.md` to a surface | Available |
+| `device-interaction` | Drive the simulator, including text entry — loaded by `verificador-ui` | Available |
 
 Subagents live in `.claude/agents/`, one file per agent.
