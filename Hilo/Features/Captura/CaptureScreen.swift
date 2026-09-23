@@ -120,11 +120,15 @@ struct CaptureScreen: View {
     .disabled(state.phase != .capturing)
   }
 
+  // se decodifica al tamaño al que se ve: el lado mayor es el ancho de la miniatura 3:2
+  private var thumbnailPixelSize: Int {
+    Int((Spacing.altoFotoCaptura * Spacing.proporcionFotoTarjeta * displayScale).rounded(.up))
+  }
+
   @ViewBuilder
   private var photoSection: some View {
     if let photoData = state.photoData,
-      let thumbnail = PhotoThumbnail.image(
-        from: photoData, maxPixelSize: Int((Spacing.altoFotoCaptura * Spacing.proporcionFotoTarjeta * displayScale).rounded(.up)))
+      let thumbnail = PhotoThumbnail.image(from: photoData, maxPixelSize: thumbnailPixelSize)
     {
       HStack(alignment: .top, spacing: Spacing.espacio3) {
         // el hueco fija el tamaño visible; la foto lo llena sin desbordar el marco de VoiceOver
