@@ -27,6 +27,8 @@ struct CaptureScreen: View {
         }
         .padding(Spacing.margenPantalla)
       }
+      // tokens.md §1.8: debajo de la barra de vidrio siempre queda fondo
+      .background(Color.fondo)
       .navigationTitle("Tell a memory")
       .navigationBarTitleDisplayMode(.inline)
       // en la barra: con un relato largo siempre esta a la vista, y las fichas no lo desplazan

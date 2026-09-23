@@ -99,6 +99,8 @@ struct ReviewScreen: View {
         }
         .padding(Spacing.margenPantalla)
       }
+      // tokens.md §1.8: debajo de la barra de vidrio siempre queda fondo
+      .background(Color.fondo)
       .navigationTitle("Review")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
