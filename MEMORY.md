@@ -78,6 +78,7 @@ Decisiones vivas, todavía sin archivar:
 - Una carga asíncrona que alimenta el estado (la foto) la posee el estado, no la vista: la vista pasa un cierre de carga, el estado cancela la anterior y descarta el resultado si ya no está capturando. Los tests controlan cuándo termina cada carga con una continuación, sin esperas por tiempo (F4.7.9).
 - Para comprobar que un test nuevo de verdad detecta el defecto cuando no se vio en rojo antes (porque no compilaba), se quita temporalmente la protección y se ve fallar; luego se restaura (F4.7.9).
 - Un número suelto en una vista que ya tiene token en `tokens.md` se sustituye sin preguntar; uno que no lo tiene se propone con nombre y valor y se escribe en `tokens.md` en `main` antes de usarlo en código (F4.7, DEC-53).
+- Un hallazgo descrito como bug pendiente en un encargo puede llevar ya corregido en `main` — se verifica en vivo antes de tocar código, no se da por buena la descripción del encargo sin más (mantenimiento de color entre F4 y F5: el fondo blanco reportado ya estaba resuelto por F4.7.11).
 
 ## Última sesión
 
