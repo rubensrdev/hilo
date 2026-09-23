@@ -4,7 +4,7 @@
 - **Estado**: Draft
 - **Origen**: Idea v2.3 §7.5, §8.3, §9.1, §9.2, §10.2 (S2 y S3), §13 (reglas 3, 5, 6, 7, 9, 10), §15
 - **Capacidades**: 1, 2, 3, 4
-- **Decisiones**: DEC-12, DEC-16, DEC-17, DEC-18, DEC-19, DEC-22, DEC-26, DEC-27, DEC-35, DEC-37, DEC-40, DEC-41, DEC-42, DEC-43, DEC-44, DEC-45, DEC-46, DEC-47
+- **Decisiones**: DEC-12, DEC-16, DEC-17, DEC-18, DEC-19, DEC-22, DEC-26, DEC-27, DEC-35, DEC-37, DEC-40, DEC-41, DEC-42, DEC-43, DEC-44, DEC-45, DEC-46, DEC-47, DEC-54
 - **Depende de**: F1, F2, F3
 
 ## Objetivo
@@ -208,7 +208,7 @@ El guardarraíl y el rechazo usan el mismo texto que el resto del caso genérico
 |---|---|---|
 | Título | Aquí empiezan los hilos | These are the first threads |
 | Un elemento | Es la primera vez que aparece {José}. El próximo recuerdo en el que vuelva a aparecer se conectará con este. | This is the first time {José} appears. The next memory that mentions {José} will connect to this one. |
-| Varios | Es la primera vez que aparecen {José y el reloj}. El próximo recuerdo que comparta cualquiera de ellos se conectará con este. | This is the first time {José and el reloj} appear. The next memory that shares any of them will connect to this one. |
+| Varios | Es la primera vez que aparecen {José y el reloj}. El próximo recuerdo en el que vuelva a aparecer cualquiera se conectará con este. | This is the first time {José and el reloj} appear. The next memory that shares any of them will connect to this one. |
 
 Los nombres van tal como el usuario los confirmó, sin traducir.
 
