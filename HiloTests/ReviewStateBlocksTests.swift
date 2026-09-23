@@ -209,4 +209,72 @@ nonisolated struct ReviewStateBlocksTests {
         .init(elementID: singer.id, role: ElementRole(text: "la de la abuela"))
       ])
   }
+  // MARK: reglas que antes vivian en la vista — nada reconocido, quitados en el bloque 1, grupos
+
+  @Test func `Nothing recognized only when no block has content and nothing was removed`() throws {
+    let empty = ReviewState(
+      candidates: [], extractedDateText: nil, extractedDeducedYear: nil,
+      knownElements: [], appearances: [])
+    var allRemoved = ReviewState(
+      candidates: [try candidate("José", .person)], extractedDateText: nil,
+      extractedDeducedYear: nil, knownElements: [], appearances: [])
+    let jose = try #require(allRemoved.items.first).id
+    allRemoved.remove(jose)
+
+    #expect(empty.blocks.isNothingRecognized)
+    #expect(!allRemoved.blocks.isNothingRecognized)
+  }
+
+  // DEC-17: lo quitado sigue en el bloque 1 para poder deshacerlo
+  @Test func `A removed element stays in the understood block, marked as removed`() throws {
+    var state = ReviewState(
+      candidates: [try candidate("José", .person), try candidate("Cádiz", .place)],
+      extractedDateText: nil, extractedDeducedYear: nil, knownElements: [], appearances: [])
+    let cadiz = try #require(state.items.first { $0.originalName == "Cádiz" }).id
+    state.remove(cadiz)
+
+    let rows = state.blocks.understoodGroups.flatMap(\.rows)
+    #expect(state.blocks.showsUnderstood)
+    #expect(rows.map(\.name) == ["José", "Cádiz"])
+    #expect(rows.map(\.isRemoved) == [false, true])
+  }
+
+  @Test func `Only removed elements still show the understood block`() throws {
+    var state = ReviewState(
+      candidates: [try candidate("José", .person)], extractedDateText: nil,
+      extractedDeducedYear: nil, knownElements: [], appearances: [])
+    state.remove(try #require(state.items.first).id)
+
+    #expect(state.blocks.showsUnderstood)
+    #expect(state.blocks.understoodGroups.map(\.type) == [.person])
+  }
+
+  @Test func `Understood groups go people, places, objects, with removed rows after active ones`()
+    throws
+  {
+    var state = ReviewState(
+      candidates: [
+        try candidate("el reloj", .object),
+        try candidate("Carmen", .person),
+        try candidate("Cádiz", .place),
+        try candidate("José", .person),
+      ],
+      extractedDateText: nil, extractedDeducedYear: nil, knownElements: [], appearances: [])
+    let carmen = try #require(state.items.first { $0.originalName == "Carmen" }).id
+    state.remove(carmen)
+
+    let groups = state.blocks.understoodGroups
+    #expect(groups.map(\.type) == [.person, .place, .object])
+    #expect(groups.first?.rows.map(\.name) == ["José", "Carmen"])
+  }
+
+  @Test func `No understood block when nothing is new and nothing was removed`() throws {
+    let jose = try #require(Element(displayName: "José", type: .person))
+    let state = ReviewState(
+      candidates: [try candidate("José", .person)], extractedDateText: nil,
+      extractedDeducedYear: nil, knownElements: [jose], appearances: [])
+
+    #expect(!state.blocks.showsUnderstood)
+    #expect(state.blocks.understoodGroups.isEmpty)
+  }
 }

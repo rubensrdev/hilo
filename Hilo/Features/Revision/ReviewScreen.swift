@@ -75,12 +75,10 @@ struct ReviewScreen: View {
         VStack(alignment: .leading, spacing: Spacing.espacio5) {
           narrativeSection
 
-          if reviewState.blocks.understood.isEmpty && reviewState.blocks.known.isEmpty
-            && reviewState.blocks.doubtful.isEmpty && !hasRemovedItems
-          {
+          if reviewState.blocks.isNothingRecognized {
             nothingRecognizedSection
           } else {
-            if !reviewState.blocks.understood.isEmpty || hasRemovedItems {
+            if reviewState.blocks.showsUnderstood {
               understoodSection
             }
             if !reviewState.blocks.known.isEmpty {
@@ -227,44 +225,13 @@ struct ReviewScreen: View {
 
   // MARK: bloque 1 — lo que ha entendido, agrupado por tipo, con quitar/deshacer (DEC-17)
 
-  private struct UnderstoodRow: Identifiable {
-    let id: ReviewItemID
-    let name: String
-    let type: ElementType
-    let isRemoved: Bool
-  }
-
-  // invariante de esta vista: quitar solo se ofrece aqui, asi que todo item isRemoved viene
-  // de este bloque — no hace falta reconstruir su categoria original para agruparlo
-  private var understoodRows: [UnderstoodRow] {
-    let active = reviewState.blocks.understood.map {
-      UnderstoodRow(id: $0.id, name: $0.name, type: $0.type, isRemoved: false)
-    }
-    let removed = reviewState.items.filter(\.isRemoved).map {
-      UnderstoodRow(id: $0.id, name: $0.currentName, type: $0.type, isRemoved: true)
-    }
-    return active + removed
-  }
-
-  private var hasRemovedItems: Bool {
-    reviewState.items.contains(where: \.isRemoved)
-  }
-
-  private var understoodGroups: [(type: ElementType, rows: [UnderstoodRow])] {
-    let grouped = Dictionary(grouping: understoodRows, by: \.type)
-    return ElementType.reviewOrder.compactMap { type in
-      guard let rows = grouped[type], !rows.isEmpty else { return nil }
-      return (type, rows)
-    }
-  }
-
   @ViewBuilder
   private var understoodSection: some View {
     VStack(alignment: .leading, spacing: Spacing.espacio3) {
       Text("What Hilo understood")
         .tituloSeccion()
         .accessibilityAddTraits(.isHeader)
-      ForEach(understoodGroups, id: \.type) { group in
+      ForEach(reviewState.blocks.understoodGroups, id: \.type) { group in
         VStack(alignment: .leading, spacing: Spacing.espacio2) {
           Label {
             Text(group.type.localizedPluralName(locale: interfaceLocale))
@@ -282,7 +249,7 @@ struct ReviewScreen: View {
     }
   }
 
-  private func understoodChip(_ row: UnderstoodRow) -> some View {
+  private func understoodChip(_ row: ReviewBlocks.UnderstoodRow) -> some View {
     let layout = rowLayout(spacing: Spacing.espacio2)
     return layout {
       if row.isRemoved {

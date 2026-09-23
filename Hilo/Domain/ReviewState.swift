@@ -187,11 +187,12 @@ nonisolated struct ReviewState: Sendable {
     var understood: [ReviewBlocks.Understood] = []
     var known: [ReviewBlocks.Known] = []
     var doubtful: [ReviewBlocks.Doubtful] = []
+    var removed: [ReviewBlocks.Understood] = []
 
     for item in items {
       switch category(of: item) {
       case .removed:
-        continue
+        removed.append(.init(id: item.id, name: item.currentName, type: item.type))
       case .new:
         understood.append(.init(id: item.id, name: item.currentName, type: item.type))
       case .known:
@@ -215,7 +216,7 @@ nonisolated struct ReviewState: Sendable {
     }
 
     return ReviewBlocks(
-      understood: understood, known: known, doubtful: doubtful,
+      understood: understood, known: known, doubtful: doubtful, removed: removed,
       isBeginning: known.isEmpty && !understood.isEmpty)
   }
 
@@ -335,7 +336,38 @@ nonisolated struct ReviewBlocks: Sendable, Equatable {
   let understood: [Understood]  // bloque 1
   let known: [Known]  // bloque 2
   let doubtful: [Doubtful]  // bloque 3
+  let removed: [Understood]  // DEC-17: quitados, siguen a la vista en el bloque 1 para deshacer
   let isBeginning: Bool  // contrato 2: known vacio y understood no vacio
+
+  nonisolated struct UnderstoodRow: Sendable, Equatable, Identifiable {
+    let id: ReviewItemID
+    let name: String
+    let type: ElementType
+    let isRemoved: Bool
+  }
+
+  nonisolated struct UnderstoodGroup: Sendable, Equatable {
+    let type: ElementType
+    let rows: [UnderstoodRow]
+  }
+
+  // contrato 2: cada bloque aparece solo si tiene contenido; lo quitado cuenta como contenido
+  var isNothingRecognized: Bool {
+    understood.isEmpty && known.isEmpty && doubtful.isEmpty && removed.isEmpty
+  }
+
+  var showsUnderstood: Bool { !understood.isEmpty || !removed.isEmpty }
+
+  // bloque 1 por tipo, en el orden de los bloques; dentro de cada tipo, lo quitado va detras
+  var understoodGroups: [UnderstoodGroup] {
+    let rows =
+      understood.map { UnderstoodRow(id: $0.id, name: $0.name, type: $0.type, isRemoved: false) }
+      + removed.map { UnderstoodRow(id: $0.id, name: $0.name, type: $0.type, isRemoved: true) }
+    return ElementType.reviewOrder.compactMap { type in
+      let ofType = rows.filter { $0.type == type }
+      return ofType.isEmpty ? nil : UnderstoodGroup(type: type, rows: ofType)
+    }
+  }
 
   // el comienzo nombra en el orden de los bloques de arriba, estable dentro de cada tipo
   var beginningNames: [String] {
