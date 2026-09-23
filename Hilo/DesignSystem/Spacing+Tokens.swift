@@ -19,6 +19,8 @@ enum Spacing {
   static let separacionChips = espacio2
   static let altoFilaMinimo: CGFloat = 44
   static let objetivoToqueMinimo: CGFloat = 44
+  // el campo crece con el texto, por eso el minimo no escala con Dynamic Type
+  static let altoMinimoCampoCaptura: CGFloat = 160
 
   // radio-tarjeta, radio-campo y radio-foto son "continuo": la vista aplica
   // RoundedRectangle(cornerRadius:, style: .continuous), el valor no lo dice
@@ -26,6 +28,10 @@ enum Spacing {
   static let radioCampo: CGFloat = 12
   static let radioFoto: CGFloat = 12
   static let radioChip = Capsule()
+
+  // foto-tarjeta (tokens.md §1.9): ancho entre alto
+  static let proporcionFotoTarjeta: CGFloat = 3 / 2
+  static let altoFotoCaptura: CGFloat = 120
 
   static let trazoBordeTarjeta: CGFloat = 1
   static let trazoChipConocido: CGFloat = 1.5

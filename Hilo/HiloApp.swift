@@ -12,9 +12,44 @@ struct HiloApp: App {
     }
   }()
 
+  @State private var captureState: CaptureState
+  @State private var reviewCoordinator: ReviewCoordinator
+
+  // el closure de onUnderstood se construye aqui, antes de que self exista, asi que no
+  // puede tocar un @State de la app: captura reviewCoordinator (una referencia), no self
+  init() {
+    let persistenceActor = PersistenceActor(modelContainer: Self.container)
+    let coordinator = ReviewCoordinator(persistenceActor: persistenceActor)
+    let capture = CaptureState(
+      comprehender: FoundationModelsMemoryComprehender(),
+      persistenceActor: persistenceActor,
+      interfaceLanguage: Locale.current.language.languageCode?.identifier ?? "en"
+    ) { extracted, narrative, _, savedMemoryID in
+      coordinator.present(
+        extracted: extracted, narrative: narrative, savedMemoryID: savedMemoryID)
+    }
+    coordinator.onPreparationFailed = { capture.reviewPreparationFailed() }
+    capture.onReviewSaved = { coordinator.showConnections(savedMemoryID: $0) }
+    capture.onReviewSaveFailed = { coordinator.closeAfterFailedSave() }
+    _reviewCoordinator = State(initialValue: coordinator)
+    _captureState = State(initialValue: capture)
+  }
+
   var body: some Scene {
     WindowGroup {
-      ProvisionalScreen()
+      CaptureScreen(state: captureState)
+        // DEC-47: deslizar y Cancel pasan los dos por aqui; guardar ya ha salido de .reviewing y esto queda inocuo
+        .sheet(item: $reviewCoordinator.presentation, onDismiss: captureState.reviewDismissed) {
+          presentation in
+          switch presentation.stage {
+          case .review(let reviewState, let narrative):
+            ReviewScreen(initial: reviewState, narrative: narrative) { reviewState, dateText in
+              captureState.reviewConfirmed(reviewState, dateTextAtSave: dateText)
+            }
+          case .connected(let moment):
+            ConnectionMomentScreen(moment: moment)
+          }
+        }
     }
     .modelContainer(Self.container)
   }

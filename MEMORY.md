@@ -2,6 +2,12 @@
 
 Memoria entre sesiones. Se lee al empezar y se actualiza al cerrar cada fase.
 
+## Pendiente de Rubén, heredado de F4
+
+- **`CLAUDE.md`**: (1) la excepción de disponibilidad nombra solo `LanguageModelError`, pero producción clasifica cuatro familias de iOS 27 (`LanguageModelError`, `SystemLanguageModel.Error`, `GeneratedContent.ParsingError`, `LanguageModelSession.Error`); (2) la ruta del diseño es `docs/design/reference/README-design.md`, no `docs/design/README.md`; (3) `device-interaction` en la tabla de Skills (DEC-48); (4) la skill `xcode` y el agente `verificador-ui` deberían fijar el destino `iPhone 18 Pro` (iOS 27.0), el único que ejecuta los tests de las familias de error de iOS 27. El comentario de `MemoryComprehensionError+Mapping.swift:28-30` se deja como está hasta entonces.
+- **Destino de tests**: el simulador activo es iOS 27 (iPhone 18 Pro). En uno de 26.x los 12 tests de mapeo de iOS 27 salen omitidos, no fallados. `DeviceInteraction` solo acepta simuladores iOS 27, así que ningún agente verifica la UI en 26.x: eso queda para el dispositivo.
+- **Previews como regla**: F4 añadió `#Preview` a todas sus vistas; si debe ser regla de `CLAUDE.md`, es decisión de Rubén.
+
 ## Decisiones tomadas
 
 Las fases cerradas se archivan enteras en `docs/decisions/memory-archive/F<n>.md` y aquí queda una línea por fase. Así crece el archivo, no la memoria activa.
@@ -11,6 +17,7 @@ Las fases cerradas se archivan enteras en `docs/decisions/memory-archive/F<n>.md
 - [F1](docs/decisions/memory-archive/F1.md) — Núcleo de dominio: nombre canónico, duda de identidad, resolución, conexión deducida, renombrar/alias con colisión y huérfanos. Todo puro, `nonisolated`, sin estado
 - [F2](docs/decisions/memory-archive/F2.md) — Persistencia: esquema de cuatro entidades (DEC-37 `isAnalyzed` explícito, DEC-38 sufijo `Record`), actor de modelo único, foto externa sin metadatos, memoria de ejemplo idempotente, borrado total. `ADR-002` cerrado en `main`
 - [F3](docs/decisions/memory-archive/F3.md) — Comprensión: protocolo y streaming sobre Foundation Models, los siete caminos de error del contrato 4, el desenlace puro (`MemoryComprehensionOutcome`) para guardar sin analizar y comprender más tarde (DEC-16/DEC-18). `#available(iOS 27, *)` acotado a clasificar error, decisión de Rubén pendiente de trasladar a `CLAUDE.md`/`ADR-000`/`ADR-001`
+- [F4](docs/decisions/memory-archive/F4.md) — Captura y revisión: `CaptureState`, `ReviewState`/`ReviewBlocks` puros, guardado atómico del `ReviewOutcome`, momento de la conexión, comprender más tarde, textos y anuncios como funciones puras en EN/ES, AX5 y previews. DEC-40 a DEC-54. Los MINOR diferidos a F5 están en el archivo
 
 Decisiones vivas, todavía sin archivar:
 
@@ -41,6 +48,12 @@ Decisiones vivas, todavía sin archivar:
 - **Cierre de F2**: al redactar `ADR-002` a petición de Rubén se escribió un borrador nuevo desde cero sin comprobar antes si ya había contenido en `main` — sí lo había, `Proposed` desde F2.1, invisible desde el árbol de trabajo de la rama de fase por el mismo motivo ya conocido de F0.2 (ver «Patrones aprendidos»). `git checkout main` se negó a sobrescribir un fichero no rastreado y evitó perderlo, pero casi se pisan. Solución: antes de crear cualquier documento en `docs/decisions/` o `docs/`, comprobar con `git show main:<ruta>` si ya existe contenido, no solo mirar el árbol de trabajo de la rama de fase actual.
 - **Cierre de F3**: F3.4 introdujo `#available(iOS 27, *)` para reconocer `FoundationModels.LanguageModelError`, con un comentario que se autodenominaba "excepción acotada de CLAUDE.md" — CLAUDE.md no define ninguna excepción, y `revisor-constitucion` lo marcó BLOCKER en la auditoría de cierre, correctamente. Además, incluso con ese `#available` puesto, la cobertura de iOS 27 estaba incompleta: `SystemLanguageModel.Error.assetsUnavailable`, `GeneratedContent.ParsingError` (equivalente de `decodingFailure`) y `LanguageModelSession.Error.concurrentRequests` (el defecto de dos peticiones concurrentes) no se reconocían y caían todos a `.noResponse` — un defecto nuestro enmascarado como estado de producto normal. Solución: Rubén tomó la decisión explícita (ver "Excepción acotada de disponibilidad" arriba) en vez de que el código la asumiera solo, y se completó el mapeo de las cuatro familias de iOS 27.
 
+- **F4.5.3**: el build incremental no recompiló los tests, y un aviso try/await en `ReviewCoordinatorTests` solo apareció en el build limpio de F4.5.4. Se corrigió en `1c1a259`. Solución de proceso: el cero avisos de una tarea con tests nuevos se confirma con build limpio, no con el incremental.
+- **F4.5.4**: `completeAnalysis` comprobaba `isAnalyzed` y escribía sin garantizar que las dos cosas fueran atómicas; con el segundo llamador (`UnderstandLaterState`) la captura y el detalle podían analizar el mismo recuerdo dos veces. Solución: `guard !record.isAnalyzed` dentro del mismo salto al actor, con un test en rojo que reproduce la carrera.
+- **F4.5.5**: `handle(.notAnalyzed)` persistía siempre, y un reintento fallido insertaba un segundo `MemoryRecord` con `savedMemoryID` apuntando al nuevo (DEC-45). Solución: persistir solo si `savedMemoryID == nil`.
+- **Cierre de F4**: `revisor-constitucion` ya había señalado en F4.5.1b el `try?` del guardado automático tras un error de comprensión, y se dejó como pendiente «para Rubén». Llegó al cierre como BLOCKER: con foto inválida, la pantalla decía «guardado», no lo estaba, y «Dejarlo así» borraba el texto. Solución (F4.7.1): mismo camino de error que guardar sin analizar, con test. Lección: un hallazgo que choca con «el texto nunca se pierde» no se aparca como pregunta, se corrige en la tarea.
+- **F4.6.5, previews con estado asíncrono**: con `.task` el canvas pintaba en un momento arbitrario y salía «escribiendo» en vez de «comprendiendo». Solución: `PreviewModifier` con `makeSharedContext()` asíncrono, que el canvas espera antes de pintar. Además, `RenderPreview` en paralelo mezcla estados y el idioma persiste entre renders: siempre en serie y con `previewLocalizationOverride`.
+
 ## Patrones aprendidos en este proyecto
 
 <!-- Patrones que han emergido y ya son convención. Cuando uno se repite en tres fases,
@@ -60,12 +73,15 @@ Decisiones vivas, todavía sin archivar:
 - Cuando un mapeo mezcla estados de producto con un efecto irreversible (`preconditionFailure`), separar clasificar (función pura, testable, sin efecto) de actuar (un único punto que ejecuta el efecto sobre el resultado de clasificar) deja como máximo una línea sin cobertura de test, en vez de varias ramas sin probar repartidas por el `switch` (F3, `MemoryComprehensionClassification`).
 - Un choque entre un ADR ya `Accepted` y una regla incondicional de `CLAUDE.md` no lo resuelve el código por su cuenta, ni siquiera citando el ADR como justificación: la propia regla suele decir qué hacer ("bring the decision to Rubén"), y la excepción solo es real cuando él la declara explícitamente, con sus condiciones exactas — no cuando el código se la autoconcede en un comentario (F3, `#available(iOS 27, *)`).
 
+- El estado de una preview se alcanza por el camino real del estado observable (sus intenciones), nunca abriendo setters. Para estados asíncronos, `PreviewModifier.makeSharedContext()`; `RenderPreview` siempre en serie y con el idioma explícito (F4.6.5).
+- Una carga asíncrona que alimenta el estado (la foto) la posee el estado, no la vista: la vista pasa un cierre de carga, el estado cancela la anterior y descarta el resultado si ya no está capturando. Los tests controlan cuándo termina cada carga con una continuación, sin esperas por tiempo (F4.7.9).
+- Para comprobar que un test nuevo de verdad detecta el defecto cuando no se vio en rojo antes (porque no compilaba), se quita temporalmente la protección y se ve fallar; luego se restaura (F4.7.9).
+- Un número suelto en una vista que ya tiene token en `tokens.md` se sustituye sin preguntar; uno que no lo tiene se propone con nombre y valor y se escribe en `tokens.md` en `main` antes de usarlo en código (F4.7, DEC-53).
+
 ## Última sesión
 
-### F3 — Comprensión (cerrada 2026-09-21)
+### F4 — Captura y revisión (cerrada 2026-09-23)
 
-- **Estado**: fase cerrada y fusionada a `main` con `--no-ff` (rama `fase/F3-comprension`). Cinco tareas atómicas (F3.1-F3.5) más una corrección de cierre (cobertura completa de errores iOS 27, ver «Errores conocidos») y las auditorías de cierre: `revisor-constitucion` 0 BLOCKER en la segunda pasada (la primera encontró un BLOCKER real, corregido antes de repetir), `auditor-concurrencia` 0 hallazgos, race-free by design. 172/172 tests en verde, 0 warnings. No abre ADR propio. Detalle completo en [docs/decisions/memory-archive/F3.md](decisions/memory-archive/F3.md).
-- **Próxima tarea**: F4 — Captura y Revisión. Leer `docs/specs/F4_Captura_y_Revision.md` antes de abrirla; consume `MemoryComprehensionOutcome`/`MemoryComprehensionReason` de F3.5, construye el camino comprender→revisión→confirmar→guardar (regla 3, F4 §5), decide `isAnalyzed` al confirmar (`ADR-002` §2) y redacta el texto exacto de cada motivo de "sin analizar". También resuelve "comprender más tarde" sobre un `MemoryRecord` ya existente — hueco abierto de F4, no de F3.
-- **Pendiente, no bloqueante, de Rubén**: trasladar a `CLAUDE.md`/`ADR-000`/`ADR-001` la excepción acotada de disponibilidad decidida en el cierre de F3 (`#available` por encima de 26.4 solo para clasificar error del SDK, nunca para alcanzar capacidad nueva) — documentos de gobernanza, los escribe él en `main`. `PersistenceActor.fetchMemories()`/`fetchElements()`/`fetchAppearances()` sigue sin `fetchLimit` (heredado de F2, sin tocar hasta F5/F6).
-- **Riesgos o bloqueos**: ninguno para F4. Riesgo ya aceptado (`ADR-002` §7): sin migraciones en el MVP, un cambio de esquema no aditivo obliga a reinstalar el dispositivo de demo hasta el ensayo final de la semana.
-- **Contenido pendiente de Rubén**: los textos de producto del error de comprensión (uno por `MemoryComprehensionReason`, F4), la revisión sin conexiones, el reconocimiento honesto y la confirmación de borrado total en interfaz (F8). `IPHONEOS_DEPLOYMENT_TARGET` a nivel de proyecto sigue en 27.0 (inocuo); `docs/specs/F0.1_Proyecto_y_Cimientos.md` contrato 1 sigue diciendo "iOS 26.0".
+- **Estado**: tareas F4.1-F4.6 y correcciones de cierre F4.7.1-F4.7.16 hechas. Auditorías de cierre (`revisor-constitucion`, `auditor-accesibilidad`, `auditor-concurrencia`, `verificador-ui`) pasadas; 388/388 tests. Build limpio (tras ⇧⌘K) con 0 errores y 0 avisos; validación en dispositivo de Rubén hecha, modo avión incluido, sobre lo que ningún agente pudo comprobar (modo oscuro, VoiceOver, «nada reconocido», tarjeta de error, teclado a AX5, Reducir movimiento).
+- **Próxima tarea**: F5 — Explorar. Leer `docs/specs/F5_Explorar.md`; A1 (rango temporal en el detalle de elemento) la bloquea. F5.3 trae la pantalla del detalle, las previews de `UnderstandLaterState` y su cableado con `.task(id:)`.
+- **Riesgos o bloqueos**: A1 pendiente de ratificar. Los MINOR diferidos de F4 están en `docs/decisions/memory-archive/F4.md`.
