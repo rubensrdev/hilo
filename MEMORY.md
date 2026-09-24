@@ -4,7 +4,8 @@ Memoria entre sesiones. Se lee al empezar y se actualiza al cerrar cada fase.
 
 ## Pendiente de Rubén, heredado de F4
 
-- **`CLAUDE.md`**: (1) la excepción de disponibilidad nombra solo `LanguageModelError`, pero producción clasifica cuatro familias de iOS 27 (`LanguageModelError`, `SystemLanguageModel.Error`, `GeneratedContent.ParsingError`, `LanguageModelSession.Error`); (2) la ruta del diseño es `docs/design/reference/README-design.md`, no `docs/design/README.md`; (3) `device-interaction` en la tabla de Skills (DEC-48); (4) la skill `xcode` y el agente `verificador-ui` deberían fijar el destino `iPhone 18 Pro` (iOS 27.0), el único que ejecuta los tests de las familias de error de iOS 27. El comentario de `MemoryComprehensionError+Mapping.swift:28-30` se deja como está hasta entonces.
+- **`CLAUDE.md`**: (1) la ruta del diseño es `docs/design/reference/README-design.md`, no `docs/design/README.md`; (2) la skill `xcode` y el agente `verificador-ui` deberían fijar el destino `iPhone 18 Pro` (iOS 27.0), el único que ejecuta los tests de las familias de error de iOS 27. El comentario de `MemoryComprehensionError+Mapping.swift:28-30` se deja como está hasta entonces.
+  - Resueltos ya (2026-09-24): la excepción acotada de disponibilidad de F3 está en CLAUDE.md, sección "Language & APIs"; `device-interaction` ya está en la tabla de Skills.
 - **Destino de tests**: el simulador activo es iOS 27 (iPhone 18 Pro). En uno de 26.x los 12 tests de mapeo de iOS 27 salen omitidos, no fallados. `DeviceInteraction` solo acepta simuladores iOS 27, así que ningún agente verifica la UI en 26.x: eso queda para el dispositivo.
 - **Previews como regla**: F4 añadió `#Preview` a todas sus vistas; si debe ser regla de `CLAUDE.md`, es decisión de Rubén.
 
