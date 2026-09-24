@@ -9,7 +9,7 @@ nonisolated struct MemoryID: Sendable, Hashable {
 }
 
 // contrato 8 + regla 1: un recuerdo sin relato no existe, y el relato nunca se reescribe
-nonisolated struct Memory: Sendable, Identifiable {
+nonisolated struct Memory: Sendable, Identifiable, Equatable {
   let id: MemoryID
   let narrative: String
   let date: MemoryDate?
