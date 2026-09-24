@@ -62,6 +62,12 @@ final class MemoryDetailState {
     await refresh()
   }
 
+  // F5.5: ElementChip necesita el recuento total del elemento (no solo "propio de este recuerdo")
+  // para anunciar nombre, tipo y en cuantos recuerdos aparece, igual que ElementRow en S1
+  func memoryCount(for element: Element) -> Int {
+    ElementMemories.count(for: element.id, in: allAppearances)
+  }
+
   func editNarrative(_ narrative: String) async -> Bool {
     do {
       try await persistenceActor.editNarrative(id: memoryID, narrative: narrative)

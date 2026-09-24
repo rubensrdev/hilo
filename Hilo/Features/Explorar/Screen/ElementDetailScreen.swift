@@ -152,6 +152,7 @@ struct ElementDetailScreen: View {
       Image(systemName: element.type.symbolName)
         .font(.largeTitle)
         .foregroundStyle(element.type.color)
+        .accessibilityHidden(true)
       VStack(alignment: .leading, spacing: Spacing.espacio1) {
         Text(element.displayName)
           .tituloPantalla()
@@ -164,7 +165,11 @@ struct ElementDetailScreen: View {
         .foregroundStyle(Color.textoSecundario)
       }
     }
-    .accessibilityElement(children: .combine)
+    // .combine leeria el "·" del subtitulo tipo+recuento como texto (F5.5); un label
+    // explicito evita eso y reutiliza el mismo patron nombre-tipo-recuento del resto de la app
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel(
+      element.accessibilityLabel(memoryCount: state.ownMemories.count, locale: interfaceLocale))
   }
 
   private var addAliasButton: some View {

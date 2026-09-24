@@ -106,6 +106,9 @@ struct MemoriesView: View {
           Text(ExploreCopy.decadeHeader(group.decade, locale: interfaceLocale))
             .encabezadoEpoca()
             .foregroundStyle(Color.textoPrimario)
+            // fuera de un List, Section no marca isHeader por si sola: sin esto el rotor de
+            // encabezados de VoiceOver no encuentra las decadas (F5.5)
+            .accessibilityAddTraits(.isHeader)
         }
       }
     }
@@ -131,7 +134,7 @@ struct MemoriesView: View {
                   matchedElements: result.narrativeMatches.isEmpty
                     ? result.matchedElementIDs.compactMap { id in
                       state.elements.first(where: { $0.id == id })
-                    } : [])
+                    }.map { ($0, state.memoryCount(for: $0)) } : [])
               }
               .buttonStyle(.plain)
             }

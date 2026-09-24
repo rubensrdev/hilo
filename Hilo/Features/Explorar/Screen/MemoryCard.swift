@@ -8,7 +8,8 @@ struct MemoryCard: View {
   var searchMatches: [Range<String.Index>] = []
   var searchExtract: Range<String.Index>?
   // contrato 3 + DEC-57: si el recuerdo aparece por elemento y no por el relato, se enseñan todos, sin tope
-  var matchedElements: [Element] = []
+  // F5.5: el recuento acompaña a cada elemento para que VoiceOver anuncie nombre, tipo y recuento
+  var matchedElements: [(element: Element, memoryCount: Int)] = []
 
   private var displayedRange: Range<String.Index> {
     searchExtract ?? memory.narrative.startIndex..<memory.narrative.endIndex
@@ -29,8 +30,8 @@ struct MemoryCard: View {
       if !matchedElements.isEmpty {
         // vertical siempre: sin tope de elementos (DEC-57), no hay ancho seguro para envolver en linea
         VStack(alignment: .leading, spacing: Spacing.espacio1) {
-          ForEach(matchedElements) { element in
-            ElementChip(element: element)
+          ForEach(matchedElements, id: \.element.id) { match in
+            ElementChip(element: match.element, memoryCount: match.memoryCount)
           }
         }
       }
@@ -86,7 +87,7 @@ struct MemoryCard: View {
     MemoryCard(
       memory: PreviewFixtures.exploreMemory,
       matchedElements: [
-        PreviewFixtures.exploreElement, Element(displayName: "Cádiz", type: .place)!,
+        (PreviewFixtures.exploreElement, 4), (Element(displayName: "Cádiz", type: .place)!, 1),
       ]
     )
     .padding()

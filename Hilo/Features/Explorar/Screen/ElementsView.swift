@@ -4,6 +4,7 @@ import SwiftUI
 struct ElementsView: View {
   @Bindable var state: ExploreState
   @Environment(\.locale) private var environmentLocale
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   private var interfaceLocale: Locale { InterfaceLocale.resolve(environmentLocale) }
 
@@ -34,13 +35,27 @@ struct ElementsView: View {
   }
 
   // DEC-13: seleccion unica; tocar el chip activo vuelve a "todos"
+  // tokens.md §2.2 chip-elemento: a tamaños de accesibilidad los chips pasan a una columna,
+  // nunca a un scroll horizontal que crece sin limite con el texto (P2, F5.5)
+  @ViewBuilder
   private var filterChips: some View {
-    ScrollView(.horizontal, showsIndicators: false) {
-      HStack(spacing: Spacing.separacionChips) {
+    if dynamicTypeSize.isAccessibilitySize {
+      VStack(alignment: .leading, spacing: Spacing.separacionChips) {
         filterChip(nil, label: "All")
         filterChip(.person, label: ElementType.person.localizedPluralName(locale: interfaceLocale))
         filterChip(.place, label: ElementType.place.localizedPluralName(locale: interfaceLocale))
         filterChip(.object, label: ElementType.object.localizedPluralName(locale: interfaceLocale))
+      }
+    } else {
+      ScrollView(.horizontal, showsIndicators: false) {
+        HStack(spacing: Spacing.separacionChips) {
+          filterChip(nil, label: "All")
+          filterChip(
+            .person, label: ElementType.person.localizedPluralName(locale: interfaceLocale))
+          filterChip(.place, label: ElementType.place.localizedPluralName(locale: interfaceLocale))
+          filterChip(
+            .object, label: ElementType.object.localizedPluralName(locale: interfaceLocale))
+        }
       }
     }
   }

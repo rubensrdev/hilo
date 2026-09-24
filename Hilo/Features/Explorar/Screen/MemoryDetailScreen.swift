@@ -150,7 +150,7 @@ struct MemoryDetailScreen: View {
       VStack(alignment: .leading, spacing: Spacing.espacio1) {
         ForEach(state.ownElements) { element in
           NavigationLink(value: element.id) {
-            ElementChip(element: element)
+            ElementChip(element: element, memoryCount: state.memoryCount(for: element))
           }
           .buttonStyle(.plain)
         }

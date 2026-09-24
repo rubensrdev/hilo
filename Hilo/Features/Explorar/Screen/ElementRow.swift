@@ -10,8 +10,11 @@ struct ElementRow: View {
 
   var body: some View {
     HStack(spacing: Spacing.espacio3) {
+      // F5.5: sin ocultar, VoiceOver anunciaba el simbolo SF (p.ej. "Person") ademas del
+      // texto del tipo justo debajo: doble anuncio del mismo dato
       Image(systemName: element.type.symbolName)
         .foregroundStyle(element.type.color)
+        .accessibilityHidden(true)
       VStack(alignment: .leading, spacing: Spacing.espacio1) {
         Text(element.displayName)
           .nombreElemento()

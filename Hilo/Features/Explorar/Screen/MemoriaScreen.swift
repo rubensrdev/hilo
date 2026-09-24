@@ -6,6 +6,7 @@ struct MemoriaScreen: View {
   @Bindable var state: ExploreState
   @Binding var isCapturePresented: Bool
   @State private var isAjustesPresented = false
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   var body: some View {
     NavigationStack {
@@ -22,12 +23,24 @@ struct MemoriaScreen: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .principal) {
-          Picker("View", selection: $state.selectedView) {
-            Text("Memories").tag(ExploreState.SelectedView.memories)
-            Text("People, places & objects").tag(ExploreState.SelectedView.elements)
+          // "People, places & objects" no cabe en un segmento a tamaños de accesibilidad y
+          // trunca; .menu muestra el texto entero del seleccionado, sin tocar el texto (F5.5).
+          // .pickerStyle no admite un ternario entre dos estilos (tipos distintos), de ahi la rama
+          if dynamicTypeSize.isAccessibilitySize {
+            Picker("View", selection: $state.selectedView) {
+              Text("Memories").tag(ExploreState.SelectedView.memories)
+              Text("People, places & objects").tag(ExploreState.SelectedView.elements)
+            }
+            .pickerStyle(.menu)
+            .tint(Color.acentoHilo)
+          } else {
+            Picker("View", selection: $state.selectedView) {
+              Text("Memories").tag(ExploreState.SelectedView.memories)
+              Text("People, places & objects").tag(ExploreState.SelectedView.elements)
+            }
+            .pickerStyle(.segmented)
+            .tint(Color.acentoHilo)
           }
-          .pickerStyle(.segmented)
-          .tint(Color.acentoHilo)
         }
         // .primaryAction/.secondaryAction pueden colapsar en el menu de desbordamiento del
         // sistema segun el espacio disponible; DEC-12 y DEC-59 piden los dos siempre alcanzables,
@@ -77,5 +90,9 @@ struct MemoriaScreen: View {
   ) { ExplorePreviewScreen() }
   #Preview("Dark", traits: .modifier(ExploreScenarios(.normal))) {
     ExplorePreviewScreen().preferredColorScheme(.dark)
+  }
+  // F5.5: el selector superior cambia a .menu en AX para que "People, places & objects" no trunque
+  #Preview("AX5", traits: .modifier(ExploreScenarios(.normal))) {
+    ExplorePreviewScreen().dynamicTypeSize(.accessibility5)
   }
 #endif
