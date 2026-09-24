@@ -4,7 +4,7 @@
 - **Estado**: Draft
 - **Origen**: Idea v2.3 §9.3, §10.1, §10.2 (S1, S4, S5), §13 (reglas 12, 17)
 - **Capacidades**: 5 (motivo visible), 6, 7
-- **Decisiones**: DEC-12, DEC-13, DEC-14, DEC-15, DEC-16, DEC-20, DEC-21, DEC-24
+- **Decisiones**: DEC-12, DEC-13, DEC-14, DEC-15, DEC-16, DEC-20, DEC-21, DEC-24, DEC-57, DEC-59
 - **Depende de**: F1, F2, F4
 
 ## Objetivo
@@ -39,8 +39,8 @@ Que la memoria se pueda recorrer: por recuerdos, por elementos y por vecindad, s
 | DEC-15 y DEC-20 · alcance de la búsqueda y extracto centrado | Contrato 3 |
 | DEC-16 · comprender más tarde desde el detalle | Contrato 4 |
 | DEC-24 · el texto del borrado se calcula | Contrato 4 |
-| DEC-59 2026-09-24 l acceso a Ajustes en F5 se construye como el de Preguntar: el botón existe y es tocable, abre un estado vacío/mínimo, nunca un crash ni un no-op silencioso. Su contenido real es de F8 y puede no existir aún al entregar |  F5 · botón de Ajustes | E| — |
-|  |  |
+| DEC-57 · huecos de apertura de F5 | Contratos 2, 3 y 4 |
+| DEC-59 · botón de Ajustes en F5 | Contrato 1 |
 
 ## Contratos
 
@@ -49,6 +49,7 @@ Que la memoria se pueda recorrer: por recuerdos, por elementos y por vecindad, s
 - Dos destinos: Memoria y Preguntar. Ajustes en la barra de herramientas.
 - En Memoria, un selector superior entre recuerdos y elementos: son **dos vistas del mismo material**, no dos sitios distintos.
 - El acceso a contar un recuerdo vive en la barra de herramientas, en todos los tamaños de texto (DEC-12). Solo los estados vacío y de un recuerdo añaden además un botón dentro del contenido.
+- El acceso a Ajustes se construye como el de Preguntar (DEC-59): el botón existe y es tocable, abre un estado vacío/mínimo, nunca un crash ni un no-op silencioso. Su contenido real es de F8 y puede no existir aún al entregar.
 
 ### 2. Recuerdos (S1)
 
@@ -64,8 +65,9 @@ Que la memoria se pueda recorrer: por recuerdos, por elementos y por vecindad, s
 
 - Cubre el relato y **los nombres y alias de los elementos del recuerdo** (DEC-15).
 - El término encontrado se marca con peso, sin color ni fondo. Si la coincidencia cae fuera de las primeras líneas, **el extracto se centra en ella** (DEC-20).
-- Si el recuerdo aparece por un elemento y no por el relato, la tarjeta muestra ese elemento, para que se entienda por qué está en los resultados.
+- Si el recuerdo aparece por un elemento y no por el relato, la tarjeta muestra ese elemento, para que se entienda por qué está en los resultados. Si coincide por varios elementos, se muestran todos, sin tope (DEC-57).
 - «Buscando sin resultados» no es el estado vacío de primera vez: aquí ya hay memoria.
+- Si se edita el texto de un recuerdo cuyo extracto sostenía una búsqueda activa, la lista se recalcula al volver a S1, nunca en caliente mientras el recuerdo se edita (DEC-57).
 
 ### 4. Elementos y detalles
 
@@ -77,7 +79,9 @@ Que la memoria se pueda recorrer: por recuerdos, por elementos y por vecindad, s
 - El texto de la confirmación de borrado **se calcula**: un elemento que se quede sin recuerdos desaparece (DEC-24, regla 11).
 - Estados: con foto, sin foto, sin conexiones, sin elementos reconocidos.
 
-**S5 · Detalle de elemento**: nombre, tipo, alias, número de recuerdos y sus recuerdos en orden. Renombrar y añadir alias, con las validaciones de F1. El espacio del retrato y del tejido queda reservado, sin dibujarse.
+**S5 · Detalle de elemento**: nombre, tipo, alias, número de recuerdos, el rango temporal y sus recuerdos en orden. Renombrar y añadir alias, con las validaciones de F1. El espacio del retrato y del tejido queda reservado, sin dibujarse.
+- El rango temporal muestra las palabras del usuario del recuerdo más antiguo y del más reciente, por el mismo orden de DEC-35 (año deducido descendente, `savedAt` descendente, sin año al final, desempate por identificador). Si el extremo elegido no tiene texto de fecha del usuario, ese extremo no se muestra. Con un solo recuerdo no hay rango que mostrar (DEC-57).
+- «Sus recuerdos en orden» usa ese mismo orden de DEC-35, no uno nuevo (DEC-57).
 - Estados: normal y con un solo recuerdo.
 
 ## Comportamiento
@@ -123,7 +127,7 @@ Que la memoria se pueda recorrer: por recuerdos, por elementos y por vecindad, s
 
 ## Huecos abiertos, a resolver al abrir la fase
 
-- **A1 · el rango temporal en S5.** §10.2 lo pide, pero el año deducido no se puede mostrar (regla 17). Las opciones son mostrar las palabras del usuario del recuerdo más antiguo y del más reciente, o quitar el rango. Está sin decidir a propósito, y por eso la referencia visual no lo dibuja.
-- **Cuántos chips mostrar** cuando un resultado de búsqueda coincide por varios elementos.
-- **Qué ocurre al editar el texto de un recuerdo cuyo extracto sostenía una búsqueda activa**: si la lista se recalcula en el momento o al volver.
-- **Orden de los recuerdos dentro de S5**: la spec dice «en orden», y hay que fijar si es el mismo criterio que la lista general (año descendente, luego guardado descendente).
+- **A1 · el rango temporal en S5 — resuelto (DEC-57).** Palabras del usuario del recuerdo más antiguo y del más reciente, por el orden de DEC-35; el extremo sin texto de fecha no se muestra; con un solo recuerdo no hay rango.
+- **Cuántos chips mostrar — resuelto (DEC-57).** Todos, sin tope, cuando un resultado de búsqueda coincide por varios elementos.
+- **Qué ocurre al editar el texto de un recuerdo cuyo extracto sostenía una búsqueda activa — resuelto (DEC-57).** La lista se recalcula al volver a S1, nunca en caliente mientras se edita.
+- **Orden de los recuerdos dentro de S5 — resuelto (DEC-57).** El mismo criterio de DEC-35 que ya usa la lista general, no uno nuevo.
