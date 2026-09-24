@@ -469,7 +469,7 @@ struct ReviewScreen: View {
         .tituloSeccion()
         .accessibilityAddTraits(.isHeader)
       Text(
-        ReviewCopy.beginningBody(
+        ConnectionCopy.firstAppearanceBody(
           names: reviewState.blocks.beginningNames,
           locale: interfaceLocale)
       )

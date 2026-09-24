@@ -7,13 +7,8 @@ nonisolated struct MemoryConnection: Sendable, Equatable {
 nonisolated enum MemoryConnections {
   static func connected(to memory: Memory, appearances: [Appearance]) -> [MemoryConnection] {
     // orden de motivos: el de las apariciones propias del recuerdo de origen, nunca el del ajeno
-    var ownOrder: [ElementID] = []
-    var ownElements: Set<ElementID> = []
-    for appearance in appearances where appearance.memoryID == memory.id {
-      if ownElements.insert(appearance.elementID).inserted {
-        ownOrder.append(appearance.elementID)
-      }
-    }
+    let ownOrder = MemoryElements.elementIDs(for: memory.id, in: appearances)
+    let ownElements = Set(ownOrder)
 
     // orden de conexiones: por la primera aparicion cualificada de cada memoryID ajeno
     var connectionOrder: [MemoryID] = []

@@ -26,12 +26,19 @@ final class ExploreState {
   var selectedElementTypeFilter: ElementType?
 
   private let persistenceActor: PersistenceActor
+  private let comprehender: MemoryComprehending
+  private let interfaceLanguage: String
   // el ancho del extracto depende de la tipografia y la tarjeta (F5.5), no de Domain: se inyecta
   private let defaultExtractLength: Int
   private let logger = Logger(subsystem: "com.hilo.app", category: "explorar")
 
-  init(persistenceActor: PersistenceActor, defaultExtractLength: Int = 160) {
+  init(
+    persistenceActor: PersistenceActor, comprehender: MemoryComprehending,
+    interfaceLanguage: String, defaultExtractLength: Int = 160
+  ) {
     self.persistenceActor = persistenceActor
+    self.comprehender = comprehender
+    self.interfaceLanguage = interfaceLanguage
     self.defaultExtractLength = defaultExtractLength
   }
 
@@ -63,6 +70,15 @@ final class ExploreState {
 
   func memoryCount(for element: Element) -> Int {
     ElementMemories.count(for: element.id, in: appearances)
+  }
+
+  // contrato 4 (S4): cada detalle crea su propio understandLater/reviewCoordinator (comentario en
+  // UnderstandLaterState.swift); S1 recarga en cuanto el detalle edita, borra o completa un analisis
+  func makeDetailState(for memoryID: MemoryID) -> MemoryDetailState {
+    MemoryDetailState(
+      memoryID: memoryID, persistenceActor: persistenceActor, comprehender: comprehender,
+      interfaceLanguage: interfaceLanguage
+    ) { [weak self] in await self?.load() }
   }
 
   func load() async {

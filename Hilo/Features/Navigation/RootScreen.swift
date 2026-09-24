@@ -46,7 +46,10 @@ struct RootScreen: View {
       persistenceActor: actor, interfaceLanguage: "en"
     ) { _, _, _, _ in }
     return RootScreen(
-      exploreState: ExploreState(persistenceActor: actor), captureState: capture,
+      exploreState: ExploreState(
+        persistenceActor: actor, comprehender: PreviewComprehender(scenario: .empty),
+        interfaceLanguage: "en"),
+      captureState: capture,
       reviewCoordinator: coordinator, isCapturePresented: .constant(false))
   }
 #endif

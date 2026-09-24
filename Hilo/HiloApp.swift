@@ -22,11 +22,13 @@ struct HiloApp: App {
   // puede tocar un @State de la app: captura reviewCoordinator (una referencia), no self
   init() {
     let persistenceActor = PersistenceActor(modelContainer: Self.container)
+    let comprehender = FoundationModelsMemoryComprehender()
+    let interfaceLanguage = Locale.current.language.languageCode?.identifier ?? "en"
     let coordinator = ReviewCoordinator(persistenceActor: persistenceActor)
     let capture = CaptureState(
-      comprehender: FoundationModelsMemoryComprehender(),
+      comprehender: comprehender,
       persistenceActor: persistenceActor,
-      interfaceLanguage: Locale.current.language.languageCode?.identifier ?? "en"
+      interfaceLanguage: interfaceLanguage
     ) { extracted, narrative, _, savedMemoryID in
       coordinator.present(
         extracted: extracted, narrative: narrative, savedMemoryID: savedMemoryID)
@@ -36,7 +38,10 @@ struct HiloApp: App {
     capture.onReviewSaveFailed = { coordinator.closeAfterFailedSave() }
     _reviewCoordinator = State(initialValue: coordinator)
     _captureState = State(initialValue: capture)
-    _exploreState = State(initialValue: ExploreState(persistenceActor: persistenceActor))
+    _exploreState = State(
+      initialValue: ExploreState(
+        persistenceActor: persistenceActor, comprehender: comprehender,
+        interfaceLanguage: interfaceLanguage))
   }
 
   var body: some Scene {

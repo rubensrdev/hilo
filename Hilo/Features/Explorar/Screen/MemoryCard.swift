@@ -30,7 +30,7 @@ struct MemoryCard: View {
         // vertical siempre: sin tope de elementos (DEC-57), no hay ancho seguro para envolver en linea
         VStack(alignment: .leading, spacing: Spacing.espacio1) {
           ForEach(matchedElements) { element in
-            elementChip(element)
+            ElementChip(element: element)
           }
         }
       }
@@ -63,22 +63,6 @@ struct MemoryCard: View {
       result += AttributedString(memory.narrative[cursor..<displayedRange.upperBound])
     }
     return Text(result)
-  }
-
-  // P1: el color semantico va en el simbolo, nunca en el nombre
-  private func elementChip(_ element: Element) -> some View {
-    Label {
-      Text(element.displayName)
-        .chipElemento()
-        .foregroundStyle(Color.textoPrimario)
-    } icon: {
-      Image(systemName: element.type.symbolName)
-        .foregroundStyle(element.type.color)
-    }
-    .padding(.horizontal, Spacing.espacio3)
-    .padding(.vertical, Spacing.espacio1)
-    .background(Color.chipRelleno)
-    .clipShape(Spacing.radioChip)
   }
 }
 

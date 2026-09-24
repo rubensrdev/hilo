@@ -28,4 +28,62 @@ nonisolated struct ExploreCopyTests {
     #expect(ExploreCopy.decadeHeader(.noYear, locale: english) == "No date")
     #expect(ExploreCopy.decadeHeader(.noYear, locale: spanish) == "Sin fecha")
   }
+
+  // MARK: contrato 4, DEC-24, regla 11 — el texto de la confirmacion de borrado se calcula
+
+  @Test func `With nothing surviving or disappearing, only the fixed sentences remain`() {
+    #expect(
+      ExploreCopy.deleteConfirmationBody(surviving: [], disappearing: [], locale: english)
+        == "Your words and your photo are deleted from this iPhone. This cannot be undone.")
+  }
+
+  @Test func `A single surviving element uses the singular verb`() {
+    #expect(
+      ExploreCopy.deleteConfirmationBody(surviving: ["José"], disappearing: [], locale: english)
+        == "Your words and your photo are deleted from this iPhone. José stays, with their other memories. This cannot be undone."
+    )
+  }
+
+  @Test func `Several surviving elements are joined and use the plural verb`() {
+    #expect(
+      ExploreCopy.deleteConfirmationBody(
+        surviving: ["José", "Carmen"], disappearing: [], locale: english)
+        == "Your words and your photo are deleted from this iPhone. José and Carmen stay, with their other memories. This cannot be undone."
+    )
+  }
+
+  @Test func `A single disappearing element uses the singular verb`() {
+    #expect(
+      ExploreCopy.deleteConfirmationBody(surviving: [], disappearing: ["el reloj"], locale: english)
+        == "Your words and your photo are deleted from this iPhone. el reloj disappears: it has no other memories. This cannot be undone."
+    )
+  }
+
+  @Test func `Several disappearing elements are joined and use the plural verb`() {
+    #expect(
+      ExploreCopy.deleteConfirmationBody(
+        surviving: [], disappearing: ["el reloj", "la casa del pueblo"], locale: english)
+        == "Your words and your photo are deleted from this iPhone. el reloj and la casa del pueblo disappear: they have no other memories. This cannot be undone."
+    )
+  }
+
+  @Test func `Surviving and disappearing elements both appear, surviving named first`() {
+    #expect(
+      ExploreCopy.deleteConfirmationBody(
+        surviving: ["Carmen"], disappearing: ["el reloj"], locale: english)
+        == "Your words and your photo are deleted from this iPhone. Carmen stays, with their other memories. el reloj disappears: it has no other memories. This cannot be undone."
+    )
+  }
+
+  // las traducciones al español se añaden despues via Xcode MCP; aqui solo se comprueba que compone
+  @Test func `The delete confirmation body composes something non-empty in Spanish too`() {
+    let empty = ExploreCopy.deleteConfirmationBody(surviving: [], disappearing: [], locale: spanish)
+    let both = ExploreCopy.deleteConfirmationBody(
+      surviving: ["José"], disappearing: ["el reloj"], locale: spanish)
+
+    #expect(!empty.isEmpty)
+    #expect(!both.isEmpty)
+    #expect(both.contains("José"))
+    #expect(both.contains("el reloj"))
+  }
 }

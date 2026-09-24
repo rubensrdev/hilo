@@ -154,6 +154,13 @@ actor PersistenceActor {
     try fetchMemoryRecord(id: id)?.photoData
   }
 
+  // DEC-19: editar el texto no reanaliza ni toca fecha, foto o apariciones
+  func editNarrative(id: MemoryID, narrative: String) throws {
+    guard let record = try fetchMemoryRecord(id: id) else { throw WriteError.memoryNotFound }
+    record.narrative = narrative
+    try modelContext.save()
+  }
+
   // contrato 4: el cascade borra apariciones y foto; el dominio decide los huerfanos (reglas 11+12)
   func deleteMemory(id: MemoryID) throws {
     guard let record = try fetchMemoryRecord(id: id) else { throw WriteError.memoryNotFound }

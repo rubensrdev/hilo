@@ -67,7 +67,10 @@ struct MemoriesView: View {
 
   private func singleState(_ memory: Memory) -> some View {
     VStack(alignment: .leading, spacing: Spacing.espacio4) {
-      MemoryCard(memory: memory)
+      NavigationLink(value: memory.id) {
+        MemoryCard(memory: memory)
+      }
+      .buttonStyle(.plain)
       Text("This is where connections begin.")
         .tituloSeccion()
         .foregroundStyle(Color.textoPrimario)
@@ -93,7 +96,10 @@ struct MemoriesView: View {
         Section {
           VStack(spacing: Spacing.separacionTarjetas) {
             ForEach(group.memories) { memory in
-              MemoryCard(memory: memory)
+              NavigationLink(value: memory.id) {
+                MemoryCard(memory: memory)
+              }
+              .buttonStyle(.plain)
             }
           }
         } header: {
@@ -118,13 +124,16 @@ struct MemoriesView: View {
         LazyVStack(spacing: Spacing.separacionTarjetas) {
           ForEach(results, id: \.memoryID) { result in
             if let memory = state.memories.first(where: { $0.id == result.memoryID }) {
-              MemoryCard(
-                memory: memory, searchMatches: result.narrativeMatches,
-                searchExtract: result.extract,
-                matchedElements: result.narrativeMatches.isEmpty
-                  ? result.matchedElementIDs.compactMap { id in
-                    state.elements.first(where: { $0.id == id })
-                  } : [])
+              NavigationLink(value: memory.id) {
+                MemoryCard(
+                  memory: memory, searchMatches: result.narrativeMatches,
+                  searchExtract: result.extract,
+                  matchedElements: result.narrativeMatches.isEmpty
+                    ? result.matchedElementIDs.compactMap { id in
+                      state.elements.first(where: { $0.id == id })
+                    } : [])
+              }
+              .buttonStyle(.plain)
             }
           }
         }

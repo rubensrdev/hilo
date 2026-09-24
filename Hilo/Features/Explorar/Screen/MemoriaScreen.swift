@@ -52,6 +52,12 @@ struct MemoriaScreen: View {
           .accessibilityIdentifier("explore.openCapture")
         }
       }
+      // fuera del LazyVStack de MemoriesView a proposito: Apple pide no colgar
+      // navigationDestination de un contenedor "lazy" para que la pila siempre lo vea
+      .navigationDestination(for: MemoryID.self) { memoryID in
+        let detailState = state.makeDetailState(for: memoryID)
+        MemoryDetailScreen(state: detailState, reviewCoordinator: detailState.reviewCoordinator)
+      }
     }
     .task { await state.load() }
     // DEC-59: el acceso existe y es tocable, abre un estado minimo — su contenido real es de F8

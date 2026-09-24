@@ -33,7 +33,8 @@ struct ExploreStateTests {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
     let state = ExploreState(
-      persistenceActor: actor, defaultExtractLength: Self.defaultExtractLength)
+      persistenceActor: actor, comprehender: FakeMemoryComprehender(script: .fails(.noResponse)),
+      interfaceLanguage: "es", defaultExtractLength: Self.defaultExtractLength)
     return (state, actor)
   }
 
