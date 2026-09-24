@@ -77,7 +77,7 @@ struct MemoriaScreen: View {
     }
     .task { await state.load() }
     // DEC-59: el acceso existe y es tocable, abre un estado minimo — su contenido real es de F8
-    .sheet(isPresented: $isAjustesPresented) { AjustesScreen() }
+    .sheet(isPresented: $isAjustesPresented) { AjustesScreen(state: state) }
   }
 }
 

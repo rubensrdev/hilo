@@ -113,4 +113,28 @@ final class ExploreState {
     }
     await load()
   }
+
+  #if DEBUG
+    // F5: panel Debug de Ajustes, para docs/validacion-manual — nunca en Release
+    func loadDebugValidationDataset() async {
+      do {
+        try await persistenceActor.loadDebugValidationDataset(loadedAt: Date())
+      } catch {
+        logger.error(
+          "No se pudo cargar el set de validacion: \(String(describing: type(of: error)), privacy: .public)"
+        )
+      }
+      await load()
+    }
+
+    func wipeAllData() async {
+      do {
+        try await persistenceActor.wipeAllData()
+      } catch {
+        logger.error(
+          "No se pudo borrar todo: \(String(describing: type(of: error)), privacy: .public)")
+      }
+      await load()
+    }
+  #endif
 }

@@ -198,11 +198,26 @@ actor PersistenceActor {
   // contrato 5 + B11: contenido fijo, resuelto contra los elementos ya existentes (F1 contrato 3)
   func loadExampleMemory(language: ExampleMemoryLanguage, loadedAt: Date) throws {
     guard try fetchExampleMemoryRecords().isEmpty else { return }
+    try insertSeeds(ExampleMemoryContent.seeds(for: language), isExample: true, loadedAt: loadedAt)
+  }
+
+  #if DEBUG
+    // F5: refuerza la memoria de ejemplo con dos recuerdos mas para docs/validacion-manual —
+    // nunca en Release, mismo guard de idempotencia que loadExampleMemory
+    func loadDebugValidationDataset(loadedAt: Date) throws {
+      guard try fetchExampleMemoryRecords().isEmpty else { return }
+      try insertSeeds(
+        ExampleMemoryContent.seeds(for: .spanish) + DebugValidationContent.seeds,
+        isExample: true, loadedAt: loadedAt)
+    }
+  #endif
+
+  private func insertSeeds(_ seeds: [ExampleMemorySeed], isExample: Bool, loadedAt: Date) throws {
     var knownElements = try fetchElements()
-    for seed in ExampleMemoryContent.seeds(for: language) {
+    for seed in seeds {
       let date = seed.dateText.flatMap { MemoryDate(text: $0, deducedYear: seed.deducedYear) }
       let memory = Memory(id: MemoryID(), narrative: seed.narrative, date: date, savedAt: loadedAt)
-      let memoryID = try save(memory, isAnalyzed: true, isExample: true)
+      let memoryID = try save(memory, isAnalyzed: true, isExample: isExample)
       for appearanceSeed in seed.appearances {
         let elementID: ElementID
         switch ElementResolution.resolving(
