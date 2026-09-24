@@ -259,6 +259,132 @@
     }
   }
 
+  // MARK: explorar
+
+  enum ExploreScenario: Hashable, CaseIterable {
+    case empty
+    case single
+    case normal
+    case searchingWithResults
+    case searchingNoResults
+    case elementsList
+    case elementsFilterNoResults
+  }
+
+  struct ExploreScenarios: PreviewModifier {
+    private struct Key: Hashable {
+      let scenario: ExploreScenario
+      let language: String
+    }
+
+    let scenario: ExploreScenario
+    let locale: Locale
+
+    init(_ scenario: ExploreScenario, locale: Locale = Locale(identifier: "en")) {
+      self.scenario = scenario
+      self.locale = locale
+    }
+
+    static func makeSharedContext() async -> [AnyHashable: ExploreState] {
+      var states: [AnyHashable: ExploreState] = [:]
+      for language in ["en", "es"] {
+        for scenario in ExploreScenario.allCases {
+          states[Key(scenario: scenario, language: language)] = await reached(
+            scenario, language: language)
+        }
+      }
+      return states
+    }
+
+    func body(content: Content, context: [AnyHashable: ExploreState]) -> some View {
+      let language = locale.language.languageCode?.identifier ?? "en"
+      Group {
+        if let state = context[Key(scenario: scenario, language: language)] {
+          content
+            .environment(state)
+            .environment(\.locale, locale)
+        }
+      }
+    }
+
+    private static func reached(_ scenario: ExploreScenario, language: String) async
+      -> ExploreState
+    {
+      let actor = PreviewFixtures.persistenceActor()
+      let state = ExploreState(persistenceActor: actor, defaultExtractLength: 160)
+      switch scenario {
+      case .empty:
+        break
+      case .single:
+        _ = try? await actor.save(PreviewFixtures.exploreMemory, isAnalyzed: true, isExample: false)
+      case .normal, .searchingWithResults, .searchingNoResults, .elementsList,
+        .elementsFilterNoResults:
+        await PreviewFixtures.seedExploreSample(into: actor)
+      }
+      await state.load()
+      switch scenario {
+      case .searchingWithResults:
+        state.searchQuery = "Singer"
+      case .searchingNoResults:
+        state.searchQuery = "xyz-nada"
+      case .elementsList:
+        state.selectedView = .elements
+      case .elementsFilterNoResults:
+        state.selectedView = .elements
+        // en la muestra no hay ningun objeto: filtrar por objeto siempre da "sin resultados"
+        state.selectedElementTypeFilter = .object
+      case .empty, .single, .normal:
+        break
+      }
+      return state
+    }
+  }
+
+  struct ExplorePreviewScreen: View {
+    @Environment(ExploreState.self) private var state
+
+    var body: some View {
+      MemoriaScreen(state: state, isCapturePresented: .constant(false))
+    }
+  }
+
+  extension PreviewFixtures {
+    static var exploreMemory: Memory {
+      // reutiliza el mismo contenido de PreviewFixtures.narrative, nunca texto de muestra nuevo
+      Memory(
+        narrative: narrative, date: MemoryDate(text: "El verano del 87", deducedYear: 1987),
+        savedAt: .now)!
+    }
+
+    static var exploreElement: Element {
+      Element(displayName: "la abuela Carmen", type: .person)!
+    }
+
+    // dos recuerdos y dos elementos, para los estados normal/buscando/lista de elementos
+    static func seedExploreSample(into actor: PersistenceActor) async {
+      let carmen = exploreElement
+      let cadiz = Element(displayName: "Cádiz", type: .place)!
+      _ = try? await actor.save(carmen)
+      _ = try? await actor.save(cadiz)
+      let first = exploreMemory
+      let second = Memory(
+        narrative:
+          "Los domingos en Cádiz comíamos en la playa de la Caleta con la abuela Carmen.",
+        date: MemoryDate(text: "los domingos de aquellos años"),
+        savedAt: Date(timeIntervalSinceNow: -86400))!
+      _ = try? await actor.save(first, isAnalyzed: true, isExample: false)
+      _ = try? await actor.save(second, isAnalyzed: true, isExample: false)
+      try? await actor.save(
+        Appearance(memoryID: first.id, elementID: carmen.id, role: nil, status: .confirmedByUser))
+      try? await actor.save(
+        Appearance(memoryID: first.id, elementID: cadiz.id, role: nil, status: .confirmedByUser))
+      try? await actor.save(
+        Appearance(memoryID: second.id, elementID: carmen.id, role: nil, status: .confirmedByUser))
+      try? await actor.save(
+        Appearance(memoryID: second.id, elementID: cadiz.id, role: nil, status: .confirmedByUser))
+    }
+  }
+
   // MARK: momento de la conexion
 
   extension PreviewFixtures {
