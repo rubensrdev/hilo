@@ -39,6 +39,8 @@ Que la memoria se pueda recorrer: por recuerdos, por elementos y por vecindad, s
 | DEC-15 y DEC-20 · alcance de la búsqueda y extracto centrado | Contrato 3 |
 | DEC-16 · comprender más tarde desde el detalle | Contrato 4 |
 | DEC-24 · el texto del borrado se calcula | Contrato 4 |
+| DEC-59 2026-09-24 l acceso a Ajustes en F5 se construye como el de Preguntar: el botón existe y es tocable, abre un estado vacío/mínimo, nunca un crash ni un no-op silencioso. Su contenido real es de F8 y puede no existir aún al entregar |  F5 · botón de Ajustes | E| — |
+|  |  |
 
 ## Contratos
 

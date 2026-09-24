@@ -3,7 +3,7 @@
 - **Fase**: F0.1 · Sesión S0
 - **Estado**: Draft
 - **Origen**: Idea v2.3 §11.1, §11.2, §11.4 · `F0` · `ADR-000` · `tokens.md` 1.3
-- **Decisiones**: DEC-04, DEC-06, DEC-08, DEC-09, DEC-10
+- **Decisiones**: DEC-04, DEC-06, DEC-08, DEC-09, DEC-10, DEC-33, DEC-56
 - **Depende de**: `tokens.md` cerrado (Fase 0.4)
 
 ## Objetivo
@@ -47,7 +47,7 @@ Dejar un proyecto que compila, arranca y trae puestos los cimientos que después
 
 | Ajuste | Valor |
 |---|---|
-| Versión mínima | iOS 26.0 |
+| Versión mínima | iOS 26.4 |
 | Familias de dispositivo | Solo iPhone |
 | Orientación | Solo vertical |
 | Swift Language Version | Swift 6 |
@@ -64,8 +64,11 @@ Sin capacidades (`capabilities`) de ningún tipo, sin App Transport Security dec
 | `Domain` | Tipos valor y reglas puras | Solo la biblioteca estándar y `Foundation` |
 | `Persistence` | Esquema y acceso a datos | `Domain`, SwiftData |
 | `Intelligence` | Protocolos de comprensión, interpretación y redacción, y su implementación | `Domain`, FoundationModels |
+| `Shared` | Tipos usados por más de una pantalla — avisos, ayudantes de idioma. `Shared/Previews/` guarda fixtures de previews solo para DEBUG, nunca código de producto | `Domain`, SwiftUI |
 | `Features` | Una carpeta por pantalla | Todo lo anterior y SwiftUI |
 | `DesignSystem` | Acceso tipado a los tokens | SwiftUI |
+
+*`Shared` no existía al cerrar F0.1; se añadió en el mantenimiento previo a F5 (DEC-56). Se incluye aquí para que este contrato no quede desincronizado de `CLAUDE.md`.*
 
 **Regla de importación:** `Domain` no importa SwiftUI, SwiftData, FoundationModels ni PhotosUI. Se comprueba en cada cierre de fase y con un hook.
 
@@ -108,7 +111,7 @@ Una vista temporal que solo demuestra que la app arranca y que los tokens se res
 
 ## Comportamiento
 
-- **Dado** el proyecto recién creado, **cuando** se compila para un iPhone con iOS 26.0, **entonces** compila sin avisos de concurrencia.
+- **Dado** el proyecto recién creado, **cuando** se compila para un iPhone con iOS 26.4, **entonces** compila sin avisos de concurrencia.
 - **Dado** un tipo de `Domain`, **cuando** se usa desde un contexto no aislado, **entonces** compila sin necesidad de `await`.
 - **Dado** el sistema en oscuro con más contraste, **cuando** se abre la pantalla provisional, **entonces** cada token muestra el valor de esa apariencia.
 - **Dado** el idioma del sistema en español, **cuando** arranca la app, **entonces** los textos provisionales salen del catálogo en español.
@@ -122,7 +125,7 @@ Una vista temporal que solo demuestra que la app arranca y que los tokens se res
 - [ ] Toda clave del catálogo de textos tiene valor en inglés y en español.
 
 **En dispositivo**
-- [ ] La app arranca en un iPhone con iOS 26.0 y muestra la pantalla provisional.
+- [ ] La app arranca en un iPhone con iOS 26.4 y muestra la pantalla provisional.
 - [ ] Las cuatro apariencias se ven correctas, comprobadas cambiando el sistema y activando Aumentar contraste.
 - [ ] En modo avión la app arranca y funciona igual.
 - [ ] Con el idioma en español, los textos provisionales aparecen traducidos.
