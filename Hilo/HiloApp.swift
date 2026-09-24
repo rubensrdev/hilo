@@ -14,16 +14,21 @@ struct HiloApp: App {
 
   @State private var captureState: CaptureState
   @State private var reviewCoordinator: ReviewCoordinator
+  @State private var exploreState: ExploreState
+  // contrato 1, DEC-12: contar un recuerdo se abre desde el toolbar de Memoria, ya no es la raiz
+  @State private var isCapturePresented = false
 
   // el closure de onUnderstood se construye aqui, antes de que self exista, asi que no
   // puede tocar un @State de la app: captura reviewCoordinator (una referencia), no self
   init() {
     let persistenceActor = PersistenceActor(modelContainer: Self.container)
+    let comprehender = FoundationModelsMemoryComprehender()
+    let interfaceLanguage = Locale.current.language.languageCode?.identifier ?? "en"
     let coordinator = ReviewCoordinator(persistenceActor: persistenceActor)
     let capture = CaptureState(
-      comprehender: FoundationModelsMemoryComprehender(),
+      comprehender: comprehender,
       persistenceActor: persistenceActor,
-      interfaceLanguage: Locale.current.language.languageCode?.identifier ?? "en"
+      interfaceLanguage: interfaceLanguage
     ) { extracted, narrative, _, savedMemoryID in
       coordinator.present(
         extracted: extracted, narrative: narrative, savedMemoryID: savedMemoryID)
@@ -33,23 +38,17 @@ struct HiloApp: App {
     capture.onReviewSaveFailed = { coordinator.closeAfterFailedSave() }
     _reviewCoordinator = State(initialValue: coordinator)
     _captureState = State(initialValue: capture)
+    _exploreState = State(
+      initialValue: ExploreState(
+        persistenceActor: persistenceActor, comprehender: comprehender,
+        interfaceLanguage: interfaceLanguage))
   }
 
   var body: some Scene {
     WindowGroup {
-      CaptureScreen(state: captureState)
-        // DEC-47: deslizar y Cancel pasan los dos por aqui; guardar ya ha salido de .reviewing y esto queda inocuo
-        .sheet(item: $reviewCoordinator.presentation, onDismiss: captureState.reviewDismissed) {
-          presentation in
-          switch presentation.stage {
-          case .review(let reviewState, let narrative):
-            ReviewScreen(initial: reviewState, narrative: narrative) { reviewState, dateText in
-              captureState.reviewConfirmed(reviewState, dateTextAtSave: dateText)
-            }
-          case .connected(let moment):
-            ConnectionMomentScreen(moment: moment)
-          }
-        }
+      RootScreen(
+        exploreState: exploreState, captureState: captureState,
+        reviewCoordinator: reviewCoordinator, isCapturePresented: $isCapturePresented)
     }
     .modelContainer(Self.container)
   }

@@ -79,7 +79,7 @@ struct CaptureScreen: View {
     .onChange(of: state.phase) { _, newPhase in
       guard case .notAnalyzed(let reason) = newPhase else { return }
       AccessibilityNotification.Announcement(
-        CaptureCopy.comprehensionNotice(reason, locale: interfaceLocale).announcement
+        ComprehensionCopy.notice(reason, locale: interfaceLocale).announcement
       ).post()
     }
   }
@@ -200,7 +200,8 @@ struct CaptureScreen: View {
     .accessibilityElement(children: .combine)
     .accessibilityLabel(
       CaptureCopy.elementAppeared(
-        name: element.name, type: ElementType(element.type), locale: interfaceLocale))
+        name: element.name, type: ElementType(element.type), locale: interfaceLocale)
+    )
     .transition(.opacity)
   }
 
@@ -248,7 +249,7 @@ struct CaptureScreen: View {
 
   @ViewBuilder
   private func errorState(_ reason: MemoryComprehensionReason) -> some View {
-    let notice = CaptureCopy.comprehensionNotice(reason, locale: interfaceLocale)
+    let notice = ComprehensionCopy.notice(reason, locale: interfaceLocale)
     Label {
       VStack(alignment: .leading, spacing: Spacing.espacio1) {
         Text(notice.title)

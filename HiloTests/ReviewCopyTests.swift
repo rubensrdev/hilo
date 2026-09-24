@@ -8,37 +8,6 @@ nonisolated struct ReviewCopyTests {
   private let english = Locale(identifier: "en")
   private let spanish = Locale(identifier: "es")
 
-  // MARK: el comienzo — un nombre y varios
-
-  @Test func `One first-time name in English repeats the name`() {
-    #expect(
-      ReviewCopy.beginningBody(names: ["José"], locale: english)
-        == "This is the first time José appears. The next memory that mentions José will connect to this one."
-    )
-  }
-
-  @Test func `One first-time name in Spanish`() {
-    #expect(
-      ReviewCopy.beginningBody(names: ["José"], locale: spanish)
-        == "Es la primera vez que aparece José. El próximo recuerdo en el que vuelva a aparecer se conectará con este."
-    )
-  }
-
-  @Test func `Several first-time names in English join with the English conjunction`() {
-    #expect(
-      ReviewCopy.beginningBody(names: ["José", "el reloj"], locale: english)
-        == "This is the first time José and el reloj appear. The next memory that shares any of them will connect to this one."
-    )
-  }
-
-  // el defecto de F4.5.1: dentro de una frase en ingles la lista salia con "y"
-  @Test func `Several first-time names in Spanish join with the Spanish conjunction`() {
-    #expect(
-      ReviewCopy.beginningBody(names: ["José", "la casa del pueblo", "el reloj"], locale: spanish)
-        == "Es la primera vez que aparecen José, la casa del pueblo y el reloj. El próximo recuerdo en el que vuelva a aparecer cualquiera se conectará con este."
-    )
-  }
-
   // MARK: elemento — nombre, tipo y en cuantos recuerdos (contrato 6)
 
   @Test func `A known element announces name, type and its memories in English`() {
@@ -93,28 +62,7 @@ nonisolated struct ReviewCopyTests {
     #expect(ReviewCopy.doubtRejection(type: type, locale: self.spanish) == spanish)
   }
 
-  // MARK: el momento de la conexion — su motivo y su anuncio
-
-  @Test func `A connection motive lists its names in the interface language`() {
-    #expect(
-      ReviewCopy.connectionMotive(names: ["José", "el reloj"], locale: english)
-        == "By José and el reloj")
-    #expect(
-      ReviewCopy.connectionMotive(names: ["José", "el reloj"], locale: spanish)
-        == "Por José y el reloj")
-  }
-
-  // guia de accesibilidad: una conexion anuncia su motivo antes que el recuerdo, que va entero
-  @Test func `A connection row announces its motive first and then the whole memory`() {
-    let narrative = "José trajo naranjas del pueblo. Fue el último verano."
-    #expect(
-      ReviewCopy.connectionRowLabel(names: ["José"], narrative: narrative, locale: english)
-        == "By José. José trajo naranjas del pueblo. Fue el último verano.")
-    #expect(
-      ReviewCopy.connectionRowLabel(
-        names: ["José", "el pueblo"], narrative: narrative, locale: spanish)
-        == "Por José y el pueblo. José trajo naranjas del pueblo. Fue el último verano.")
-  }
+  // MARK: el momento de la conexion — su anuncio
 
   @Test func `The connection moment announces the save and how many memories connect`() {
     #expect(

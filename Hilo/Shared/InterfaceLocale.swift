@@ -37,3 +37,18 @@ extension [String] {
     formatted(.list(type: .and).locale(locale))
   }
 }
+
+extension Element {
+  // F5.5: nombre, tipo y recuento — reutiliza las claves ya traducidas de ReviewCopy.elementLabel,
+  // asi VoiceOver no depende del "·" visual (footnote de tipo+recuento) para transmitir el tipo
+  nonisolated func accessibilityLabel(memoryCount: Int?, locale: Locale) -> String {
+    let typeName = type.localizedName(locale: locale)
+    guard let memoryCount else {
+      return String(
+        localized: LocalizedStringResource("\(displayName), \(typeName)", locale: locale))
+    }
+    return String(
+      localized: LocalizedStringResource(
+        "\(displayName), \(typeName), in \(memoryCount) memories", locale: locale))
+  }
+}

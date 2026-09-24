@@ -41,6 +41,13 @@
         ExtractedElement(name: "la Singer", type: .object, role: "lo que llevamos"),
       ],
       dateText: "El verano del 87", deducedYear: 1987)
+
+    // segundo recuerdo real para los escenarios "conectado"/"con rango" (F5.4/F5.5): la memoria
+    // de ejemplo ya aprobada (docs/content/memoria-de-ejemplo.md), nunca un relato inventado
+    static let secondExample = ExampleMemoryContent.seeds(for: .spanish)[1]
+    static let secondDate = secondExample.dateText.flatMap {
+      MemoryDate(text: $0, deducedYear: secondExample.deducedYear)
+    }
   }
 
   // MARK: captura
@@ -255,6 +262,340 @@
       (0..<memoryCount).map { _ in
         Appearance(
           memoryID: MemoryID(), elementID: element.id, role: nil, status: .confirmedByUser)
+      }
+    }
+  }
+
+  // MARK: explorar
+
+  enum ExploreScenario: Hashable, CaseIterable {
+    case empty
+    case single
+    case normal
+    case searchingWithResults
+    case searchingNoResults
+    case elementsList
+    case elementsFilterNoResults
+  }
+
+  struct ExploreScenarios: PreviewModifier {
+    private struct Key: Hashable {
+      let scenario: ExploreScenario
+      let language: String
+    }
+
+    let scenario: ExploreScenario
+    let locale: Locale
+
+    init(_ scenario: ExploreScenario, locale: Locale = Locale(identifier: "en")) {
+      self.scenario = scenario
+      self.locale = locale
+    }
+
+    static func makeSharedContext() async -> [AnyHashable: ExploreState] {
+      var states: [AnyHashable: ExploreState] = [:]
+      for language in ["en", "es"] {
+        for scenario in ExploreScenario.allCases {
+          states[Key(scenario: scenario, language: language)] = await reached(
+            scenario, language: language)
+        }
+      }
+      return states
+    }
+
+    func body(content: Content, context: [AnyHashable: ExploreState]) -> some View {
+      let language = locale.language.languageCode?.identifier ?? "en"
+      Group {
+        if let state = context[Key(scenario: scenario, language: language)] {
+          content
+            .environment(state)
+            .environment(\.locale, locale)
+        }
+      }
+    }
+
+    private static func reached(_ scenario: ExploreScenario, language: String) async
+      -> ExploreState
+    {
+      let actor = PreviewFixtures.persistenceActor()
+      let state = ExploreState(
+        persistenceActor: actor, comprehender: PreviewComprehender(scenario: .empty),
+        interfaceLanguage: language, defaultExtractLength: 160)
+      switch scenario {
+      case .empty:
+        break
+      case .single:
+        _ = try? await actor.save(PreviewFixtures.exploreMemory, isAnalyzed: true, isExample: false)
+      case .normal, .searchingWithResults, .searchingNoResults, .elementsList,
+        .elementsFilterNoResults:
+        await PreviewFixtures.seedExploreSample(into: actor)
+      }
+      await state.load()
+      switch scenario {
+      case .searchingWithResults:
+        state.searchQuery = "Singer"
+      case .searchingNoResults:
+        state.searchQuery = "xyz-nada"
+      case .elementsList:
+        state.selectedView = .elements
+      case .elementsFilterNoResults:
+        state.selectedView = .elements
+        // en la muestra no hay ningun objeto: filtrar por objeto siempre da "sin resultados"
+        state.selectedElementTypeFilter = .object
+      case .empty, .single, .normal:
+        break
+      }
+      return state
+    }
+  }
+
+  struct ExplorePreviewScreen: View {
+    @Environment(ExploreState.self) private var state
+
+    var body: some View {
+      MemoriaScreen(state: state, isCapturePresented: .constant(false))
+    }
+  }
+
+  extension PreviewFixtures {
+    static var exploreMemory: Memory {
+      // reutiliza el mismo contenido de PreviewFixtures.narrative, nunca texto de muestra nuevo
+      Memory(
+        id: MemoryID(), narrative: narrative,
+        date: MemoryDate(text: "El verano del 87", deducedYear: 1987), savedAt: .now)
+    }
+
+    static var exploreElement: Element {
+      Element(id: ElementID(), displayName: "la abuela Carmen", type: .person)
+    }
+
+    // dos recuerdos y dos elementos, para los estados normal/buscando/lista de elementos
+    static func seedExploreSample(into actor: PersistenceActor) async {
+      let carmen = exploreElement
+      let cadiz = Element(id: ElementID(), displayName: "Cádiz", type: .place)
+      _ = try? await actor.save(carmen)
+      _ = try? await actor.save(cadiz)
+      let first = exploreMemory
+      let second = Memory(
+        id: MemoryID(), narrative: secondExample.narrative, date: secondDate,
+        savedAt: Date(timeIntervalSinceNow: -86400))
+      _ = try? await actor.save(first, isAnalyzed: true, isExample: false)
+      _ = try? await actor.save(second, isAnalyzed: true, isExample: false)
+      try? await actor.save(
+        Appearance(memoryID: first.id, elementID: carmen.id, role: nil, status: .confirmedByUser))
+      try? await actor.save(
+        Appearance(memoryID: first.id, elementID: cadiz.id, role: nil, status: .confirmedByUser))
+      try? await actor.save(
+        Appearance(memoryID: second.id, elementID: carmen.id, role: nil, status: .confirmedByUser))
+      try? await actor.save(
+        Appearance(memoryID: second.id, elementID: cadiz.id, role: nil, status: .confirmedByUser))
+    }
+  }
+
+  // MARK: detalle de recuerdo (S4)
+
+  enum MemoryDetailScenario: Hashable, CaseIterable {
+    case withPhoto
+    case withoutPhoto
+    case withoutConnections
+    case withoutRecognizedElements
+    case notAnalyzed
+  }
+
+  struct MemoryDetailScenarios: PreviewModifier {
+    private struct Key: Hashable {
+      let scenario: MemoryDetailScenario
+      let language: String
+    }
+
+    let scenario: MemoryDetailScenario
+    let locale: Locale
+
+    init(_ scenario: MemoryDetailScenario, locale: Locale = Locale(identifier: "en")) {
+      self.scenario = scenario
+      self.locale = locale
+    }
+
+    static func makeSharedContext() async -> [AnyHashable: MemoryDetailState] {
+      var states: [AnyHashable: MemoryDetailState] = [:]
+      for language in ["en", "es"] {
+        for scenario in MemoryDetailScenario.allCases {
+          states[Key(scenario: scenario, language: language)] = await reached(
+            scenario, language: language)
+        }
+      }
+      return states
+    }
+
+    func body(content: Content, context: [AnyHashable: MemoryDetailState]) -> some View {
+      let language = locale.language.languageCode?.identifier ?? "en"
+      Group {
+        if let state = context[Key(scenario: scenario, language: language)] {
+          content
+            .environment(state)
+            .environment(\.locale, locale)
+        }
+      }
+    }
+
+    private static func reached(_ scenario: MemoryDetailScenario, language: String) async
+      -> MemoryDetailState
+    {
+      let actor = PreviewFixtures.persistenceActor()
+      let target = PreviewFixtures.exploreMemory
+      let carmen = PreviewFixtures.exploreElement
+      let cadiz = Element(id: ElementID(), displayName: "Cádiz", type: .place)
+
+      func saveElements() async {
+        _ = try? await actor.save(carmen)
+        _ = try? await actor.save(cadiz)
+        try? await actor.save(
+          Appearance(memoryID: target.id, elementID: carmen.id, role: nil, status: .confirmedByUser)
+        )
+        try? await actor.save(
+          Appearance(memoryID: target.id, elementID: cadiz.id, role: nil, status: .confirmedByUser)
+        )
+      }
+
+      // el segundo recuerdo comparte la abuela Carmen: es lo que conecta a target
+      func saveConnectedMemory() async {
+        let other = Memory(
+          id: MemoryID(), narrative: PreviewFixtures.secondExample.narrative,
+          date: PreviewFixtures.secondDate,
+          savedAt: Date(timeIntervalSinceNow: -86400))
+        _ = try? await actor.save(other, isAnalyzed: true, isExample: false)
+        try? await actor.save(
+          Appearance(memoryID: other.id, elementID: carmen.id, role: nil, status: .confirmedByUser)
+        )
+      }
+
+      switch scenario {
+      case .withPhoto:
+        _ = try? await actor.save(
+          target, photoData: PreviewFixtures.photoData, isAnalyzed: true, isExample: false)
+        await saveElements()
+        await saveConnectedMemory()
+      case .withoutPhoto:
+        _ = try? await actor.save(target, isAnalyzed: true, isExample: false)
+        await saveElements()
+        await saveConnectedMemory()
+      case .withoutConnections:
+        _ = try? await actor.save(target, isAnalyzed: true, isExample: false)
+        await saveElements()
+      case .withoutRecognizedElements:
+        _ = try? await actor.save(target, isAnalyzed: true, isExample: false)
+      case .notAnalyzed:
+        _ = try? await actor.save(target, isAnalyzed: false, isExample: false)
+      }
+
+      let state = MemoryDetailState(
+        memoryID: target.id, persistenceActor: actor,
+        comprehender: PreviewComprehender(scenario: .notAnalyzedRetryable),
+        interfaceLanguage: language
+      ) {}
+      await state.load()
+      return state
+    }
+  }
+
+  struct MemoryDetailPreviewScreen: View {
+    @Environment(MemoryDetailState.self) private var state
+
+    var body: some View {
+      NavigationStack {
+        MemoryDetailScreen(state: state, reviewCoordinator: state.reviewCoordinator)
+      }
+    }
+  }
+
+  // MARK: detalle de elemento (S5)
+
+  enum ElementDetailScenario: Hashable, CaseIterable {
+    case several
+    case single
+  }
+
+  struct ElementDetailScenarios: PreviewModifier {
+    private struct Key: Hashable {
+      let scenario: ElementDetailScenario
+      let language: String
+    }
+
+    let scenario: ElementDetailScenario
+    let locale: Locale
+
+    init(_ scenario: ElementDetailScenario, locale: Locale = Locale(identifier: "en")) {
+      self.scenario = scenario
+      self.locale = locale
+    }
+
+    static func makeSharedContext() async -> [AnyHashable: ElementDetailState] {
+      var states: [AnyHashable: ElementDetailState] = [:]
+      for language in ["en", "es"] {
+        for scenario in ElementDetailScenario.allCases {
+          states[Key(scenario: scenario, language: language)] = await reached(scenario)
+        }
+      }
+      return states
+    }
+
+    func body(content: Content, context: [AnyHashable: ElementDetailState]) -> some View {
+      let language = locale.language.languageCode?.identifier ?? "en"
+      Group {
+        if let state = context[Key(scenario: scenario, language: language)] {
+          content
+            .environment(state)
+            .environment(\.locale, locale)
+        }
+      }
+    }
+
+    // .several reutiliza la abuela Carmen (exploreElement), ya conectada a un segundo recuerdo
+    // (mismo patron que MemoryDetailScenarios.saveConnectedMemory); .single usa "la Singer", ya
+    // mencionada en PreviewFixtures.narrative/exploreMemory, sin apariciones en ningun otro sitio
+    private static func reached(_ scenario: ElementDetailScenario) async -> ElementDetailState {
+      let actor = PreviewFixtures.persistenceActor()
+      let target = PreviewFixtures.exploreMemory
+      _ = try? await actor.save(target, isAnalyzed: true, isExample: false)
+      let elementID: ElementID
+
+      switch scenario {
+      case .several:
+        let carmen = PreviewFixtures.exploreElement
+        _ = try? await actor.save(carmen)
+        try? await actor.save(
+          Appearance(
+            memoryID: target.id, elementID: carmen.id, role: nil, status: .confirmedByUser))
+        let other = Memory(
+          id: MemoryID(), narrative: PreviewFixtures.secondExample.narrative,
+          date: PreviewFixtures.secondDate,
+          savedAt: Date(timeIntervalSinceNow: -86400))
+        _ = try? await actor.save(other, isAnalyzed: true, isExample: false)
+        try? await actor.save(
+          Appearance(
+            memoryID: other.id, elementID: carmen.id, role: nil, status: .confirmedByUser))
+        elementID = carmen.id
+      case .single:
+        let singer = Element(id: ElementID(), displayName: "la Singer", type: .object)
+        _ = try? await actor.save(singer)
+        try? await actor.save(
+          Appearance(
+            memoryID: target.id, elementID: singer.id, role: nil, status: .confirmedByUser))
+        elementID = singer.id
+      }
+
+      let state = ElementDetailState(elementID: elementID, persistenceActor: actor) {}
+      await state.load()
+      return state
+    }
+  }
+
+  struct ElementDetailPreviewScreen: View {
+    @Environment(ElementDetailState.self) private var state
+
+    var body: some View {
+      NavigationStack {
+        ElementDetailScreen(state: state)
       }
     }
   }

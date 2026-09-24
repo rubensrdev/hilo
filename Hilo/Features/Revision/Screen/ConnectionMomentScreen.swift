@@ -108,7 +108,7 @@ struct ConnectionMomentScreen: View {
       // regla 4 del diseño: una conexion siempre ensena su motivo; los nombres, sin traducir
       Label {
         Text(
-          ReviewCopy.connectionMotive(
+          ConnectionCopy.connectionMotive(
             names: row.motiveNames, locale: interfaceLocale)
         )
         .motivoConexion()
@@ -122,7 +122,7 @@ struct ConnectionMomentScreen: View {
     .padding(Spacing.rellenoTarjeta)
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(
-      ReviewCopy.connectionRowLabel(
+      ConnectionCopy.connectionRowLabel(
         names: row.motiveNames, narrative: row.narrative, locale: interfaceLocale))
   }
 

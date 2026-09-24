@@ -398,6 +398,53 @@ struct PersistenceActorTests {
     #expect(try await actor.fetchElements().isEmpty)
   }
 
+  // F5: set de datos de docs/validacion-manual, Debug-only
+  @Test
+  func `Loading the debug validation dataset adds the two extra memories to the example five`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+
+    try await actor.loadDebugValidationDataset(loadedAt: Self.fixedSavedAt)
+
+    #expect(try await actor.fetchMemories().count == 7)
+    let elements = try await actor.fetchElements()
+    #expect(elements.contains { $0.displayName == "Marta" })
+    #expect(elements.contains { $0.displayName == "Martina" })
+  }
+
+  @Test func `Marta and Martina resolve to two distinct person elements, never colliding at load`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+
+    try await actor.loadDebugValidationDataset(loadedAt: Self.fixedSavedAt)
+
+    let elements = try await actor.fetchElements()
+    let marta = try #require(elements.first { $0.displayName == "Marta" })
+    let martina = try #require(elements.first { $0.displayName == "Martina" })
+    #expect(marta.id != martina.id)
+    #expect(marta.type == .person)
+    #expect(martina.type == .person)
+  }
+
+  @Test func `Loading the debug validation dataset twice does not duplicate memories or elements`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    try await actor.loadDebugValidationDataset(loadedAt: Self.fixedSavedAt)
+    let memoriesAfterFirstLoad = try await actor.fetchMemories().count
+    let elementsAfterFirstLoad = try await actor.fetchElements().count
+
+    try await actor.loadDebugValidationDataset(loadedAt: Self.fixedSavedAt)
+
+    #expect(try await actor.fetchMemories().count == memoriesAfterFirstLoad)
+    #expect(try await actor.fetchElements().count == elementsAfterFirstLoad)
+  }
+
   @Test
   func
     `Deleting the example memory keeps an element that also appears in a real memory, with only that appearance left`()

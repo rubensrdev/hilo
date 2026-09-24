@@ -154,6 +154,29 @@ actor PersistenceActor {
     try fetchMemoryRecord(id: id)?.photoData
   }
 
+  // DEC-19: editar el texto no reanaliza ni toca fecha, foto o apariciones
+  func editNarrative(id: MemoryID, narrative: String) throws {
+    guard let record = try fetchMemoryRecord(id: id) else { throw WriteError.memoryNotFound }
+    record.narrative = narrative
+    try modelContext.save()
+  }
+
+  // contrato 4 (S5) + regla 10: el elemento es uno solo, renombrarlo lo cambia en toda la memoria;
+  // la colision (DEC-26) ya la rechazo el dominio antes de llegar aqui
+  func renameElement(id: ElementID, newName: String) throws {
+    guard let record = try fetchElementRecord(id: id) else { throw WriteError.elementNotFound }
+    record.displayName = newName
+    record.canonicalName = CanonicalName.of(newName)
+    try modelContext.save()
+  }
+
+  // contrato 4 (S5): añadir un alias, con la misma colision ya rechazada por el dominio
+  func addAlias(id: ElementID, alias: String) throws {
+    guard let record = try fetchElementRecord(id: id) else { throw WriteError.elementNotFound }
+    record.aliases.append(alias)
+    try modelContext.save()
+  }
+
   // contrato 4: el cascade borra apariciones y foto; el dominio decide los huerfanos (reglas 11+12)
   func deleteMemory(id: MemoryID) throws {
     guard let record = try fetchMemoryRecord(id: id) else { throw WriteError.memoryNotFound }
@@ -175,11 +198,26 @@ actor PersistenceActor {
   // contrato 5 + B11: contenido fijo, resuelto contra los elementos ya existentes (F1 contrato 3)
   func loadExampleMemory(language: ExampleMemoryLanguage, loadedAt: Date) throws {
     guard try fetchExampleMemoryRecords().isEmpty else { return }
+    try insertSeeds(ExampleMemoryContent.seeds(for: language), isExample: true, loadedAt: loadedAt)
+  }
+
+  #if DEBUG
+    // F5: refuerza la memoria de ejemplo con dos recuerdos mas para docs/validacion-manual —
+    // nunca en Release, mismo guard de idempotencia que loadExampleMemory
+    func loadDebugValidationDataset(loadedAt: Date) throws {
+      guard try fetchExampleMemoryRecords().isEmpty else { return }
+      try insertSeeds(
+        ExampleMemoryContent.seeds(for: .spanish) + DebugValidationContent.seeds,
+        isExample: true, loadedAt: loadedAt)
+    }
+  #endif
+
+  private func insertSeeds(_ seeds: [ExampleMemorySeed], isExample: Bool, loadedAt: Date) throws {
     var knownElements = try fetchElements()
-    for seed in ExampleMemoryContent.seeds(for: language) {
+    for seed in seeds {
       let date = seed.dateText.flatMap { MemoryDate(text: $0, deducedYear: seed.deducedYear) }
       let memory = Memory(id: MemoryID(), narrative: seed.narrative, date: date, savedAt: loadedAt)
-      let memoryID = try save(memory, isAnalyzed: true, isExample: true)
+      let memoryID = try save(memory, isAnalyzed: true, isExample: isExample)
       for appearanceSeed in seed.appearances {
         let elementID: ElementID
         switch ElementResolution.resolving(

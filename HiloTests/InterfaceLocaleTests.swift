@@ -25,3 +25,36 @@ nonisolated struct InterfaceLocaleTests {
     #expect(locale.language.languageCode == "en")
   }
 }
+
+// F5.5: nombre, tipo y recuento — el mismo dato que el chip visual transmite por color+simbolo,
+// para quien usa VoiceOver
+nonisolated struct ElementAccessibilityLabelTests {
+  private let english = Locale(identifier: "en")
+  private let spanish = Locale(identifier: "es")
+
+  @Test func `An element with a known count announces name, type and its memories in English`() {
+    let element = Element(displayName: "Carmen", type: .person)!
+    #expect(
+      element.accessibilityLabel(memoryCount: 3, locale: english) == "Carmen, Person, in 3 memories"
+    )
+    #expect(
+      element.accessibilityLabel(memoryCount: 1, locale: english) == "Carmen, Person, in 1 memory")
+  }
+
+  @Test func `An element with a known count announces name, type and its memories in Spanish`() {
+    let element = Element(displayName: "el pueblo", type: .place)!
+    #expect(
+      element.accessibilityLabel(memoryCount: 3, locale: spanish)
+        == "el pueblo, Lugar, en 3 recuerdos")
+    #expect(
+      element.accessibilityLabel(memoryCount: 1, locale: spanish)
+        == "el pueblo, Lugar, en 1 recuerdo")
+  }
+
+  // sin recuento (nil): la fila de S1/S4 lo omite si aun no se conoce, sin decir "0 recuerdos"
+  @Test func `An element with no known count announces only name and type, in both languages`() {
+    let clock = Element(displayName: "el reloj", type: .object)!
+    #expect(clock.accessibilityLabel(memoryCount: nil, locale: english) == "el reloj, Object")
+    #expect(clock.accessibilityLabel(memoryCount: nil, locale: spanish) == "el reloj, Objeto")
+  }
+}
