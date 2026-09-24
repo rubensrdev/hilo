@@ -41,6 +41,13 @@
         ExtractedElement(name: "la Singer", type: .object, role: "lo que llevamos"),
       ],
       dateText: "El verano del 87", deducedYear: 1987)
+
+    // segundo recuerdo real para los escenarios "conectado"/"con rango" (F5.4/F5.5): la memoria
+    // de ejemplo ya aprobada (docs/content/memoria-de-ejemplo.md), nunca un relato inventado
+    static let secondExample = ExampleMemoryContent.seeds(for: .spanish)[1]
+    static let secondDate = secondExample.dateText.flatMap {
+      MemoryDate(text: $0, deducedYear: secondExample.deducedYear)
+    }
   }
 
   // MARK: captura
@@ -354,26 +361,24 @@
     static var exploreMemory: Memory {
       // reutiliza el mismo contenido de PreviewFixtures.narrative, nunca texto de muestra nuevo
       Memory(
-        narrative: narrative, date: MemoryDate(text: "El verano del 87", deducedYear: 1987),
-        savedAt: .now)!
+        id: MemoryID(), narrative: narrative,
+        date: MemoryDate(text: "El verano del 87", deducedYear: 1987), savedAt: .now)
     }
 
     static var exploreElement: Element {
-      Element(displayName: "la abuela Carmen", type: .person)!
+      Element(id: ElementID(), displayName: "la abuela Carmen", type: .person)
     }
 
     // dos recuerdos y dos elementos, para los estados normal/buscando/lista de elementos
     static func seedExploreSample(into actor: PersistenceActor) async {
       let carmen = exploreElement
-      let cadiz = Element(displayName: "Cádiz", type: .place)!
+      let cadiz = Element(id: ElementID(), displayName: "Cádiz", type: .place)
       _ = try? await actor.save(carmen)
       _ = try? await actor.save(cadiz)
       let first = exploreMemory
       let second = Memory(
-        narrative:
-          "Los domingos en Cádiz comíamos en la playa de la Caleta con la abuela Carmen.",
-        date: MemoryDate(text: "los domingos de aquellos años"),
-        savedAt: Date(timeIntervalSinceNow: -86400))!
+        id: MemoryID(), narrative: secondExample.narrative, date: secondDate,
+        savedAt: Date(timeIntervalSinceNow: -86400))
       _ = try? await actor.save(first, isAnalyzed: true, isExample: false)
       _ = try? await actor.save(second, isAnalyzed: true, isExample: false)
       try? await actor.save(
@@ -439,7 +444,7 @@
       let actor = PreviewFixtures.persistenceActor()
       let target = PreviewFixtures.exploreMemory
       let carmen = PreviewFixtures.exploreElement
-      let cadiz = Element(displayName: "Cádiz", type: .place)!
+      let cadiz = Element(id: ElementID(), displayName: "Cádiz", type: .place)
 
       func saveElements() async {
         _ = try? await actor.save(carmen)
@@ -455,10 +460,9 @@
       // el segundo recuerdo comparte la abuela Carmen: es lo que conecta a target
       func saveConnectedMemory() async {
         let other = Memory(
-          narrative:
-            "Los domingos en Cádiz comíamos en la playa de la Caleta con la abuela Carmen.",
-          date: MemoryDate(text: "los domingos de aquellos años"),
-          savedAt: Date(timeIntervalSinceNow: -86400))!
+          id: MemoryID(), narrative: PreviewFixtures.secondExample.narrative,
+          date: PreviewFixtures.secondDate,
+          savedAt: Date(timeIntervalSinceNow: -86400))
         _ = try? await actor.save(other, isAnalyzed: true, isExample: false)
         try? await actor.save(
           Appearance(memoryID: other.id, elementID: carmen.id, role: nil, status: .confirmedByUser)
@@ -563,17 +567,16 @@
           Appearance(
             memoryID: target.id, elementID: carmen.id, role: nil, status: .confirmedByUser))
         let other = Memory(
-          narrative:
-            "Los domingos en Cádiz comíamos en la playa de la Caleta con la abuela Carmen.",
-          date: MemoryDate(text: "los domingos de aquellos años"),
-          savedAt: Date(timeIntervalSinceNow: -86400))!
+          id: MemoryID(), narrative: PreviewFixtures.secondExample.narrative,
+          date: PreviewFixtures.secondDate,
+          savedAt: Date(timeIntervalSinceNow: -86400))
         _ = try? await actor.save(other, isAnalyzed: true, isExample: false)
         try? await actor.save(
           Appearance(
             memoryID: other.id, elementID: carmen.id, role: nil, status: .confirmedByUser))
         elementID = carmen.id
       case .single:
-        let singer = Element(displayName: "la Singer", type: .object)!
+        let singer = Element(id: ElementID(), displayName: "la Singer", type: .object)
         _ = try? await actor.save(singer)
         try? await actor.save(
           Appearance(
