@@ -86,4 +86,56 @@ nonisolated struct ExploreCopyTests {
     #expect(both.contains("José"))
     #expect(both.contains("el reloj"))
   }
+
+  // MARK: contrato 4 (S5): cabecera del detalle de elemento — tipo, separador y recuento
+
+  @Test(arguments: [
+    (ElementType.person, "Person", "Persona"),
+    (ElementType.place, "Place", "Lugar"),
+    (ElementType.object, "Object", "Objeto"),
+  ])
+  func `elementTypeAndCount composes the localized type and the memory count, in both languages`(
+    type: ElementType, english: String, spanish: String
+  ) {
+    #expect(
+      ExploreCopy.elementTypeAndCount(type, count: 1, locale: self.english)
+        == "\(english) · in 1 memory")
+    #expect(
+      ExploreCopy.elementTypeAndCount(type, count: 1, locale: self.spanish)
+        == "\(spanish) · en 1 recuerdo")
+    #expect(
+      ExploreCopy.elementTypeAndCount(type, count: 4, locale: self.english)
+        == "\(english) · in 4 memories")
+    #expect(
+      ExploreCopy.elementTypeAndCount(type, count: 4, locale: self.spanish)
+        == "\(spanish) · en 4 recuerdos")
+  }
+
+  @Test func `elementTypeAndCount uses the plural form for zero memories, in both languages`() {
+    #expect(
+      ExploreCopy.elementTypeAndCount(.person, count: 0, locale: english)
+        == "Person · in 0 memories")
+    #expect(
+      ExploreCopy.elementTypeAndCount(.person, count: 0, locale: spanish)
+        == "Persona · en 0 recuerdos")
+  }
+
+  // MARK: contrato 4 (S5), DEC-57 (A1): el rango temporal se anuncia como una frase, no dos textos pegados
+
+  @Test func `The date range accessibility label reads as a full sentence in English`() {
+    #expect(
+      ExploreCopy.dateRangeAccessibilityLabel(
+        oldest: "cuando yo era niño", newest: "el verano pasado", locale: english)
+        == "From cuando yo era niño to el verano pasado")
+  }
+
+  // la traduccion al español se añade despues via Xcode MCP; aqui solo se comprueba que compone
+  @Test func `The date range accessibility label composes something non-empty in Spanish too`() {
+    let label = ExploreCopy.dateRangeAccessibilityLabel(
+      oldest: "cuando yo era niño", newest: "el verano pasado", locale: spanish)
+
+    #expect(!label.isEmpty)
+    #expect(label.contains("cuando yo era niño"))
+    #expect(label.contains("el verano pasado"))
+  }
 }

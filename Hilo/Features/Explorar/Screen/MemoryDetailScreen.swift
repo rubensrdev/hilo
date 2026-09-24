@@ -137,8 +137,7 @@ struct MemoryDetailScreen: View {
     }
   }
 
-  // MARK: elementos — sin recortar ni renombrar desde aqui (eso es Revision), no navegan todavia
-  // (S5 no existe hasta F5.4 — mismo motivo que en F5.2 para la lista de elementos y las tarjetas)
+  // MARK: elementos — sin recortar ni renombrar desde aqui (eso es Revision); navegan a S5 (F5.4)
 
   @ViewBuilder
   private var elementsSection: some View {
@@ -150,7 +149,10 @@ struct MemoryDetailScreen: View {
     } else {
       VStack(alignment: .leading, spacing: Spacing.espacio1) {
         ForEach(state.ownElements) { element in
-          ElementChip(element: element)
+          NavigationLink(value: element.id) {
+            ElementChip(element: element)
+          }
+          .buttonStyle(.plain)
         }
       }
     }

@@ -81,6 +81,13 @@ final class ExploreState {
     ) { [weak self] in await self?.load() }
   }
 
+  // contrato 4 (S5): sin ReviewCoordinator/UnderstandLaterState — renombrar no reanaliza nada
+  func makeElementDetailState(for elementID: ElementID) -> ElementDetailState {
+    ElementDetailState(
+      elementID: elementID, persistenceActor: persistenceActor
+    ) { [weak self] in await self?.load() }
+  }
+
   func load() async {
     do {
       async let fetchedMemories = persistenceActor.fetchMemories()

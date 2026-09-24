@@ -19,7 +19,10 @@ struct ElementsView: View {
         } else {
           LazyVStack(spacing: Spacing.espacio1) {
             ForEach(state.filteredElements) { element in
-              ElementRow(element: element, memoryCount: state.memoryCount(for: element))
+              NavigationLink(value: element.id) {
+                ElementRow(element: element, memoryCount: state.memoryCount(for: element))
+              }
+              .buttonStyle(.plain)
             }
           }
         }

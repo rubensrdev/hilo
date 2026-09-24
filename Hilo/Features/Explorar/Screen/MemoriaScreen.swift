@@ -58,6 +58,9 @@ struct MemoriaScreen: View {
         let detailState = state.makeDetailState(for: memoryID)
         MemoryDetailScreen(state: detailState, reviewCoordinator: detailState.reviewCoordinator)
       }
+      .navigationDestination(for: ElementID.self) { elementID in
+        ElementDetailScreen(state: state.makeElementDetailState(for: elementID))
+      }
     }
     .task { await state.load() }
     // DEC-59: el acceso existe y es tocable, abre un estado minimo — su contenido real es de F8

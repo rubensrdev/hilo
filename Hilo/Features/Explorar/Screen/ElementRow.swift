@@ -25,7 +25,11 @@ struct ElementRow: View {
         .metadato()
         .foregroundStyle(Color.textoSecundario)
     }
-    .frame(minHeight: Spacing.altoFilaMinimo)
+    .frame(maxWidth: .infinity, minHeight: Spacing.altoFilaMinimo, alignment: .leading)
+    // sin fondo propio (a diferencia de MemoryCard/ElementChip), asi que el Spacer central
+    // queda transparente al toque sin esto: el NavigationLink que la envuelve fallaba en
+    // silencio si se tocaba ahi (hallado por verificador-ui)
+    .contentShape(Rectangle())
     .accessibilityElement(children: .combine)
   }
 }

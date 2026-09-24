@@ -57,4 +57,15 @@ nonisolated enum ExploreCopy {
       String(localized: LocalizedStringResource("This cannot be undone.", locale: locale)))
     return sentences.joined(separator: " ")
   }
+
+  // contrato 4 (S5): cabecera del detalle de elemento, tipo mas recuento en una sola linea
+  static func elementTypeAndCount(_ type: ElementType, count: Int, locale: Locale) -> String {
+    "\(type.localizedName(locale: locale)) · \(elementMemoryCount(count, locale: locale))"
+  }
+
+  // DEC-57 (A1): VoiceOver no debe leer el guion medio del rango como si fuera texto
+  static func dateRangeAccessibilityLabel(oldest: String, newest: String, locale: Locale) -> String
+  {
+    String(localized: LocalizedStringResource("From \(oldest) to \(newest)", locale: locale))
+  }
 }

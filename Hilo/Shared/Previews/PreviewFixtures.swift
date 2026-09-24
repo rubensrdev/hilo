@@ -504,6 +504,99 @@
     }
   }
 
+  // MARK: detalle de elemento (S5)
+
+  enum ElementDetailScenario: Hashable, CaseIterable {
+    case several
+    case single
+  }
+
+  struct ElementDetailScenarios: PreviewModifier {
+    private struct Key: Hashable {
+      let scenario: ElementDetailScenario
+      let language: String
+    }
+
+    let scenario: ElementDetailScenario
+    let locale: Locale
+
+    init(_ scenario: ElementDetailScenario, locale: Locale = Locale(identifier: "en")) {
+      self.scenario = scenario
+      self.locale = locale
+    }
+
+    static func makeSharedContext() async -> [AnyHashable: ElementDetailState] {
+      var states: [AnyHashable: ElementDetailState] = [:]
+      for language in ["en", "es"] {
+        for scenario in ElementDetailScenario.allCases {
+          states[Key(scenario: scenario, language: language)] = await reached(scenario)
+        }
+      }
+      return states
+    }
+
+    func body(content: Content, context: [AnyHashable: ElementDetailState]) -> some View {
+      let language = locale.language.languageCode?.identifier ?? "en"
+      Group {
+        if let state = context[Key(scenario: scenario, language: language)] {
+          content
+            .environment(state)
+            .environment(\.locale, locale)
+        }
+      }
+    }
+
+    // .several reutiliza la abuela Carmen (exploreElement), ya conectada a un segundo recuerdo
+    // (mismo patron que MemoryDetailScenarios.saveConnectedMemory); .single usa "la Singer", ya
+    // mencionada en PreviewFixtures.narrative/exploreMemory, sin apariciones en ningun otro sitio
+    private static func reached(_ scenario: ElementDetailScenario) async -> ElementDetailState {
+      let actor = PreviewFixtures.persistenceActor()
+      let target = PreviewFixtures.exploreMemory
+      _ = try? await actor.save(target, isAnalyzed: true, isExample: false)
+      let elementID: ElementID
+
+      switch scenario {
+      case .several:
+        let carmen = PreviewFixtures.exploreElement
+        _ = try? await actor.save(carmen)
+        try? await actor.save(
+          Appearance(
+            memoryID: target.id, elementID: carmen.id, role: nil, status: .confirmedByUser))
+        let other = Memory(
+          narrative:
+            "Los domingos en Cádiz comíamos en la playa de la Caleta con la abuela Carmen.",
+          date: MemoryDate(text: "los domingos de aquellos años"),
+          savedAt: Date(timeIntervalSinceNow: -86400))!
+        _ = try? await actor.save(other, isAnalyzed: true, isExample: false)
+        try? await actor.save(
+          Appearance(
+            memoryID: other.id, elementID: carmen.id, role: nil, status: .confirmedByUser))
+        elementID = carmen.id
+      case .single:
+        let singer = Element(displayName: "la Singer", type: .object)!
+        _ = try? await actor.save(singer)
+        try? await actor.save(
+          Appearance(
+            memoryID: target.id, elementID: singer.id, role: nil, status: .confirmedByUser))
+        elementID = singer.id
+      }
+
+      let state = ElementDetailState(elementID: elementID, persistenceActor: actor) {}
+      await state.load()
+      return state
+    }
+  }
+
+  struct ElementDetailPreviewScreen: View {
+    @Environment(ElementDetailState.self) private var state
+
+    var body: some View {
+      NavigationStack {
+        ElementDetailScreen(state: state)
+      }
+    }
+  }
+
   // MARK: momento de la conexion
 
   extension PreviewFixtures {

@@ -161,6 +161,22 @@ actor PersistenceActor {
     try modelContext.save()
   }
 
+  // contrato 4 (S5) + regla 10: el elemento es uno solo, renombrarlo lo cambia en toda la memoria;
+  // la colision (DEC-26) ya la rechazo el dominio antes de llegar aqui
+  func renameElement(id: ElementID, newName: String) throws {
+    guard let record = try fetchElementRecord(id: id) else { throw WriteError.elementNotFound }
+    record.displayName = newName
+    record.canonicalName = CanonicalName.of(newName)
+    try modelContext.save()
+  }
+
+  // contrato 4 (S5): añadir un alias, con la misma colision ya rechazada por el dominio
+  func addAlias(id: ElementID, alias: String) throws {
+    guard let record = try fetchElementRecord(id: id) else { throw WriteError.elementNotFound }
+    record.aliases.append(alias)
+    try modelContext.save()
+  }
+
   // contrato 4: el cascade borra apariciones y foto; el dominio decide los huerfanos (reglas 11+12)
   func deleteMemory(id: MemoryID) throws {
     guard let record = try fetchMemoryRecord(id: id) else { throw WriteError.memoryNotFound }
