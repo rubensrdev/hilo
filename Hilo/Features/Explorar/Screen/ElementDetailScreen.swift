@@ -6,6 +6,7 @@ import SwiftUI
 struct ElementDetailScreen: View {
   @Bindable var state: ElementDetailState
   @Environment(\.locale) private var environmentLocale
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   @State private var isRenamePresented = false
   @State private var renameText = ""
   @State private var isAddAliasPresented = false
@@ -147,8 +148,15 @@ struct ElementDetailScreen: View {
     }
   }
 
+  // P2 (F8.4): a tamaños AX el simbolo largeTitle y el nombre no caben en fila
+  private var headerLayout: AnyLayout {
+    dynamicTypeSize.isAccessibilitySize
+      ? AnyLayout(VStackLayout(alignment: .leading, spacing: Spacing.espacio2))
+      : AnyLayout(HStackLayout(alignment: .top, spacing: Spacing.espacio3))
+  }
+
   private func header(_ element: Element) -> some View {
-    HStack(alignment: .top, spacing: Spacing.espacio3) {
+    headerLayout {
       Image(systemName: element.type.symbolName)
         .font(.largeTitle)
         .foregroundStyle(element.type.color)
@@ -169,7 +177,10 @@ struct ElementDetailScreen: View {
     // explicito evita eso y reutiliza el mismo patron nombre-tipo-recuento del resto de la app
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(
-      element.accessibilityLabel(memoryCount: state.ownMemories.count, locale: interfaceLocale))
+      element.accessibilityLabel(memoryCount: state.ownMemories.count, locale: interfaceLocale)
+    )
+    // sin navigationTitle (la referencia lo deja vacio): la cabecera es lo que el rotor encuentra
+    .accessibilityAddTraits(.isHeader)
   }
 
   private var addAliasButton: some View {

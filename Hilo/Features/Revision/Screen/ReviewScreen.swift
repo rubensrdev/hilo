@@ -41,6 +41,14 @@ struct ReviewScreen: View {
   @State private var pendingRenamePrompt: RenamePrompt?
   @FocusState private var isDateFocused: Bool
 
+  // F8.4: quitar, deshacer, rechazar y responder sustituyen la vista enfocada; VoiceOver
+  // volveria al principio de la hoja sin un destino explicito
+  private enum ReviewFocus: Hashable {
+    case item(ReviewItemID)
+    case removal(ReviewItemID)
+  }
+  @AccessibilityFocusState private var focused: ReviewFocus?
+
   // renaming solo lo usan las previews: arrancan con el alert de renombrar ya abierto
   init(
     initial: ReviewState, narrative: String, renaming itemID: ReviewItemID? = nil,
@@ -202,6 +210,7 @@ struct ReviewScreen: View {
       Text("Your words, as you wrote them")
         .metadato()
         .foregroundStyle(Color.textoSecundario)
+        .accessibilityAddTraits(.isHeader)
       Text(narrative)
         .relato()
         .accessibilityIdentifier("review.narrative")
@@ -233,13 +242,15 @@ struct ReviewScreen: View {
         .accessibilityAddTraits(.isHeader)
       ForEach(reviewState.blocks.understoodGroups, id: \.type) { group in
         VStack(alignment: .leading, spacing: Spacing.espacio2) {
+          // P1: el color del tipo va en el simbolo; el texto footnote queda en texto-secundario
           Label {
             Text(group.type.localizedPluralName(locale: interfaceLocale))
+              .foregroundStyle(Color.textoSecundario)
           } icon: {
             Image(systemName: group.type.symbolName)
+              .foregroundStyle(group.type.color)
               .accessibilityHidden(true)
           }
-          .foregroundStyle(group.type.color)
           .metadato()
           ForEach(group.rows) { row in
             understoodChip(row)
@@ -287,6 +298,7 @@ struct ReviewScreen: View {
             name: row.name, type: row.type, otherMemories: nil, locale: interfaceLocale)
         )
         .accessibilityHint("Double tap to rename")
+        .accessibilityFocused($focused, equals: .item(row.id))
       }
 
       if row.isRemoved {
@@ -297,21 +309,28 @@ struct ReviewScreen: View {
           .accessibilityHidden(true)
         Button {
           reviewState.restore(row.id)
+          focused = .removal(row.id)
         } label: {
           Text("Undo")
             .frame(minWidth: Spacing.objetivoToqueMinimo, minHeight: Spacing.objetivoToqueMinimo)
             .contentShape(Rectangle())
         }
         .accessibilityLabel("Undo removing \(row.name)")
+        .accessibilityFocused($focused, equals: .removal(row.id))
       } else {
         Button {
           reviewState.remove(row.id)
+          focused = .removal(row.id)
+          AccessibilityNotification.Announcement(
+            ReviewCopy.removedElementLabel(name: row.name, type: row.type, locale: interfaceLocale)
+          ).post()
         } label: {
           Image(systemName: "xmark")
             .frame(minWidth: Spacing.objetivoToqueMinimo, minHeight: Spacing.objetivoToqueMinimo)
         }
         .accessibilityLabel("Remove \(row.name)")
         .accessibilityHint("Leaves it out of this memory. You can undo it.")
+        .accessibilityFocused($focused, equals: .removal(row.id))
       }
     }
     .padding(.horizontal, Spacing.espacio3)
@@ -366,6 +385,7 @@ struct ReviewScreen: View {
             locale: interfaceLocale)
         )
         .accessibilityHint("Double tap to rename")
+        .accessibilityFocused($focused, equals: .item(known.id))
         // ya lo dice la etiqueta del nombre: VoiceOver no lo lee dos veces
         Text(
           "\(known.type.localizedName(locale: interfaceLocale)) · in \(known.otherMemoriesCount) memories"
@@ -377,6 +397,7 @@ struct ReviewScreen: View {
       .frame(maxWidth: .infinity, alignment: .leading)
       Button {
         reviewState.rejectRecognition(known.id)
+        focused = .item(known.id)
       } label: {
         Text("Not the same \(known.name)")
           .metadato()
@@ -439,6 +460,7 @@ struct ReviewScreen: View {
       answersLayout {
         Button {
           reviewState.confirmDoubt(card.itemID, as: card.candidate.id)
+          focused = .item(card.itemID)
         } label: {
           Text("Same \(card.candidate.name)")
             .botonSecundario()
@@ -448,6 +470,7 @@ struct ReviewScreen: View {
 
         Button {
           reviewState.rejectDoubt(card.itemID)
+          focused = .item(card.itemID)
         } label: {
           Text(ReviewCopy.doubtRejection(type: card.itemType, locale: interfaceLocale))
             .botonSecundario()

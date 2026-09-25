@@ -42,6 +42,7 @@ struct ConnectionMomentScreen: View {
     } icon: {
       Image(systemName: "checkmark.circle.fill")
         .foregroundStyle(Color.estadoExito)
+        .accessibilityHidden(true)
     }
   }
 

@@ -56,6 +56,21 @@ struct MemoryDetailScreen: View {
       }
     }
     .task { await state.load() }
+    // F8.4: comprender mas tarde se anuncia igual que en la captura — empieza a leer, o falla y por que
+    .onChange(of: state.understandLater.phase) { _, newPhase in
+      switch newPhase {
+      case .comprehending:
+        AccessibilityNotification.Announcement(
+          ComprehensionCopy.readingAnnouncement(locale: interfaceLocale)
+        ).post()
+      case .notAnalyzed(let reason):
+        AccessibilityNotification.Announcement(
+          ComprehensionCopy.notice(reason, locale: interfaceLocale).announcement
+        ).post()
+      default:
+        break
+      }
+    }
     .sheet(isPresented: $isEditPresented) {
       EditNarrativeScreen(narrative: state.memory?.narrative ?? "") { newText in
         _ = await state.editNarrative(newText)
@@ -147,10 +162,13 @@ struct MemoryDetailScreen: View {
         .foregroundStyle(Color.textoSecundario)
         .accessibilityIdentifier("detail.noElements")
     } else {
-      VStack(alignment: .leading, spacing: Spacing.espacio1) {
+      VStack(alignment: .leading, spacing: Spacing.separacionChips) {
         ForEach(state.ownElements) { element in
           NavigationLink(value: element.id) {
             ElementChip(element: element, memoryCount: state.memoryCount(for: element))
+              // el chip mide menos de 44 pt: el objetivo lo pone el enlace, no el chip compartido
+              .frame(minHeight: Spacing.objetivoToqueMinimo, alignment: .leading)
+              .contentShape(Rectangle())
           }
           .buttonStyle(.plain)
         }
@@ -253,6 +271,7 @@ struct MemoryDetailScreen: View {
           Text("Saved without analyzing")
             .tituloSeccion()
             .foregroundStyle(Color.textoPrimario)
+            .accessibilityAddTraits(.isHeader)
           Text(
             "No people, places or objects yet, so this memory does not connect with the others."
           )
@@ -263,6 +282,12 @@ struct MemoryDetailScreen: View {
         Image(systemName: "exclamationmark.triangle.fill")
           .foregroundStyle(Color.estadoAviso)
           .accessibilityHidden(true)
+      }
+      if state.understandLater.phase == .comprehending {
+        Text("Reading your memory…")
+          .metadato()
+          .foregroundStyle(Color.textoSecundario)
+          .accessibilityIdentifier("detail.understandLaterReading")
       }
       if case .notAnalyzed(let reason) = state.understandLater.phase {
         let notice = ComprehensionCopy.notice(reason, locale: interfaceLocale)

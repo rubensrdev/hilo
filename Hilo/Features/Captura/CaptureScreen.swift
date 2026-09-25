@@ -77,10 +77,18 @@ struct CaptureScreen: View {
       ).post()
     }
     .onChange(of: state.phase) { _, newPhase in
-      guard case .notAnalyzed(let reason) = newPhase else { return }
-      AccessibilityNotification.Announcement(
-        ComprehensionCopy.notice(reason, locale: interfaceLocale).announcement
-      ).post()
+      switch newPhase {
+      case .comprehending:
+        AccessibilityNotification.Announcement(
+          ComprehensionCopy.readingAnnouncement(locale: interfaceLocale)
+        ).post()
+      case .notAnalyzed(let reason):
+        AccessibilityNotification.Announcement(
+          ComprehensionCopy.notice(reason, locale: interfaceLocale).announcement
+        ).post()
+      default:
+        break
+      }
     }
   }
 

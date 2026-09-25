@@ -24,6 +24,7 @@ struct ElementChip: View {
     .padding(.vertical, Spacing.espacio1)
     .background(Color.chipRelleno)
     .clipShape(Spacing.radioChip)
+    .accessibilityElement(children: .ignore)
     .accessibilityLabel(
       element.accessibilityLabel(memoryCount: memoryCount, locale: interfaceLocale))
   }
