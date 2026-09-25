@@ -338,9 +338,8 @@ struct CaptureScreen: View {
 
   // contrato 1: el texto de ayuda enseña con un recuerdo de ejemplo real, nunca una instruccion
   private static func placeholder(locale: Locale) -> String {
-    let language: ExampleMemoryLanguage =
-      locale.language.languageCode?.identifier == "es" ? .spanish : .english
-    return ExampleMemoryContent.seeds(for: language).first?.narrative ?? ""
+    ExampleMemoryContent.seeds(for: ExampleMemoryLanguage(interfaceLocale: locale)).first?
+      .narrative ?? ""
   }
 }
 

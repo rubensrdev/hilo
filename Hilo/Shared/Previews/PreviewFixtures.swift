@@ -600,6 +600,72 @@
     }
   }
 
+  // MARK: ajustes (S7)
+
+  enum AjustesScenario: Hashable, CaseIterable {
+    case withoutExample
+    case withExample
+  }
+
+  struct AjustesScenarios: PreviewModifier {
+    private struct Key: Hashable {
+      let scenario: AjustesScenario
+      let language: String
+    }
+
+    let scenario: AjustesScenario
+    let locale: Locale
+
+    init(_ scenario: AjustesScenario, locale: Locale = Locale(identifier: "en")) {
+      self.scenario = scenario
+      self.locale = locale
+    }
+
+    static func makeSharedContext() async -> [AnyHashable: AjustesState] {
+      var states: [AnyHashable: AjustesState] = [:]
+      for language in ["en", "es"] {
+        for scenario in AjustesScenario.allCases {
+          states[Key(scenario: scenario, language: language)] = await reached(
+            scenario, language: language)
+        }
+      }
+      return states
+    }
+
+    func body(content: Content, context: [AnyHashable: AjustesState]) -> some View {
+      let language = locale.language.languageCode?.identifier ?? "en"
+      Group {
+        if let state = context[Key(scenario: scenario, language: language)] {
+          content
+            .environment(state)
+            .environment(\.locale, locale)
+        }
+      }
+    }
+
+    private static func reached(_ scenario: AjustesScenario, language: String) async
+      -> AjustesState
+    {
+      let state = AjustesState(
+        persistenceActor: PreviewFixtures.persistenceActor(), version: "1.0",
+        onMemoryChanged: {}, onWiped: {})
+      if scenario == .withExample {
+        await state.loadExampleMemory(
+          language: ExampleMemoryLanguage(interfaceLocale: Locale(identifier: language)))
+      }
+      await state.load()
+      return state
+    }
+  }
+
+  struct AjustesPreviewScreen: View {
+    @Environment(AjustesState.self) private var state
+
+    var body: some View {
+      AjustesScreen(state: state)
+    }
+  }
+
   // MARK: momento de la conexion
 
   extension PreviewFixtures {

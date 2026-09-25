@@ -9,7 +9,7 @@ struct MemoriesView: View {
   private var interfaceLocale: Locale { InterfaceLocale.resolve(environmentLocale) }
 
   private var exampleLanguage: ExampleMemoryLanguage {
-    interfaceLocale.language.languageCode?.identifier == "es" ? .spanish : .english
+    ExampleMemoryLanguage(interfaceLocale: interfaceLocale)
   }
 
   var body: some View {

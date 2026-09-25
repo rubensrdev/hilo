@@ -385,6 +385,24 @@ struct PersistenceActorTests {
     #expect(!elements.contains { $0.displayName == "the watch" })
   }
 
+  // F8 contrato 1: Ajustes ofrece cargar o borrar el ejemplo segun este si esta
+  @Test func `The store reports whether the example memory is present, ignoring real memories`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let actor = PersistenceActor(modelContainer: container)
+    let real = try #require(
+      Memory(narrative: "Comimos con José el domingo pasado.", savedAt: Self.fixedSavedAt))
+    _ = try await actor.save(real, isAnalyzed: false, isExample: false)
+    #expect(try await actor.hasExampleMemory() == false)
+
+    try await actor.loadExampleMemory(language: .spanish, loadedAt: Self.fixedSavedAt)
+    #expect(try await actor.hasExampleMemory() == true)
+
+    try await actor.deleteExampleMemory()
+    #expect(try await actor.hasExampleMemory() == false)
+  }
+
   @Test func `Deleting the example memory removes its memories and leaves no elements behind`()
     async throws
   {

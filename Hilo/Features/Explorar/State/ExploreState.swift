@@ -88,6 +88,21 @@ final class ExploreState {
     ) { [weak self] in await self?.load() }
   }
 
+  // F8 contrato 1 (S7): el ejemplo recarga S1; el borrado total lo devuelve al vacio de primera vez
+  func makeAjustesState() -> AjustesState {
+    AjustesState(
+      persistenceActor: persistenceActor, version: ProductVersion.read(),
+      onMemoryChanged: { [weak self] in await self?.load() },
+      onWiped: { [weak self] in await self?.resetToFirstTime() })
+  }
+
+  func resetToFirstTime() async {
+    searchQuery = ""
+    selectedElementTypeFilter = nil
+    selectedView = .memories
+    await load()
+  }
+
   func load() async {
     do {
       async let fetchedMemories = persistenceActor.fetchMemories()
@@ -113,28 +128,4 @@ final class ExploreState {
     }
     await load()
   }
-
-  #if DEBUG
-    // F5: panel Debug de Ajustes, para docs/validacion-manual — nunca en Release
-    func loadDebugValidationDataset() async {
-      do {
-        try await persistenceActor.loadDebugValidationDataset(loadedAt: Date())
-      } catch {
-        logger.error(
-          "No se pudo cargar el set de validacion: \(String(describing: type(of: error)), privacy: .public)"
-        )
-      }
-      await load()
-    }
-
-    func wipeAllData() async {
-      do {
-        try await persistenceActor.wipeAllData()
-      } catch {
-        logger.error(
-          "No se pudo borrar todo: \(String(describing: type(of: error)), privacy: .public)")
-      }
-      await load()
-    }
-  #endif
 }

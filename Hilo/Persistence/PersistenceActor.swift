@@ -249,6 +249,10 @@ actor PersistenceActor {
     try cleanOrphanedElements()
   }
 
+  func hasExampleMemory() throws -> Bool {
+    try !fetchExampleMemoryRecords().isEmpty
+  }
+
   private func fetchExampleMemoryRecords() throws -> [MemoryRecord] {
     try modelContext.fetch(FetchDescriptor<MemoryRecord>(predicate: #Predicate { $0.isExample }))
   }

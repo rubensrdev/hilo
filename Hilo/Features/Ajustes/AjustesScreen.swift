@@ -1,37 +1,27 @@
 import SwiftUI
 
-// contrato 1 + DEC-59: el acceso existe y es tocable, con un estado minimo — nunca un crash ni un no-op silencioso
+// F8 contrato 1: S7 es una hoja, superficie del sistema como contenedor (tokens.md §7)
 struct AjustesScreen: View {
-  let state: ExploreState
+  @Bindable var state: AjustesState
   @Environment(\.dismiss) private var dismiss
-  #if DEBUG
-    @State private var isWipeConfirmationPresented = false
-  #endif
+  @Environment(\.locale) private var environmentLocale
+  @State private var isDeleteExamplePresented = false
 
-  private var placeholder: some View {
-    ContentUnavailableView(
-      "Settings are coming soon",
-      systemImage: "gearshape",
-      description: Text("Language and accessibility options will live here.")
-    )
-  }
+  private var interfaceLocale: Locale { InterfaceLocale.resolve(environmentLocale) }
 
   var body: some View {
     NavigationStack {
-      Group {
+      List {
+        privacySection
+        exampleMemorySection
+        wipeSection
+        aboutSection
         #if DEBUG
-          List {
-            Section {
-              placeholder
-            }
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            debugSection
-          }
-        #else
-          placeholder
+          debugSection
         #endif
       }
+      .scrollContentBackground(.hidden)
+      .background(Color.fondo)
       .navigationTitle("Settings")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -40,19 +30,124 @@ struct AjustesScreen: View {
             .accessibilityIdentifier("settings.close")
         }
       }
-      #if DEBUG
-        .alert(
-          "Wipe all data?", isPresented: $isWipeConfirmationPresented
-        ) {
-          Button("Wipe all data", role: .destructive) {
-            Task { await state.wipeAllData() }
-          }
-          Button("Cancel", role: .cancel) {}
-        } message: {
-          Text("This removes every memory, element and photo. It cannot be undone.")
+      .task { await state.load() }
+      .alert("Delete the example memory?", isPresented: $isDeleteExamplePresented) {
+        Button("Delete the example", role: .destructive) {
+          Task { await state.deleteExampleMemory() }
         }
-      #endif
+        Button("Cancel", role: .cancel) {}
+      } message: {
+        Text("Your own memories stay. Only the example memories are deleted.")
+      }
+      // regla 25, doble confirmacion: dos alertas encadenadas por el paso del estado
+      .alert("Delete everything?", isPresented: $state.isFirstWipeConfirmationPresented) {
+        Button("Continue", role: .destructive) { state.continueWipe() }
+        Button("Cancel", role: .cancel) { state.cancelWipe() }
+      } message: {
+        Text(AjustesCopy.wipeFirstStepBody(locale: interfaceLocale))
+      }
+      .alert(
+        "Delete everything for good?", isPresented: $state.isSecondWipeConfirmationPresented
+      ) {
+        Button("Delete everything", role: .destructive) {
+          Task { if await state.confirmWipe() { dismiss() } }
+        }
+        Button("Cancel", role: .cancel) { state.cancelWipe() }
+      } message: {
+        Text(AjustesCopy.wipeSecondStepBody(locale: interfaceLocale))
+      }
     }
+  }
+
+  // MARK: privacidad — amplia la afirmacion del vacio, no la repite (§9.2)
+
+  private var privacySection: some View {
+    Section {
+      Text(
+        "Your memories, the people, places and objects in them, and your photos live only on this iPhone. Hilo has no account, sends nothing anywhere and reads your memories on the device itself. It works the same without a connection."
+      )
+      .metadato()
+      .foregroundStyle(Color.textoSecundario)
+      .accessibilityIdentifier("settings.privacy")
+    } header: {
+      Text("Privacy")
+    }
+    .listRowBackground(Color.superficieTarjeta)
+  }
+
+  // MARK: memoria de ejemplo — cargar o borrar segun este (F2 contrato 5 y 6)
+
+  private var exampleMemorySection: some View {
+    Section {
+      if state.hasExampleMemory {
+        Button(role: .destructive) {
+          isDeleteExamplePresented = true
+        } label: {
+          Text("Delete the example memory")
+            .botonSecundario()
+            .frame(maxWidth: .infinity, minHeight: Spacing.altoFilaMinimo, alignment: .leading)
+        }
+        .accessibilityIdentifier("settings.deleteExample")
+      } else {
+        Button {
+          Task {
+            await state.loadExampleMemory(
+              language: ExampleMemoryLanguage(interfaceLocale: interfaceLocale))
+          }
+        } label: {
+          Text("Load the example memory")
+            .botonSecundario()
+            .foregroundStyle(Color.acentoHilo)
+            .frame(maxWidth: .infinity, minHeight: Spacing.altoFilaMinimo, alignment: .leading)
+        }
+        .accessibilityIdentifier("settings.loadExample")
+      }
+    } header: {
+      Text("Example memory")
+    } footer: {
+      Text("A few made-up memories to see how Hilo connects them. You can delete them at any time.")
+    }
+    .listRowBackground(Color.superficieTarjeta)
+  }
+
+  // MARK: borrado total (regla 25)
+
+  private var wipeSection: some View {
+    Section {
+      Button(role: .destructive) {
+        state.requestWipe()
+      } label: {
+        Text("Delete everything")
+          .botonSecundario()
+          .frame(maxWidth: .infinity, minHeight: Spacing.altoFilaMinimo, alignment: .leading)
+      }
+      .accessibilityIdentifier("settings.wipeAll")
+    } footer: {
+      Text(
+        "Deletes every memory, every person, place and object, and every photo from this iPhone.")
+    }
+    .listRowBackground(Color.superficieTarjeta)
+  }
+
+  // MARK: informacion del producto — nombre y version, sin enlaces
+
+  private var aboutSection: some View {
+    Section {
+      LabeledContent {
+        Text(AjustesCopy.versionLine(state.version, locale: interfaceLocale))
+          .metadato()
+          .foregroundStyle(Color.textoSecundario)
+      } label: {
+        Text("Hilo")
+          .botonSecundario()
+          .foregroundStyle(Color.textoPrimario)
+      }
+      .accessibilityElement(children: .combine)
+      .accessibilityIdentifier("settings.about")
+    } header: {
+      Text("About")
+    }
+    .listRowBackground(Color.superficieTarjeta)
   }
 
   #if DEBUG
@@ -63,30 +158,27 @@ struct AjustesScreen: View {
           Task { await state.loadDebugValidationDataset() }
         }
         .accessibilityIdentifier("settings.debug.loadValidationDataset")
-        Button("Wipe all data", role: .destructive) {
-          isWipeConfirmationPresented = true
-        }
-        .accessibilityIdentifier("settings.debug.wipeAllData")
       }
+      .listRowBackground(Color.superficieTarjeta)
     }
   #endif
 }
 
 #if DEBUG
-  #Preview("Empty") {
-    AjustesScreen(
-      state: ExploreState(
-        persistenceActor: PreviewFixtures.persistenceActor(),
-        comprehender: PreviewComprehender(scenario: .empty),
-        interfaceLanguage: "en"))
+  #Preview("Without example", traits: .modifier(AjustesScenarios(.withoutExample))) {
+    AjustesPreviewScreen()
   }
-  #Preview("AX5") {
-    AjustesScreen(
-      state: ExploreState(
-        persistenceActor: PreviewFixtures.persistenceActor(),
-        comprehender: PreviewComprehender(scenario: .empty),
-        interfaceLanguage: "en")
-    )
-    .dynamicTypeSize(.accessibility5)
+  #Preview("With example", traits: .modifier(AjustesScenarios(.withExample))) {
+    AjustesPreviewScreen()
   }
+  #Preview("AX5", traits: .modifier(AjustesScenarios(.withExample))) {
+    AjustesPreviewScreen().dynamicTypeSize(.accessibility5)
+  }
+  #Preview("Dark", traits: .modifier(AjustesScenarios(.withoutExample))) {
+    AjustesPreviewScreen().preferredColorScheme(.dark)
+  }
+  #Preview(
+    "Spanish",
+    traits: .modifier(AjustesScenarios(.withExample, locale: Locale(identifier: "es")))
+  ) { AjustesPreviewScreen() }
 #endif

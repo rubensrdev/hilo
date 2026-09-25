@@ -271,4 +271,35 @@ struct ExploreStateTests {
     #expect(Set(state.memories.map(\.id)) == Set(directMemories.map(\.id)))
     #expect(Set(state.elements.map(\.id)) == Set(directElements.map(\.id)))
   }
+
+  // MARK: resetToFirstTime — F8 contrato 1: tras el borrado total, el vacio de primera vez
+
+  @Test func `Resetting after a wipe clears search, filter and view, and shows the empty state`()
+    async throws
+  {
+    let (state, actor) = try Self.makeState()
+    await state.loadExampleMemory(language: .spanish)
+    state.searchQuery = "reloj"
+    state.selectedElementTypeFilter = .person
+    state.selectedView = .elements
+    try await actor.wipeAllData()
+
+    await state.resetToFirstTime()
+
+    #expect(state.searchQuery.isEmpty)
+    #expect(state.selectedElementTypeFilter == nil)
+    #expect(state.selectedView == .memories)
+    #expect(state.memoriesDisplay == .empty)
+  }
+
+  @Test func `The settings state it builds reloads this state when the memory changes`()
+    async throws
+  {
+    let (state, _) = try Self.makeState()
+    let ajustes = state.makeAjustesState()
+
+    await ajustes.loadExampleMemory(language: .spanish)
+
+    #expect(state.memories.count == 5)
+  }
 }
