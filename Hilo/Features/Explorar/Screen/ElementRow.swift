@@ -5,35 +5,46 @@ struct ElementRow: View {
   let element: Element
   let memoryCount: Int
   @Environment(\.locale) private var environmentLocale
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   private var interfaceLocale: Locale { InterfaceLocale.resolve(environmentLocale) }
 
+  private var countText: some View {
+    Text(ExploreCopy.elementMemoryCount(memoryCount, locale: interfaceLocale))
+      .metadato()
+      .foregroundStyle(Color.textoSecundario)
+  }
+
   var body: some View {
-    HStack(spacing: Spacing.espacio3) {
-      // F5.5: sin ocultar, VoiceOver anunciaba el simbolo SF (p.ej. "Person") ademas del
-      // texto del tipo justo debajo: doble anuncio del mismo dato
+    HStack(alignment: .top, spacing: Spacing.espacio3) {
+      // F5.5: sin ocultar, VoiceOver anunciaba el simbolo SF ademas del texto del tipo (doble anuncio)
       Image(systemName: element.type.symbolName)
         .foregroundStyle(element.type.color)
         .accessibilityHidden(true)
-      VStack(alignment: .leading, spacing: Spacing.espacio1) {
-        Text(element.displayName)
-          .nombreElemento()
-          .foregroundStyle(Color.textoPrimario)
-        Text(element.type.localizedName(locale: interfaceLocale))
-          .metadato()
-          .foregroundStyle(Color.textoSecundario)
+      // P2 (F8.4): en tamaños AX el recuento baja bajo el tipo en vez de compartir la linea
+      let layout = dynamicTypeSize.rowLayout(alignment: .top, spacing: Spacing.espacio1)
+      layout {
+        VStack(alignment: .leading, spacing: Spacing.espacio1) {
+          Text(element.displayName)
+            .nombreElemento()
+            .foregroundStyle(Color.textoPrimario)
+          Text(element.type.localizedName(locale: interfaceLocale))
+            .metadato()
+            .foregroundStyle(Color.textoSecundario)
+        }
+        if !dynamicTypeSize.isAccessibilitySize {
+          Spacer()
+        }
+        countText
       }
-      Spacer()
-      Text(ExploreCopy.elementMemoryCount(memoryCount, locale: interfaceLocale))
-        .metadato()
-        .foregroundStyle(Color.textoSecundario)
     }
     .frame(maxWidth: .infinity, minHeight: Spacing.altoFilaMinimo, alignment: .leading)
-    // sin fondo propio (a diferencia de MemoryCard/ElementChip), asi que el Spacer central
-    // queda transparente al toque sin esto: el NavigationLink que la envuelve fallaba en
-    // silencio si se tocaba ahi (hallado por verificador-ui)
+    // sin fondo propio, el Spacer central era transparente al toque y el NavigationLink fallaba ahi
     .contentShape(Rectangle())
-    .accessibilityElement(children: .combine)
+    // F8.4: el anuncio sale de la funcion pura probada, no de los textos visibles
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel(
+      element.accessibilityLabel(memoryCount: memoryCount, locale: interfaceLocale))
   }
 }
 
@@ -44,7 +55,7 @@ struct ElementRow: View {
       .background(Color.fondo)
   }
   #Preview("Place, one memory") {
-    ElementRow(element: Element(displayName: "Cádiz", type: .place)!, memoryCount: 1)
+    ElementRow(element: PreviewFixtures.explorePlace, memoryCount: 1)
       .padding()
       .background(Color.fondo)
   }

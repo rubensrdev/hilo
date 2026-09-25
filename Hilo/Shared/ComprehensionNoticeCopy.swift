@@ -17,6 +17,11 @@ nonisolated struct ComprehensionNoticeCopy: Sendable, Equatable {
 }
 
 nonisolated enum ComprehensionCopy {
+  // F8.4: el inicio de la lectura se anuncia, no solo se ve — captura y comprender mas tarde
+  static func readingAnnouncement(locale: Locale) -> String {
+    String(localized: LocalizedStringResource("Reading your memory…", locale: locale))
+  }
+
   static func notice(_ reason: MemoryComprehensionReason, locale: Locale) -> ComprehensionNoticeCopy
   {
     ComprehensionNoticeCopy(

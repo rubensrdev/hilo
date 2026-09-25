@@ -75,4 +75,10 @@ nonisolated struct ComprehensionCopyTests {
     #expect(
       copy.announcement == "Tu recuerdo está guardado tal como lo contaste. \(Self.overflowES)")
   }
+
+  // F8.4: VoiceOver oye que Hilo empieza a leer, en captura y en comprender mas tarde
+  @Test func `The reading announcement has its text in both languages`() {
+    #expect(ComprehensionCopy.readingAnnouncement(locale: Self.english) == "Reading your memory…")
+    #expect(ComprehensionCopy.readingAnnouncement(locale: Self.spanish) == "Leyendo tu recuerdo…")
+  }
 }

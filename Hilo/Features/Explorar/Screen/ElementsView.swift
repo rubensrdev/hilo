@@ -34,29 +34,20 @@ struct ElementsView: View {
     .background(Color.fondo)
   }
 
-  // DEC-13: seleccion unica; tocar el chip activo vuelve a "todos"
-  // tokens.md §2.2 chip-elemento: a tamaños de accesibilidad los chips pasan a una columna,
-  // nunca a un scroll horizontal que crece sin limite con el texto (P2, F5.5)
+  // DEC-13: seleccion unica, tocar el chip activo vuelve a "todos"; en AX columna, nunca scroll (P2)
   @ViewBuilder
   private var filterChips: some View {
+    let layout = dynamicTypeSize.rowLayout(spacing: Spacing.separacionChips)
+    let chips = layout {
+      filterChip(nil, label: ExploreCopy.allFilterLabel(locale: interfaceLocale))
+      filterChip(.person, label: ElementType.person.localizedPluralName(locale: interfaceLocale))
+      filterChip(.place, label: ElementType.place.localizedPluralName(locale: interfaceLocale))
+      filterChip(.object, label: ElementType.object.localizedPluralName(locale: interfaceLocale))
+    }
     if dynamicTypeSize.isAccessibilitySize {
-      VStack(alignment: .leading, spacing: Spacing.separacionChips) {
-        filterChip(nil, label: "All")
-        filterChip(.person, label: ElementType.person.localizedPluralName(locale: interfaceLocale))
-        filterChip(.place, label: ElementType.place.localizedPluralName(locale: interfaceLocale))
-        filterChip(.object, label: ElementType.object.localizedPluralName(locale: interfaceLocale))
-      }
+      chips
     } else {
-      ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: Spacing.separacionChips) {
-          filterChip(nil, label: "All")
-          filterChip(
-            .person, label: ElementType.person.localizedPluralName(locale: interfaceLocale))
-          filterChip(.place, label: ElementType.place.localizedPluralName(locale: interfaceLocale))
-          filterChip(
-            .object, label: ElementType.object.localizedPluralName(locale: interfaceLocale))
-        }
-      }
+      ScrollView(.horizontal, showsIndicators: false) { chips }
     }
   }
 

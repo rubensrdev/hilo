@@ -76,12 +76,8 @@ struct CaptureScreen: View {
         CaptureCopy.notice(newNotice, locale: interfaceLocale)
       ).post()
     }
-    .onChange(of: state.phase) { _, newPhase in
-      guard case .notAnalyzed(let reason) = newPhase else { return }
-      AccessibilityNotification.Announcement(
-        ComprehensionCopy.notice(reason, locale: interfaceLocale).announcement
-      ).post()
-    }
+    .announcesComprehension(
+      isReading: state.phase == .comprehending, failure: state.phase.notAnalyzedReason)
   }
 
   // MARK: capturando (vacio, escribiendo, con foto, comprendiendo)
@@ -338,9 +334,8 @@ struct CaptureScreen: View {
 
   // contrato 1: el texto de ayuda enseña con un recuerdo de ejemplo real, nunca una instruccion
   private static func placeholder(locale: Locale) -> String {
-    let language: ExampleMemoryLanguage =
-      locale.language.languageCode?.identifier == "es" ? .spanish : .english
-    return ExampleMemoryContent.seeds(for: language).first?.narrative ?? ""
+    ExampleMemoryContent.seeds(for: ExampleMemoryLanguage(interfaceLocale: locale)).first?
+      .narrative ?? ""
   }
 }
 

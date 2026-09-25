@@ -51,4 +51,13 @@ extension View {
   func trazoSeparador() -> some View {
     modifier(TrazoSeparador())
   }
+
+  // tokens §1.5: el trazo se dibuja siempre y el colorset (transparente salvo en alto contraste) decide;
+  // no se llama bordeTarjeta() porque Color es View y taparia a Color.bordeTarjeta
+  func contornoTarjeta() -> some View {
+    overlay {
+      RoundedRectangle(cornerRadius: Spacing.radioTarjeta, style: .continuous)
+        .strokeBorder(Color.bordeTarjeta, lineWidth: Spacing.trazoBordeTarjeta)
+    }
+  }
 }

@@ -11,6 +11,10 @@ final class CaptureState {
     case savingWithoutAnalyzing
     case savingReview
     case notAnalyzed(MemoryComprehensionReason)
+
+    var notAnalyzedReason: MemoryComprehensionReason? {
+      if case .notAnalyzed(let reason) = self { reason } else { nil }
+    }
   }
 
   // editar el relato es la siguiente intencion: el aviso anterior ya no aplica

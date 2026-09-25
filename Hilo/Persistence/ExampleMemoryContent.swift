@@ -1,8 +1,13 @@
 import Foundation
 
-enum ExampleMemoryLanguage {
+nonisolated enum ExampleMemoryLanguage: Equatable {
   case spanish
   case english
+
+  // F2 contrato 5: el idioma de la interfaz al cargarlo; el locale ya viene resuelto por InterfaceLocale
+  init(interfaceLocale: Locale) {
+    self = interfaceLocale.language.languageCode?.identifier == "es" ? .spanish : .english
+  }
 }
 
 struct ExampleAppearanceSeed {

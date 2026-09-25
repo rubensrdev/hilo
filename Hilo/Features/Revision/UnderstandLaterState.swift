@@ -10,6 +10,10 @@ final class UnderstandLaterState {
     case reviewing
     case saving
     case notAnalyzed(MemoryComprehensionReason)
+
+    var notAnalyzedReason: MemoryComprehensionReason? {
+      if case .notAnalyzed(let reason) = self { reason } else { nil }
+    }
   }
 
   private(set) var phase: Phase = .idle

@@ -42,6 +42,7 @@ struct ConnectionMomentScreen: View {
     } icon: {
       Image(systemName: "checkmark.circle.fill")
         .foregroundStyle(Color.estadoExito)
+        .accessibilityHidden(true)
     }
   }
 
@@ -59,6 +60,7 @@ struct ConnectionMomentScreen: View {
     .padding(Spacing.rellenoTarjeta)
     .background(Color.superficieTarjeta)
     .clipShape(RoundedRectangle(cornerRadius: Spacing.radioTarjeta, style: .continuous))
+    .contornoTarjeta()
     .accessibilityElement(children: .combine)
     .accessibilityIdentifier("moment.memory")
   }
@@ -96,6 +98,7 @@ struct ConnectionMomentScreen: View {
       }
       .background(Color.superficieTarjeta)
       .clipShape(RoundedRectangle(cornerRadius: Spacing.radioTarjeta, style: .continuous))
+      .contornoTarjeta()
       .opacity(reduceMotion && !isFormed ? 0 : 1)
     }
   }

@@ -3,9 +3,7 @@ import SwiftUI
 // contrato 2 (S1) + contrato 4 (S4): simbolo, color y nombre de un elemento, siempre juntos (P1)
 struct ElementChip: View {
   let element: Element
-  // F5.5: cuando se conoce, VoiceOver anuncia tambien el tipo y en cuantos recuerdos aparece —
-  // el chip visual solo muestra el nombre, asi que sin esto el tipo (color+simbolo) se pierde
-  // para quien no ve el color (regla de accesibilidad, no solo P1)
+  // F5.5: el chip visual solo enseña el nombre; VoiceOver necesita el tipo y el recuento por texto
   var memoryCount: Int? = nil
   @Environment(\.locale) private var environmentLocale
 
@@ -24,6 +22,11 @@ struct ElementChip: View {
     .padding(.vertical, Spacing.espacio1)
     .background(Color.chipRelleno)
     .clipShape(Spacing.radioChip)
+    // tokens §1.6: fuera de la revision el chip es "nuevo"; el colorset solo pinta en alto contraste
+    .overlay {
+      Spacing.radioChip.strokeBorder(Color.bordeChipNuevo, lineWidth: Spacing.trazoBordeTarjeta)
+    }
+    .accessibilityElement(children: .ignore)
     .accessibilityLabel(
       element.accessibilityLabel(memoryCount: memoryCount, locale: interfaceLocale))
   }
