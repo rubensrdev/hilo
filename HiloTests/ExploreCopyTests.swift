@@ -18,6 +18,12 @@ nonisolated struct ExploreCopyTests {
     #expect(ExploreCopy.elementMemoryCount(3, locale: spanish) == "en 3 recuerdos")
   }
 
+  // F8 contrato 2: los compuestos se revisan montados con 0, 1 y N — el cero es plural en ambos
+  @Test func `Zero memories produce the plural form, in both languages`() {
+    #expect(ExploreCopy.elementMemoryCount(0, locale: english) == "in 0 memories")
+    #expect(ExploreCopy.elementMemoryCount(0, locale: spanish) == "en 0 recuerdos")
+  }
+
   // contrato 2, DEC-14: encabezado de decada, texto de interfaz — nunca una fecha del usuario
   @Test func `A decade header names its starting year, in both languages`() {
     #expect(ExploreCopy.decadeHeader(.decade(startingYear: 1980), locale: english) == "1980s")

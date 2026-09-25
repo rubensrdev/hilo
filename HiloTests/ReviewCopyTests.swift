@@ -28,6 +28,16 @@ nonisolated struct ReviewCopyTests {
         == "el pueblo, Lugar, en 1 recuerdo")
   }
 
+  // F8 contrato 2: el cero, montado, es plural en los dos idiomas
+  @Test func `A known element with zero other memories uses the plural, in both languages`() {
+    #expect(
+      ReviewCopy.elementLabel(name: "José", type: .person, otherMemories: 0, locale: english)
+        == "José, Person, in 0 memories")
+    #expect(
+      ReviewCopy.elementLabel(name: "el pueblo", type: .place, otherMemories: 0, locale: spanish)
+        == "el pueblo, Lugar, en 0 recuerdos")
+  }
+
   // sin concordancia de genero (contrato 6): "primera vez", nunca "nuevo"/"nueva"
   @Test func `A new element announces that it is the first time, in both languages`() {
     #expect(
@@ -77,5 +87,15 @@ nonisolated struct ReviewCopyTests {
     #expect(
       ReviewCopy.momentAnnouncement(connectedCount: 3, locale: spanish)
         == "Recuerdo guardado. Conectado con 3 recuerdos")
+  }
+
+  // F8 contrato 2: el momento nunca llega con cero, pero el plural del cero tiene que ser correcto
+  @Test func `The connection moment with zero uses the plural, in both languages`() {
+    #expect(
+      ReviewCopy.momentAnnouncement(connectedCount: 0, locale: english)
+        == "Memory saved. Connected with 0 memories")
+    #expect(
+      ReviewCopy.momentAnnouncement(connectedCount: 0, locale: spanish)
+        == "Recuerdo guardado. Conectado con 0 recuerdos")
   }
 }

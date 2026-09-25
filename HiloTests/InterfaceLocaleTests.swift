@@ -51,6 +51,17 @@ nonisolated struct ElementAccessibilityLabelTests {
         == "el pueblo, Lugar, en 1 recuerdo")
   }
 
+  // F8 contrato 2: el cero, montado, es plural en los dos idiomas
+  @Test func `An element with zero memories uses the plural, in both languages`() {
+    let element = Element(displayName: "Carmen", type: .person)!
+    #expect(
+      element.accessibilityLabel(memoryCount: 0, locale: english) == "Carmen, Person, in 0 memories"
+    )
+    #expect(
+      element.accessibilityLabel(memoryCount: 0, locale: spanish)
+        == "Carmen, Persona, en 0 recuerdos")
+  }
+
   // sin recuento (nil): la fila de S1/S4 lo omite si aun no se conoce, sin decir "0 recuerdos"
   @Test func `An element with no known count announces only name and type, in both languages`() {
     let clock = Element(displayName: "el reloj", type: .object)!
