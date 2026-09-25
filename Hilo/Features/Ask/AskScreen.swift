@@ -1,7 +1,7 @@
 import SwiftUI
 
 // F5 alcance + DEC-59: la pestaña existe y es tocable; su contenido real es de F6
-struct PreguntarScreen: View {
+struct AskScreen: View {
   var body: some View {
     NavigationStack {
       ContentUnavailableView(
@@ -16,6 +16,6 @@ struct PreguntarScreen: View {
 }
 
 #if DEBUG
-  #Preview("Empty") { PreguntarScreen() }
-  #Preview("AX5") { PreguntarScreen().dynamicTypeSize(.accessibility5) }
+  #Preview("Empty") { AskScreen() }
+  #Preview("AX5") { AskScreen().dynamicTypeSize(.accessibility5) }
 #endif

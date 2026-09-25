@@ -39,8 +39,8 @@ nonisolated struct ConnectionMomentTests {
       Memory(narrative: "El reloj, Granada, 1994. Se perdió José en los jardines.", savedAt: Date()))
     let jose = try #require(Element(displayName: "José", type: .person))
     let granada = try #require(Element(displayName: "Granada", type: .place))
-    let reloj = try #require(Element(displayName: "el reloj", type: .object))
-    let shared = [reloj, granada, jose]
+    let clock = try #require(Element(displayName: "el reloj", type: .object))
+    let shared = [clock, granada, jose]
 
     let moment = try #require(
       ConnectionMoment(
@@ -63,13 +63,13 @@ nonisolated struct ConnectionMomentTests {
       Memory(narrative: "El reloj, Granada y José, en ese orden.", savedAt: Date()))
     let jose = try #require(Element(displayName: "José", type: .person))
     let granada = try #require(Element(displayName: "Granada", type: .place))
-    let reloj = try #require(Element(displayName: "el reloj", type: .object))
-    let links: [(Memory, Element)] = [(byObject, reloj), (byPlace, granada), (byPerson, jose)]
+    let clock = try #require(Element(displayName: "el reloj", type: .object))
+    let links: [(Memory, Element)] = [(byObject, clock), (byPlace, granada), (byPerson, jose)]
 
     let moment = try #require(
       ConnectionMoment(
         savedMemoryID: saved.id, memories: [byObject, byPlace, byPerson, saved],
-        elements: [reloj, granada, jose],
+        elements: [clock, granada, jose],
         appearances: links.flatMap { memory, element in
           [saved, memory].map {
             Appearance(
@@ -84,12 +84,12 @@ nonisolated struct ConnectionMomentTests {
   @Test func `A saved memory with no appearances has no connection moment`() throws {
     let earlier = try #require(Memory(narrative: "El reloj del abuelo.", savedAt: Date()))
     let saved = try #require(Memory(narrative: "Una tarde sin nombres.", savedAt: Date()))
-    let reloj = try #require(Element(displayName: "el reloj", type: .object))
+    let clock = try #require(Element(displayName: "el reloj", type: .object))
 
     let moment = ConnectionMoment(
-      savedMemoryID: saved.id, memories: [earlier, saved], elements: [reloj],
+      savedMemoryID: saved.id, memories: [earlier, saved], elements: [clock],
       appearances: [
-        Appearance(memoryID: earlier.id, elementID: reloj.id, role: nil, status: .confirmedByUser)
+        Appearance(memoryID: earlier.id, elementID: clock.id, role: nil, status: .confirmedByUser)
       ])
 
     #expect(moment == nil)
@@ -111,16 +111,16 @@ nonisolated struct ConnectionMomentTests {
   @Test func `The motive uses the element's display name, never one of its aliases`() throws {
     let earlier = try #require(Memory(narrative: "El abuelo nos llevó al río.", savedAt: Date()))
     let saved = try #require(Memory(narrative: "El abuelo arreglaba la radio.", savedAt: Date()))
-    let abuelo = Element(
+    let grandfather = Element(
       id: ElementID(), displayName: "abuelo Ramón", type: .person, aliases: ["el abuelo"])
 
     let moment = try #require(
       ConnectionMoment(
-        savedMemoryID: saved.id, memories: [earlier, saved], elements: [abuelo],
+        savedMemoryID: saved.id, memories: [earlier, saved], elements: [grandfather],
         appearances: [
           Appearance(
-            memoryID: earlier.id, elementID: abuelo.id, role: nil, status: .confirmedByUser),
-          Appearance(memoryID: saved.id, elementID: abuelo.id, role: nil, status: .confirmedByUser),
+            memoryID: earlier.id, elementID: grandfather.id, role: nil, status: .confirmedByUser),
+          Appearance(memoryID: saved.id, elementID: grandfather.id, role: nil, status: .confirmedByUser),
         ]))
 
     #expect(moment.rows.first?.motiveNames == ["abuelo Ramón"])

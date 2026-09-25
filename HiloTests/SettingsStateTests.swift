@@ -5,7 +5,7 @@ import Testing
 @testable import Hilo
 
 // F8 contrato 1 (S7): ejemplo cargar/borrar y borrado total con doble confirmacion, sin la vista
-struct AjustesStateTests {
+struct SettingsStateTests {
   private static let fixedSavedAt = Date(timeIntervalSince1970: 0)
 
   private final class Calls {
@@ -13,11 +13,11 @@ struct AjustesStateTests {
     var wiped = 0
   }
 
-  private static func makeState() throws -> (AjustesState, PersistenceActor, Calls) {
+  private static func makeState() throws -> (SettingsState, PersistenceActor, Calls) {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
     let calls = Calls()
-    let state = AjustesState(
+    let state = SettingsState(
       persistenceActor: actor, version: "1.0",
       onMemoryChanged: { calls.memoryChanged += 1 },
       onWiped: { calls.wiped += 1 })
@@ -174,7 +174,7 @@ struct AjustesStateTests {
       for: PersistenceContainer.schema,
       configurations: [ModelConfiguration(url: storeURL, allowsSave: false)])
     let calls = Calls()
-    let state = AjustesState(
+    let state = SettingsState(
       persistenceActor: PersistenceActor(modelContainer: readOnly), version: "1.0",
       onMemoryChanged: { calls.memoryChanged += 1 }, onWiped: { calls.wiped += 1 })
     state.requestWipe()

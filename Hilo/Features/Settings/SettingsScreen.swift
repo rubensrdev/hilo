@@ -1,8 +1,8 @@
 import SwiftUI
 
 // F8 contrato 1: S7 es una hoja, superficie del sistema como contenedor (tokens.md §7)
-struct AjustesScreen: View {
-  @Bindable var state: AjustesState
+struct SettingsScreen: View {
+  @Bindable var state: SettingsState
   @Environment(\.dismiss) private var dismiss
   @Environment(\.locale) private var environmentLocale
   @State private var isDeleteExamplePresented = false
@@ -48,7 +48,7 @@ struct AjustesScreen: View {
         Button("Continue", role: .destructive) { state.continueWipe() }
         Button("Cancel", role: .cancel) { state.cancelWipe() }
       } message: {
-        Text(AjustesCopy.wipeFirstStepBody(locale: interfaceLocale))
+        Text(SettingsCopy.wipeFirstStepBody(locale: interfaceLocale))
       }
       .alert(
         "Delete everything for good?", isPresented: $state.isSecondWipeConfirmationPresented
@@ -58,7 +58,7 @@ struct AjustesScreen: View {
         }
         Button("Cancel", role: .cancel) { state.cancelWipe() }
       } message: {
-        Text(AjustesCopy.wipeSecondStepBody(locale: interfaceLocale))
+        Text(SettingsCopy.wipeSecondStepBody(locale: interfaceLocale))
       }
     }
   }
@@ -136,7 +136,7 @@ struct AjustesScreen: View {
   private var aboutSection: some View {
     section(header: "About") {
       LabeledContent {
-        Text(AjustesCopy.versionLine(state.version, locale: interfaceLocale))
+        Text(SettingsCopy.versionLine(state.version, locale: interfaceLocale))
           .metadato()
           .foregroundStyle(Color.textoSecundario)
       } label: {
@@ -195,20 +195,20 @@ struct AjustesScreen: View {
 }
 
 #if DEBUG
-  #Preview("Without example", traits: .modifier(AjustesScenarios(.withoutExample))) {
-    AjustesPreviewScreen()
+  #Preview("Without example", traits: .modifier(SettingsScenarios(.withoutExample))) {
+    SettingsPreviewScreen()
   }
-  #Preview("With example", traits: .modifier(AjustesScenarios(.withExample))) {
-    AjustesPreviewScreen()
+  #Preview("With example", traits: .modifier(SettingsScenarios(.withExample))) {
+    SettingsPreviewScreen()
   }
-  #Preview("AX5", traits: .modifier(AjustesScenarios(.withExample))) {
-    AjustesPreviewScreen().dynamicTypeSize(.accessibility5)
+  #Preview("AX5", traits: .modifier(SettingsScenarios(.withExample))) {
+    SettingsPreviewScreen().dynamicTypeSize(.accessibility5)
   }
-  #Preview("Dark", traits: .modifier(AjustesScenarios(.withoutExample))) {
-    AjustesPreviewScreen().preferredColorScheme(.dark)
+  #Preview("Dark", traits: .modifier(SettingsScenarios(.withoutExample))) {
+    SettingsPreviewScreen().preferredColorScheme(.dark)
   }
   #Preview(
     "Spanish",
-    traits: .modifier(AjustesScenarios(.withExample, locale: Locale(identifier: "es")))
-  ) { AjustesPreviewScreen() }
+    traits: .modifier(SettingsScenarios(.withExample, locale: Locale(identifier: "es")))
+  ) { SettingsPreviewScreen() }
 #endif

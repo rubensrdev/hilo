@@ -296,9 +296,9 @@ struct ExploreStateTests {
     async throws
   {
     let (state, _) = try Self.makeState()
-    let ajustes = state.makeAjustesState()
+    let settings = state.makeSettingsState()
 
-    await ajustes.loadExampleMemory(language: .spanish)
+    await settings.loadExampleMemory(language: .spanish)
 
     #expect(state.memories.count == 5)
   }

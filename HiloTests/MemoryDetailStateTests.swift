@@ -338,17 +338,17 @@ struct MemoryDetailStateTests {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
     let saved = try Self.memory(narrative: "Un paseo con el abuelo, sin nadie más.")
-    let abuelo = try Self.element(name: "Abuelo")
+    let grandfather = try Self.element(name: "Abuelo")
     _ = try await actor.save(saved, isAnalyzed: true, isExample: false)
-    _ = try await actor.save(abuelo)
-    try await actor.save(Self.appearance(memoryID: saved.id, elementID: abuelo.id))
+    _ = try await actor.save(grandfather)
+    try await actor.save(Self.appearance(memoryID: saved.id, elementID: grandfather.id))
     let state = Self.makeState(memoryID: saved.id, actor: actor)
     await state.load()
 
     _ = await state.delete()
 
     let remainingElements = try await actor.fetchElements()
-    #expect(!remainingElements.contains { $0.id == abuelo.id })
+    #expect(!remainingElements.contains { $0.id == grandfather.id })
   }
 
   @Test func `Deleting a memory keeps an element that still appears in another memory`()

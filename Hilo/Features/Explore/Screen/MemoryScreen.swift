@@ -2,11 +2,11 @@ import SwiftUI
 
 // contrato 1: selector superior Recuerdos <-> Elementos (dos vistas del mismo material),
 // contar un recuerdo y Ajustes en la barra de herramientas, en todos los tamaños de texto (DEC-12)
-struct MemoriaScreen: View {
+struct MemoryScreen: View {
   @Bindable var state: ExploreState
   @Binding var isCapturePresented: Bool
   // creado al tocar el engranaje: en el closure de la hoja se reevaluaria con cada cambio de ExploreState
-  @State private var ajustesState: AjustesState?
+  @State private var settingsState: SettingsState?
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   var body: some View {
@@ -33,7 +33,7 @@ struct MemoriaScreen: View {
         // nunca detras de un "...", asi que van en topBarTrailing (posicional, nunca colapsa)
         ToolbarItem(placement: .topBarTrailing) {
           Button {
-            ajustesState = state.makeAjustesState()
+            settingsState = state.makeSettingsState()
           } label: {
             Image(systemName: "gearshape")
           }
@@ -62,7 +62,7 @@ struct MemoriaScreen: View {
       }
     }
     .task { await state.load() }
-    .sheet(item: $ajustesState) { AjustesScreen(state: $0) }
+    .sheet(item: $settingsState) { SettingsScreen(state: $0) }
   }
 
   // «People, places & objects» no cabe en un segmento a tamaños AX: .menu enseña el texto entero (F5.5)

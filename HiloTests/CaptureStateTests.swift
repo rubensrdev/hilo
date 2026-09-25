@@ -681,8 +681,8 @@ struct CaptureStateTests {
   {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
-    let abuelo = try #require(Element(displayName: "el abuelo", type: .person))
-    _ = try await actor.save(abuelo)
+    let grandfather = try #require(Element(displayName: "el abuelo", type: .person))
+    _ = try await actor.save(grandfather)
     var understood: [ExtractedMemory] = []
     let state = CaptureState(
       comprehender: FakeMemoryComprehender(

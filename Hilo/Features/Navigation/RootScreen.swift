@@ -10,10 +10,10 @@ struct RootScreen: View {
   var body: some View {
     TabView {
       Tab("Memory", systemImage: "square.stack") {
-        MemoriaScreen(state: exploreState, isCapturePresented: $isCapturePresented)
+        MemoryScreen(state: exploreState, isCapturePresented: $isCapturePresented)
       }
       Tab("Ask", systemImage: "text.magnifyingglass") {
-        PreguntarScreen()
+        AskScreen()
       }
     }
     .sheet(

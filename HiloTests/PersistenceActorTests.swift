@@ -734,21 +734,21 @@ struct PersistenceActorReviewTests {
   {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
-    let abuelo = try #require(Element(displayName: "el abuelo", type: .person))
-    _ = try await actor.save(abuelo)
+    let grandfather = try #require(Element(displayName: "el abuelo", type: .person))
+    _ = try await actor.save(grandfather)
     let earlier = try #require(
       Memory(narrative: "El abuelo tenía un huerto.", savedAt: Self.fixedSavedAt))
     _ = try await actor.save(earlier, isAnalyzed: true, isExample: false)
     try await actor.save(
-      Appearance(memoryID: earlier.id, elementID: abuelo.id, role: nil, status: .confirmedByUser))
+      Appearance(memoryID: earlier.id, elementID: grandfather.id, role: nil, status: .confirmedByUser))
     let memory = try #require(
       Memory(narrative: "El abuelo Ramón nos llevó al río.", savedAt: Self.fixedSavedAt))
 
     _ = try await actor.saveReviewed(
       memory, photoData: nil,
       outcome: Self.outcome(
-        confirmedAppearances: [.init(elementID: abuelo.id, role: nil)],
-        renamesToApply: [.init(elementID: abuelo.id, newName: "abuelo Ramón")]))
+        confirmedAppearances: [.init(elementID: grandfather.id, role: nil)],
+        renamesToApply: [.init(elementID: grandfather.id, newName: "abuelo Ramón")]))
 
     let records = try ModelContext(container).fetch(FetchDescriptor<ElementRecord>())
     #expect(records.count == 1)
@@ -756,7 +756,7 @@ struct PersistenceActorReviewTests {
     #expect(records.first?.canonicalName == "abuelo ramon")
     let appearances = try await actor.fetchAppearances()
     #expect(Set(appearances.map(\.memoryID)) == [earlier.id, memory.id])
-    #expect(appearances.allSatisfy { $0.elementID == abuelo.id })
+    #expect(appearances.allSatisfy { $0.elementID == grandfather.id })
   }
 
   // DEC-45 + DEC-35: comprender mas tarde actualiza el mismo recuerdo, sin tocar savedAt ni la foto
@@ -808,7 +808,7 @@ struct PersistenceActorReviewTests {
       Memory(narrative: "La boda de Elena en el pueblo.", savedAt: Self.fixedSavedAt))
     let savedID = try await actor.save(memory, isAnalyzed: false, isExample: false)
     let elena = try #require(Element(displayName: "Elena", type: .person))
-    let pueblo = try #require(Element(displayName: "el pueblo", type: .place))
+    let village = try #require(Element(displayName: "el pueblo", type: .place))
     try await actor.completeAnalysis(
       of: savedID,
       outcome: Self.outcome(
@@ -819,7 +819,7 @@ struct PersistenceActorReviewTests {
       try await actor.completeAnalysis(
         of: savedID,
         outcome: Self.outcome(
-          elementsToCreate: [.init(element: pueblo, role: nil)],
+          elementsToCreate: [.init(element: village, role: nil)],
           date: try #require(MemoryDate(text: "en junio", deducedYear: nil))))
     }
 

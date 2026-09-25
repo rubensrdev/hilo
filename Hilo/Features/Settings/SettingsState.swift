@@ -3,7 +3,7 @@ import OSLog
 
 // F8 contrato 1 (S7) + regla 25: el paso de la doble confirmacion vive aqui, la hoja solo emite intenciones
 @Observable
-final class AjustesState: Identifiable {
+final class SettingsState: Identifiable {
   enum WipeStep: Equatable {
     case none
     case first

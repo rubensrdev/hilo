@@ -70,7 +70,7 @@ nonisolated struct ReviewStateOutcomeTests {
 
   @Test
   func
-    `a rejected recognition is saved as a new element, and the previous element is left untouched, regla 6`()
+    `a rejected recognition is saved as a new element, and the previous element is left untouched, rule 6`()
     throws
   {
     // caso del spec, comportamiento linea 123
@@ -111,7 +111,7 @@ nonisolated struct ReviewStateOutcomeTests {
 
   @Test
   func
-    `confirming a doubt adds the name used in this memory as an alias of the existing element, regla 7`()
+    `confirming a doubt adds the name used in this memory as an alias of the existing element, rule 7`()
     throws
   {
     let jose = try #require(Element(displayName: "José", type: .person))

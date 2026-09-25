@@ -353,7 +353,7 @@
     @Environment(ExploreState.self) private var state
 
     var body: some View {
-      MemoriaScreen(state: state, isCapturePresented: .constant(false))
+      MemoryScreen(state: state, isCapturePresented: .constant(false))
     }
   }
 
@@ -606,29 +606,29 @@
 
   // MARK: ajustes (S7)
 
-  enum AjustesScenario: Hashable, CaseIterable {
+  enum SettingsScenario: Hashable, CaseIterable {
     case withoutExample
     case withExample
   }
 
-  struct AjustesScenarios: PreviewModifier {
+  struct SettingsScenarios: PreviewModifier {
     private struct Key: Hashable {
-      let scenario: AjustesScenario
+      let scenario: SettingsScenario
       let language: String
     }
 
-    let scenario: AjustesScenario
+    let scenario: SettingsScenario
     let locale: Locale
 
-    init(_ scenario: AjustesScenario, locale: Locale = Locale(identifier: "en")) {
+    init(_ scenario: SettingsScenario, locale: Locale = Locale(identifier: "en")) {
       self.scenario = scenario
       self.locale = locale
     }
 
-    static func makeSharedContext() async -> [AnyHashable: AjustesState] {
-      var states: [AnyHashable: AjustesState] = [:]
+    static func makeSharedContext() async -> [AnyHashable: SettingsState] {
+      var states: [AnyHashable: SettingsState] = [:]
       for language in ["en", "es"] {
-        for scenario in AjustesScenario.allCases {
+        for scenario in SettingsScenario.allCases {
           states[Key(scenario: scenario, language: language)] = await reached(
             scenario, language: language)
         }
@@ -636,7 +636,7 @@
       return states
     }
 
-    func body(content: Content, context: [AnyHashable: AjustesState]) -> some View {
+    func body(content: Content, context: [AnyHashable: SettingsState]) -> some View {
       let language = locale.language.languageCode?.identifier ?? "en"
       Group {
         if let state = context[Key(scenario: scenario, language: language)] {
@@ -647,10 +647,10 @@
       }
     }
 
-    private static func reached(_ scenario: AjustesScenario, language: String) async
-      -> AjustesState
+    private static func reached(_ scenario: SettingsScenario, language: String) async
+      -> SettingsState
     {
-      let state = AjustesState(
+      let state = SettingsState(
         persistenceActor: PreviewFixtures.persistenceActor(), version: "1.0",
         onMemoryChanged: {}, onWiped: {})
       if scenario == .withExample {
@@ -662,11 +662,11 @@
     }
   }
 
-  struct AjustesPreviewScreen: View {
-    @Environment(AjustesState.self) private var state
+  struct SettingsPreviewScreen: View {
+    @Environment(SettingsState.self) private var state
 
     var body: some View {
-      AjustesScreen(state: state)
+      SettingsScreen(state: state)
     }
   }
 

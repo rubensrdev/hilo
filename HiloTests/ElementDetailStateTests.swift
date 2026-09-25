@@ -308,9 +308,9 @@ struct ElementDetailStateTests {
   {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
-    let casa = try Self.element(name: "Casa", type: .place)
+    let house = try Self.element(name: "Casa", type: .place)
     let target = try Self.element(name: "Pedro", type: .person)
-    _ = try await actor.save(casa)
+    _ = try await actor.save(house)
     _ = try await actor.save(target)
     let state = Self.makeState(elementID: target.id, actor: actor)
     await state.load()

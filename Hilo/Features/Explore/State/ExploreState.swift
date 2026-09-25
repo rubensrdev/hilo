@@ -89,8 +89,8 @@ final class ExploreState {
   }
 
   // F8 contrato 1 (S7): el ejemplo recarga S1; el borrado total lo devuelve al vacio de primera vez
-  func makeAjustesState() -> AjustesState {
-    AjustesState(
+  func makeSettingsState() -> SettingsState {
+    SettingsState(
       persistenceActor: persistenceActor, version: ProductVersion.read(),
       onMemoryChanged: { [weak self] in await self?.load() },
       onWiped: { [weak self] in await self?.resetToFirstTime() })

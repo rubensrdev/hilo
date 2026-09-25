@@ -11,7 +11,7 @@ nonisolated struct ReviewStateActionsTests {
       ReviewCandidate(name: name, type: type, role: role.flatMap { ElementRole(text: $0) }))
   }
 
-  @Test func `rejecting a recognition moves the item from known to understood, regla 6`() throws {
+  @Test func `rejecting a recognition moves the item from known to understood, rule 6`() throws {
     let jose = try #require(Element(displayName: "José", type: .person))
     var state = ReviewState(
       candidates: [try candidate("José", .person)],
@@ -46,7 +46,7 @@ nonisolated struct ReviewStateActionsTests {
     #expect(state.blocks.doubtful.map(\.name) == ["José García"])
   }
 
-  @Test func `confirming a doubt with a chosen element moves the item into known, regla 7`() throws
+  @Test func `confirming a doubt with a chosen element moves the item into known, rule 7`() throws
   {
     let jose = try #require(Element(displayName: "José", type: .person))
     let joseGarciaPerez = try #require(Element(displayName: "José García Pérez", type: .person))
