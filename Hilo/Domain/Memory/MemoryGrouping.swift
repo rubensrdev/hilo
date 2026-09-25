@@ -1,4 +1,4 @@
-// contrato 2, DEC-14 + DEC-21: decada del año deducido; sin año va aparte, nunca fusionado
+/// Decade of the deduced year; memories without a year stay apart, never merged.
 nonisolated enum MemoryDecade: Sendable, Hashable {
   case decade(startingYear: Int)
   case noYear
@@ -10,7 +10,7 @@ nonisolated struct MemoryGroup: Sendable, Equatable {
 }
 
 nonisolated enum MemoryGrouping {
-  // el orden ya viene de Memory.isOrderedBefore: agrupar solo detecta el cambio de decada
+  /// The order already comes from Memory.isOrderedBefore; grouping only detects decade changes.
   static func grouped(_ memories: [Memory]) -> [MemoryGroup] {
     var groups: [MemoryGroup] = []
     for memory in memories.sorted(by: Memory.isOrderedBefore) {

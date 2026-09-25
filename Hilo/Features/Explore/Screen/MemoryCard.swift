@@ -1,14 +1,13 @@
 import SwiftUI
 
-// contrato 2 + contrato 3: primeras lineas del relato, fecha del usuario si la hay, sin titulo, sin foto aun
-// (la foto vive en PersistenceActor, no en Memory — esta tarea no la trae a S1, la retoma F5.3 en S4)
+/// No title and no photo: the photo lives in PersistenceActor, not in Memory.
 struct MemoryCard: View {
   let memory: Memory
-  // contrato 3, DEC-20: cuando hay una busqueda activa, la tarjeta se centra en la coincidencia
+  /// With an active search, the card centres on the match.
   var searchMatches: [Range<String.Index>] = []
   var searchExtract: Range<String.Index>?
-  // contrato 3 + DEC-57: si el recuerdo aparece por elemento y no por el relato, se enseñan todos, sin tope
-  // F5.5: el recuento acompaña a cada elemento para que VoiceOver anuncie nombre, tipo y recuento
+  /// When the memory matches by element rather than by narrative, every match is shown, uncapped,
+  /// each with its count so VoiceOver can announce it.
   var matchedElements: [(element: Element, memoryCount: Int)] = []
 
   private var displayedRange: Range<String.Index> {
@@ -28,7 +27,7 @@ struct MemoryCard: View {
           .foregroundStyle(Color.textoSecundario)
       }
       if !matchedElements.isEmpty {
-        // vertical siempre: sin tope de elementos (DEC-57), no hay ancho seguro para envolver en linea
+        // Always vertical: with no cap on elements there is no safe width to wrap inline.
         VStack(alignment: .leading, spacing: Spacing.espacio1) {
           ForEach(matchedElements, id: \.element.id) { match in
             ElementChip(element: match.element, memoryCount: match.memoryCount)
@@ -43,8 +42,8 @@ struct MemoryCard: View {
     .accessibilityElement(children: .combine)
   }
 
-  // tokens.md §1.7: el termino encontrado va en semibold, sin color ni fondo
-  // Text + Text esta obsoleto desde iOS 26: se compone un AttributedString y se envuelve una vez
+  /// The match goes semibold, with no colour or background. Text + Text is deprecated since iOS 26,
+  /// so one AttributedString is composed and wrapped once.
   private var narrativeText: Text {
     guard !searchMatches.isEmpty else { return Text(memory.narrative[displayedRange]) }
     var result = AttributedString()
@@ -56,7 +55,7 @@ struct MemoryCard: View {
         result += AttributedString(memory.narrative[cursor..<clamped.lowerBound])
       }
       var matched = AttributedString(memory.narrative[clamped])
-      // el peso cambia, la familia serif del relato se mantiene igual (tokens.md §2.1)
+      // Only the weight changes; the narrative keeps its serif family.
       matched.font = Font.system(.body, design: .serif).weight(.semibold)
       result += matched
       cursor = clamped.upperBound

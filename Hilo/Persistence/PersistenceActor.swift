@@ -9,11 +9,11 @@ actor PersistenceActor {
     case alreadyAnalyzed
   }
 
-  // unico punto de escritura (contrato 2): las vistas nunca insertan, borran ni guardan
+  /// The single write path: views never insert, delete or save.
   func save(
     _ memory: Memory, photoData: Data? = nil, isAnalyzed: Bool, isExample: Bool
   ) throws -> MemoryID {
-    // contrato 3 + DEC-27: los metadatos (incluida la ubicacion) se eliminan al guardar
+    // Metadata, location included, is stripped on save.
     let strippedPhotoData = try photoData.map(PhotoStripper.stripMetadata(from:))
     let record = MemoryRecord(
       id: memory.id.value, narrative: memory.narrative, dateText: memory.date?.text,
@@ -23,14 +23,14 @@ actor PersistenceActor {
     do {
       try modelContext.save()
     } catch {
-      // igual que saveReviewed: un guardado fallido no deja nada pendiente para la siguiente escritura
+      // As in saveReviewed: a failed save leaves nothing pending for the next write.
       modelContext.rollback()
       throw error
     }
     return memory.id
   }
 
-  // contrato 1: el canonico lo calcula el dominio, la persistencia solo lo guarda
+  /// The domain computes the canonical name; persistence only stores it.
   func save(_ element: Element) throws -> ElementID {
     modelContext.insert(Self.elementRecord(from: element))
     try modelContext.save()
@@ -51,10 +51,10 @@ actor PersistenceActor {
     try modelContext.save()
   }
 
-  // DEC-40: todo el ReviewOutcome en un unico save; si algo falla a mitad, no queda nada a medias
+  /// The whole ReviewOutcome in one save: if anything fails midway, nothing is left half-done.
   func saveReviewed(_ memory: Memory, photoData: Data?, outcome: ReviewOutcome) throws -> MemoryID {
     do {
-      // DEC-44: la fecha es siempre la del outcome, la unica que aplica la regla del año
+      // The date always comes from the outcome, the only place that applies the year rule.
       let record = MemoryRecord(
         id: memory.id.value, narrative: memory.narrative, dateText: outcome.date?.text,
         deducedYear: outcome.date?.deducedYear,
@@ -70,11 +70,11 @@ actor PersistenceActor {
     }
   }
 
-  // DEC-45 + DEC-35: comprender mas tarde actualiza el mismo recuerdo, sin tocar savedAt ni la foto
+  /// Understanding later updates the same memory, without touching savedAt or the photo.
   func completeAnalysis(of id: MemoryID, outcome: ReviewOutcome) throws {
     do {
       guard let record = try fetchMemoryRecord(id: id) else { throw WriteError.memoryNotFound }
-      // comprobar y escribir en el mismo salto al actor: captura y detalle no pueden analizarlo dos veces
+      // Check and write in the same actor hop, so capture and detail can't analyse it twice.
       guard !record.isAnalyzed else { throw WriteError.alreadyAnalyzed }
       record.dateText = outcome.date?.text
       record.deducedYear = outcome.date?.deducedYear
@@ -105,7 +105,7 @@ actor PersistenceActor {
       }
       elementRecord.aliases.append(alias.alias)
     }
-    // regla 10: el elemento es uno solo, asi que renombrarlo lo renombra en todos sus recuerdos
+    // Rule 10: there is one element, so renaming it renames it in all its memories.
     for rename in outcome.renamesToApply {
       guard let elementRecord = try fetchElementRecord(id: rename.elementID) else {
         throw WriteError.elementNotFound
@@ -123,7 +123,7 @@ actor PersistenceActor {
         memory: memory, element: element, role: role?.text, status: .confirmedByUser))
   }
 
-  // extraccion de valores Sendable (contrato 2): el dominio nunca ve un @Model
+  /// Extracts Sendable values: the domain never sees an @Model.
   func fetchMemories() throws -> [Memory] {
     try modelContext.fetch(FetchDescriptor<MemoryRecord>()).map(Self.memory(from:))
   }
@@ -136,33 +136,33 @@ actor PersistenceActor {
     try modelContext.fetch(FetchDescriptor<AppearanceRecord>()).compactMap(Self.appearance(from:))
   }
 
-  // se calcula aqui: un solo salto al actor, todo leido del mismo estado del almacen
+  /// Computed here: one actor hop, everything read from the same store state.
   func connectionMoment(for id: MemoryID) throws -> ConnectionMoment? {
     try ConnectionMoment(
       savedMemoryID: id, memories: fetchMemories(), elements: fetchElements(),
       appearances: fetchAppearances())
   }
 
-  // DEC-16: solo un recuerdo sin analizar se comprende mas tarde
+  /// Only an unanalyzed memory can be understood later.
   func unanalyzedMemory(id: MemoryID) throws -> Memory? {
     guard let record = try fetchMemoryRecord(id: id), !record.isAnalyzed else { return nil }
     return Self.memory(from: record)
   }
 
-  // la foto no es del dominio (F1); sale como Data simple, ya Sendable por si misma
+  /// The photo isn't part of the domain; it leaves as plain Data, already Sendable.
   func photoData(for id: MemoryID) throws -> Data? {
     try fetchMemoryRecord(id: id)?.photoData
   }
 
-  // DEC-19: editar el texto no reanaliza ni toca fecha, foto o apariciones
+  /// Editing the text never re-analyses and leaves date, photo and appearances alone.
   func editNarrative(id: MemoryID, narrative: String) throws {
     guard let record = try fetchMemoryRecord(id: id) else { throw WriteError.memoryNotFound }
     record.narrative = narrative
     try modelContext.save()
   }
 
-  // contrato 4 (S5) + regla 10: el elemento es uno solo, renombrarlo lo cambia en toda la memoria;
-  // la colision (DEC-26) ya la rechazo el dominio antes de llegar aqui
+  /// Rule 10: renaming changes the element across the whole memory. The domain has already
+  /// rejected any collision.
   func renameElement(id: ElementID, newName: String) throws {
     guard let record = try fetchElementRecord(id: id) else { throw WriteError.elementNotFound }
     record.displayName = newName
@@ -170,14 +170,14 @@ actor PersistenceActor {
     try modelContext.save()
   }
 
-  // contrato 4 (S5): añadir un alias, con la misma colision ya rechazada por el dominio
+  /// The domain has already rejected any collision.
   func addAlias(id: ElementID, alias: String) throws {
     guard let record = try fetchElementRecord(id: id) else { throw WriteError.elementNotFound }
     record.aliases.append(alias)
     try modelContext.save()
   }
 
-  // contrato 4: el cascade borra apariciones y foto; el dominio decide los huerfanos (reglas 11+12)
+  /// The cascade deletes appearances and photo; the domain decides the orphans (rules 11 and 12).
   func deleteMemory(id: MemoryID) throws {
     guard let record = try fetchMemoryRecord(id: id) else { throw WriteError.memoryNotFound }
     modelContext.delete(record)
@@ -195,15 +195,15 @@ actor PersistenceActor {
     try modelContext.save()
   }
 
-  // contrato 5 + B11: contenido fijo, resuelto contra los elementos ya existentes (F1 contrato 3)
+  /// Fixed content, resolved against the elements that already exist.
   func loadExampleMemory(language: ExampleMemoryLanguage, loadedAt: Date) throws {
     guard try fetchExampleMemoryRecords().isEmpty else { return }
     try insertSeeds(ExampleMemoryContent.seeds(for: language), isExample: true, loadedAt: loadedAt)
   }
 
   #if DEBUG
-    // F5: refuerza la memoria de ejemplo con dos recuerdos mas para docs/validacion-manual —
-    // nunca en Release, mismo guard de idempotencia que loadExampleMemory
+    /// Adds two memories to the example for docs/validacion-manual. Never in Release; same
+    /// idempotency guard as loadExampleMemory.
     func loadDebugValidationDataset(loadedAt: Date) throws {
       guard try fetchExampleMemoryRecords().isEmpty else { return }
       try insertSeeds(
@@ -240,7 +240,7 @@ actor PersistenceActor {
     }
   }
 
-  // contrato 6 + B11: el cascade borra apariciones; el dominio decide que elemento sobrevive
+  /// The cascade deletes appearances; the domain decides which elements survive.
   func deleteExampleMemory() throws {
     for record in try fetchExampleMemoryRecords() {
       modelContext.delete(record)
@@ -257,7 +257,7 @@ actor PersistenceActor {
     try modelContext.fetch(FetchDescriptor<MemoryRecord>(predicate: #Predicate { $0.isExample }))
   }
 
-  // contrato 6 + regla 25: borrado total, sin restos ni en el almacen ni en la foto externa
+  /// Rule 25: a full wipe, with nothing left in the store or in the external photo storage.
   func wipeAllData() throws {
     for record in try modelContext.fetch(FetchDescriptor<MemoryRecord>()) {
       modelContext.delete(record)
@@ -272,7 +272,7 @@ actor PersistenceActor {
   }
 
   private func fetchMemoryRecord(id: MemoryID) throws -> MemoryRecord? {
-    // #Predicate exige capturar un valor simple, no acceder a .value del struct dentro del closure
+    // #Predicate needs a plain captured value, not .value read inside the closure.
     let targetID = id.value
     var descriptor = FetchDescriptor<MemoryRecord>(predicate: #Predicate { $0.id == targetID })
     descriptor.fetchLimit = 1
@@ -306,7 +306,7 @@ actor PersistenceActor {
       aliases: record.aliases)
   }
 
-  // sin memoria o elemento (relacion rota), no hay Aparicion valida que devolver
+  /// With no memory or element (a broken relationship) there is no valid Appearance.
   private static func appearance(from record: AppearanceRecord) -> Appearance? {
     guard let memoryID = record.memory?.id, let elementID = record.element?.id else { return nil }
     return Appearance(

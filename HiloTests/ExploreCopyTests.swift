@@ -3,7 +3,6 @@ import Testing
 
 @testable import Hilo
 
-// tokens.md §1.6: "«N» es el número de recuerdos en los que ya aparece ese elemento", plural correcto
 nonisolated struct ExploreCopyTests {
   private let english = Locale(identifier: "en")
   private let spanish = Locale(identifier: "es")
@@ -18,13 +17,11 @@ nonisolated struct ExploreCopyTests {
     #expect(ExploreCopy.elementMemoryCount(3, locale: spanish) == "en 3 recuerdos")
   }
 
-  // F8 contrato 2: los compuestos se revisan montados con 0, 1 y N — el cero es plural en ambos
   @Test func `Zero memories produce the plural form, in both languages`() {
     #expect(ExploreCopy.elementMemoryCount(0, locale: english) == "in 0 memories")
     #expect(ExploreCopy.elementMemoryCount(0, locale: spanish) == "en 0 recuerdos")
   }
 
-  // contrato 2, DEC-14: encabezado de decada, texto de interfaz — nunca una fecha del usuario
   @Test func `A decade header names its starting year, in both languages`() {
     #expect(ExploreCopy.decadeHeader(.decade(startingYear: 1980), locale: english) == "1980s")
     #expect(ExploreCopy.decadeHeader(.decade(startingYear: 1980), locale: spanish) == "Años 1980")
@@ -35,7 +32,7 @@ nonisolated struct ExploreCopyTests {
     #expect(ExploreCopy.decadeHeader(.noYear, locale: spanish) == "Sin fecha")
   }
 
-  // MARK: contrato 4, DEC-24, regla 11 — el texto de la confirmacion de borrado se calcula
+  // MARK: delete confirmation body (rule 11)
 
   @Test func `With nothing surviving or disappearing, only the fixed sentences remain`() {
     #expect(
@@ -81,7 +78,7 @@ nonisolated struct ExploreCopyTests {
     )
   }
 
-  // las traducciones al español se añaden despues via Xcode MCP; aqui solo se comprueba que compone
+  /// Spanish translations are added through the Xcode MCP; this only checks that it composes.
   @Test func `The delete confirmation body composes something non-empty in Spanish too`() {
     let empty = ExploreCopy.deleteConfirmationBody(surviving: [], disappearing: [], locale: spanish)
     let both = ExploreCopy.deleteConfirmationBody(
@@ -93,7 +90,7 @@ nonisolated struct ExploreCopyTests {
     #expect(both.contains("el reloj"))
   }
 
-  // MARK: contrato 4 (S5): cabecera del detalle de elemento — tipo, separador y recuento
+  // MARK: element detail header — type, separator and count
 
   @Test(arguments: [
     (ElementType.person, "Person", "Persona"),
@@ -126,7 +123,7 @@ nonisolated struct ExploreCopyTests {
         == "Persona · en 0 recuerdos")
   }
 
-  // MARK: contrato 4 (S5), DEC-57 (A1): el rango temporal se anuncia como una frase, no dos textos pegados
+  // MARK: date range — announced as one sentence, not two texts joined
 
   @Test func `The date range accessibility label reads as a full sentence in English`() {
     #expect(
@@ -135,8 +132,8 @@ nonisolated struct ExploreCopyTests {
         == "From cuando yo era niño to el verano pasado")
   }
 
-  // F8.2: sin «a» delante de las palabras del usuario, que a menudo empiezan por «el» («a el»);
-  // el texto del usuario no se toca, asi que la plantilla evita la contraccion
+  /// No «a» before the user's words, which often start with «el» («a el»). The user's text is
+  /// never touched, so the template avoids the contraction.
   @Test func `The date range accessibility label reads as a full sentence in Spanish`() {
     #expect(
       ExploreCopy.dateRangeAccessibilityLabel(
@@ -144,7 +141,7 @@ nonisolated struct ExploreCopyTests {
         == "Desde 1994 hasta el verano de 2001")
   }
 
-  // F8.2: el chip «All» pasaba como String ya montado y salia sin traducir
+  /// Regression: the «All» chip passed a pre-built String and came out untranslated.
   @Test func `The filter chip that clears the filter has its text in both languages`() {
     #expect(ExploreCopy.allFilterLabel(locale: english) == "All")
     #expect(ExploreCopy.allFilterLabel(locale: spanish) == "Todos")

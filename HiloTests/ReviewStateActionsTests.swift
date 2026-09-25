@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// reglas 6, 7, 9 y DEC-17: rechazar, confirmar, quitar y deshacer sobre el estado de revision
 nonisolated struct ReviewStateActionsTests {
   private func candidate(_ name: String, _ type: ElementType, role: String? = nil) throws
     -> ReviewCandidate
@@ -126,7 +125,7 @@ nonisolated struct ReviewStateActionsTests {
     #expect(state.blocks.understood.map(\.name) == ["José García"])
     let outcome = state.outcome(memoryID: MemoryID(), dateTextAtSave: "")
     #expect(outcome.confirmedAppearances.isEmpty)
-    #expect(outcome.aliasesToAdd.isEmpty)  // regla 7 deshecha: rechazar no deja alias de José
+    #expect(outcome.aliasesToAdd.isEmpty)  // rule 7 undone: rejecting leaves no alias for José
     #expect(outcome.elementsToCreate.map(\.element.displayName) == ["José García"])
   }
 
@@ -164,7 +163,7 @@ nonisolated struct ReviewStateActionsTests {
       extractedDateText: nil, extractedDeducedYear: nil,
       knownElements: [jose, joseGarciaPerez], appearances: [])
     let itemID = try #require(state.items.first?.id)
-    // deja el item con un estado no trivial antes de quitarlo, para probar que nada se pierde
+    // Leave the item in a non-trivial state before removing it, to prove nothing is lost.
     state.confirmDoubt(itemID, as: jose.id)
     let identityBeforeRemoving = try #require(state.items.first?.identity)
 

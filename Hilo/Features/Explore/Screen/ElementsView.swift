@@ -1,6 +1,5 @@
 import SwiftUI
 
-// contrato 4: lista de personas, lugares y objetos, filtrable por tipo con chips (DEC-13)
 struct ElementsView: View {
   @Bindable var state: ExploreState
   @Environment(\.locale) private var environmentLocale
@@ -34,7 +33,7 @@ struct ElementsView: View {
     .background(Color.fondo)
   }
 
-  // DEC-13: seleccion unica, tocar el chip activo vuelve a "todos"; en AX columna, nunca scroll (P2)
+  /// Single selection: tapping the active chip goes back to all. At accessibility sizes, a column, never a scroll.
   @ViewBuilder
   private var filterChips: some View {
     let layout = dynamicTypeSize.rowLayout(spacing: Spacing.separacionChips)

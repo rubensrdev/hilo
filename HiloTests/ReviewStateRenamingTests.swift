@@ -2,7 +2,7 @@ import Testing
 
 @testable import Hilo
 
-// contrato 4 (DEC-40, DEC-26, DEC-41): el renombrado es pendiente, y colisiona segun la categoria efectiva
+/// Renames are pending, and collide according to the item's effective category.
 nonisolated struct ReviewStateRenamingTests {
   private func candidate(_ name: String, _ type: ElementType, role: String? = nil) throws
     -> ReviewCandidate
@@ -16,7 +16,6 @@ nonisolated struct ReviewStateRenamingTests {
     `renaming la tía Carmen to Carmen is blocked, naming the element it collides with, and leaves pendingName untouched`()
     throws
   {
-    // caso del spec, comportamiento linea 125
     let carmen = try #require(Element(displayName: "Carmen", type: .person))
     let auntCarmen = try #require(Element(displayName: "la tía Carmen", type: .person))
     var state = ReviewState(
@@ -68,7 +67,6 @@ nonisolated struct ReviewStateRenamingTests {
     `renaming a new item to an existing canonical name turns it into a rejectable recognition, DEC-41`()
     throws
   {
-    // caso del spec, comportamiento linea 126
     let carmen = try #require(Element(displayName: "Carmen", type: .person))
     var state = ReviewState(
       candidates: [try candidate("la tía", .person)],
@@ -136,8 +134,8 @@ nonisolated struct ReviewStateRenamingTests {
     #expect(state.items.first?.pendingName == "cualquier cosa")
   }
 
-  // F4.4: colision de un renombrado contra los demas candidatos de esta misma revision — lo que
-  // existira al guardar, no solo lo ya persistido (DEC-26/DEC-41 solo miraban knownElements)
+  // A rename also collides with the other candidates in this review: what will exist on save,
+  // not only what is already persisted.
 
   @Test
   func
@@ -177,8 +175,7 @@ nonisolated struct ReviewStateRenamingTests {
     #expect(state.items.first(where: { $0.id == federicoID })?.pendingName == nil)
   }
 
-  // guarda de precedencia: la comprobacion nueva contra hermanos de la revision no debe romper
-  // DEC-41 — este test ya pasa hoy, antes de tocar rename(), en cuanto el caso nuevo compile
+  /// Precedence guard: the check against review siblings must not break known-element collisions.
   @Test
   func
     `renaming two different new items to an existing element's name recognizes both against it instead of blocking them against each other, DEC-41 precedence`()

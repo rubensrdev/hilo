@@ -1,6 +1,6 @@
 import Foundation
 
-// contrato 6: textos anunciables como funciones puras, probados en los dos idiomas
+/// Announceable strings as pure functions, tested in both languages.
 nonisolated enum CaptureCopy {
   static func notice(_ notice: ReviewNotice, locale: Locale) -> String {
     switch notice {
@@ -25,7 +25,7 @@ nonisolated enum CaptureCopy {
         "\(name), \(type.localizedName(locale: locale))", locale: locale))
   }
 
-  // contrato 6: se anuncia cada elemento nuevo una vez, aunque lleguen varios en la misma tanda
+  /// Each new element is announced once, even when several arrive in the same batch.
   static func elementsAppeared(
     _ current: [ExtractedElement], after previousNames: [String], locale: Locale
   ) -> String? {

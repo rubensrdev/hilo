@@ -3,12 +3,11 @@ import Testing
 
 @testable import Hilo
 
-// contrato 6 + anexo DEC-46: textos compuestos de la revision y del momento, en los dos idiomas
 nonisolated struct ReviewCopyTests {
   private let english = Locale(identifier: "en")
   private let spanish = Locale(identifier: "es")
 
-  // MARK: elemento — nombre, tipo y en cuantos recuerdos (contrato 6)
+  // MARK: element — name, type and memory count
 
   @Test func `A known element announces name, type and its memories in English`() {
     #expect(
@@ -28,7 +27,6 @@ nonisolated struct ReviewCopyTests {
         == "el pueblo, Lugar, en 1 recuerdo")
   }
 
-  // F8 contrato 2: el cero, montado, es plural en los dos idiomas
   @Test func `A known element with zero other memories uses the plural, in both languages`() {
     #expect(
       ReviewCopy.elementLabel(name: "José", type: .person, otherMemories: 0, locale: english)
@@ -38,7 +36,7 @@ nonisolated struct ReviewCopyTests {
         == "el pueblo, Lugar, en 0 recuerdos")
   }
 
-  // sin concordancia de genero (contrato 6): "primera vez", nunca "nuevo"/"nueva"
+  /// No gender agreement: «primera vez», never «nuevo» or «nueva».
   @Test func `A new element announces that it is the first time, in both languages`() {
     #expect(
       ReviewCopy.elementLabel(name: "Lucía", type: .person, otherMemories: nil, locale: english)
@@ -48,7 +46,7 @@ nonisolated struct ReviewCopyTests {
         == "el reloj, Objeto, primera vez")
   }
 
-  // tokens §1.6: el tachado nunca es la unica señal, VoiceOver lo dice
+  /// Strikethrough is never the only signal: VoiceOver says it.
   @Test func `A removed element announces that it is out of this memory, in both languages`() {
     #expect(
       ReviewCopy.removedElementLabel(name: "José", type: .person, locale: english)
@@ -58,7 +56,7 @@ nonisolated struct ReviewCopyTests {
         == "el reloj, Objeto, fuera de este recuerdo")
   }
 
-  // MARK: duda de identidad — la respuesta «no es el mismo» nombra el tipo (DEC-49)
+  // MARK: identity doubt — «not the same» names the type
 
   @Test(arguments: [
     (ElementType.person, "Someone else", "Otra persona"),
@@ -72,7 +70,7 @@ nonisolated struct ReviewCopyTests {
     #expect(ReviewCopy.doubtRejection(type: type, locale: self.spanish) == spanish)
   }
 
-  // MARK: el momento de la conexion — su anuncio
+  // MARK: connection moment announcement
 
   @Test func `The connection moment announces the save and how many memories connect`() {
     #expect(
@@ -89,7 +87,7 @@ nonisolated struct ReviewCopyTests {
         == "Recuerdo guardado. Conectado con 3 recuerdos")
   }
 
-  // F8 contrato 2: el momento nunca llega con cero, pero el plural del cero tiene que ser correcto
+  /// The moment never comes with zero, but zero's plural must still be right.
   @Test func `The connection moment with zero uses the plural, in both languages`() {
     #expect(
       ReviewCopy.momentAnnouncement(connectedCount: 0, locale: english)

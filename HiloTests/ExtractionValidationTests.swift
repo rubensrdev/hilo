@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 2 + ADR-001 §2: lo bien formado no siempre es lo que el relato dice
 nonisolated struct ExtractionValidationTests {
   @Test func `Discards an element whose name never appears literally in the narrative`() {
     let narrative = "Cenamos con mi hermano Pablo en el patio de la abuela."
@@ -64,7 +63,7 @@ nonisolated struct ExtractionValidationTests {
     #expect(validated.deducedYear == 1987)
   }
 
-  // MARK: DEC-51 — un texto de fecha que solapa con el relato o con un elemento no es una fecha
+  // MARK: a date text overlapping the narrative or an element is not a date
 
   @Test func `Discards a dateText that wraps the mention of an extracted place, and its year with it`() {
     let narrative = "Mi tía Carmen me enseñó a coser en su casa de Cádiz, junto a la ventana."
@@ -83,7 +82,7 @@ nonisolated struct ExtractionValidationTests {
   }
 
   @Test func `Discards a dateText that is the whole narrative`() {
-    // el relato llega con espacios en los extremos: el modelo devuelve su contenido, sin ellos
+    // The narrative arrives with surrounding whitespace; the model returns its content without it.
     let narrative = "\nCarmen cosía con la Singer en Cádiz. "
     let raw = ExtractedMemory(
       elements: [], dateText: "Carmen cosía con la Singer en Cádiz.", deducedYear: 1990)
@@ -94,7 +93,7 @@ nonisolated struct ExtractionValidationTests {
     #expect(validated.deducedYear == nil)
   }
 
-  // el que evita pasarse de frenada: una fecha de verdad junto a elementos que no la tocan
+  /// The guard against overcorrecting: a real date next to elements that don't touch it.
   @Test func `Keeps a real dateText that overlaps with no extracted element`() {
     let narrative = "El verano del 87 la abuela nos llevó a Cádiz con la Singer en el coche."
     let raw = ExtractedMemory(

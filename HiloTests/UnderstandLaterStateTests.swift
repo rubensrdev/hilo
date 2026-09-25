@@ -4,7 +4,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 5 + DEC-45: comprender mas tarde abre la misma revision sobre el recuerdo ya guardado
 struct UnderstandLaterStateTests {
   @Test
   func
@@ -14,7 +13,7 @@ struct UnderstandLaterStateTests {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
     let memoryID = try await Self.saveUnanalyzed("Lucía y el primer diente.", actor: actor)
-    // lo que hara editar el texto en el detalle (F5): el relato guardado cambia despues de guardarlo
+    // What editing in the detail does: the stored narrative changes after it was saved.
     let context = ModelContext(container)
     let record = try #require(try context.fetch(FetchDescriptor<MemoryRecord>()).first)
     record.narrative = "Lucía y el primer diente, en casa de los abuelos."
@@ -62,7 +61,7 @@ struct UnderstandLaterStateTests {
     #expect(try await actor.fetchElements().isEmpty)
   }
 
-  // DEC-22: «en N recuerdos» no cuenta el recuerdo que se esta comprendiendo
+  /// «in N memories» doesn't count the memory being understood.
   @Test func `The review counts José's other memories without this one`() async throws {
     let actor = PersistenceActor(modelContainer: try PersistenceContainer.make(inMemory: true))
     let earlier = try #require(Memory(narrative: "José trajo naranjas.", savedAt: Date()))
@@ -153,7 +152,7 @@ struct UnderstandLaterStateTests {
       try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).first
     ).savedAt
     var understoodCount = 0
-    // un hueco real entre parciales, donde cancelar (contrato 3 de F3)
+    // A real gap between partials, to cancel in.
     let state = UnderstandLaterState(
       comprehender: FakeMemoryComprehender(
         script: .succeeds(
@@ -216,7 +215,7 @@ struct UnderstandLaterStateTests {
     #expect(state.phase == .idle)
   }
 
-  // MARK: avisos — punto 3 de F4.6, la misma regla que en la captura
+  // MARK: notices — the same rule as in capture
 
   @Test func `A review that cannot be prepared returns to idle with a notice`() async throws {
     let actor = PersistenceActor(modelContainer: try PersistenceContainer.make(inMemory: true))
@@ -254,7 +253,7 @@ struct UnderstandLaterStateTests {
     state.onReviewSaveFailed = { failedReports += 1 }
 
     await state.start(memoryID: memoryID)
-    // un elemento conocido que no esta en el almacen: la aparicion confirmada no encuentra su elemento
+    // A known element missing from the store: the confirmed appearance can't find its element.
     let ghost = try #require(Element(displayName: "Lucía", type: .person))
     state.reviewConfirmed(
       ReviewState(extracted: Self.luciaExtraction, knownElements: [ghost], appearances: []),
@@ -284,7 +283,7 @@ struct UnderstandLaterStateTests {
     return try await actor.save(memory, photoData: photo, isAnalyzed: false, isExample: false)
   }
 
-  // el cableado que hara F5.3, el mismo que HiloApp.init hace con la captura
+  /// The same wiring HiloApp.init uses for capture.
   private static func wired(
     actor: PersistenceActor, extraction: ExtractedMemory = luciaExtraction
   ) -> (UnderstandLaterState, ReviewCoordinator) {
@@ -295,7 +294,7 @@ struct UnderstandLaterStateTests {
     ) { extracted, narrative, _, savedMemoryID in
       coordinator.present(extracted: extracted, narrative: narrative, savedMemoryID: savedMemoryID)
     }
-    // weak: estado y coordinador se apuntan mutuamente; F5.3 los crea en cada detalle
+    // weak: the state and the coordinator point at each other.
     coordinator.onPreparationFailed = { [weak state] in state?.reviewPreparationFailed() }
     state.onReviewSaved = { coordinator.showConnections(savedMemoryID: $0) }
     state.onReviewSaveFailed = { coordinator.closeAfterFailedSave() }
@@ -310,7 +309,7 @@ struct UnderstandLaterStateTests {
   }
 }
 
-// espera acotada a una condicion observable, sin exponer las Task internas
+/// A bounded wait on an observable condition, without exposing the inner Tasks.
 private func waitUntil(
   attempts: Int = 200, sleepEach: Duration = .milliseconds(5), _ condition: () -> Bool
 ) async {

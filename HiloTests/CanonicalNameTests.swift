@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 1: nombre canonico — espacios, mayusculas/acentos, articulo inicial
 nonisolated struct CanonicalNameTests {
   @Test func `strips the article when it is not part of the name, la Alhambra becomes Alhambra`() {
     #expect(CanonicalName.of("La Alhambra") == "alhambra")
@@ -19,7 +18,7 @@ nonisolated struct CanonicalNameTests {
   }
 
   @Test func `keeps a lone article as the whole name when nothing is left behind`() {
-    // contrato 1: solo se quita si queda otra palabra detras
+    // The article is only dropped when another word follows it.
     #expect(CanonicalName.of("La") == "la")
   }
 
@@ -44,7 +43,7 @@ nonisolated struct CanonicalNameTests {
   }
 
   @Test func `strips only the first article once, La La Land keeps the second la`() {
-    // contrato 1: no es recursivo, solo la primera palabra se evalua
+    // Not recursive: only the first word is checked.
     #expect(CanonicalName.of("La La Land") == "la land")
   }
 

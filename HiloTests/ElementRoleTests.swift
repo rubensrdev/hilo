@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 8: el papel es texto libre del usuario, igual que el nombre nunca se reescribe
 nonisolated struct ElementRoleTests {
   @Test(arguments: ["", "   ", "\n\t"])
   func `rejects a blank role`(text: String) {

@@ -1,7 +1,5 @@
 import SwiftUI
 
-// contrato 2: S3 Revision, cuatro bloques (cada uno solo si tiene contenido) — la vista solo
-// lee ReviewState y emite intencion, cada accion llama directo a un metodo ya probado (F4.1)
 struct ReviewScreen: View {
   @State private var reviewState: ReviewState
   @State private var dateText: String
@@ -13,12 +11,13 @@ struct ReviewScreen: View {
 
   private var interfaceLocale: Locale { InterfaceLocale.resolve(environmentLocale) }
 
-  // MARK: renombrar — contrato 4, DEC-40/DEC-26/DEC-41/DEC-48: un unico alert del sistema con
-  // campo de texto, para cualquier elemento; el aviso de alcance solo si ya existia (DEC-22)
+  // MARK: rename
+
+  /// One system alert with a text field for any element; the scope notice only for one that already existed.
   private struct RenamePrompt {
     let itemID: ReviewItemID
     let currentName: String
-    let otherMemoriesCount: Int?  // nil = elemento nuevo, sin aviso de alcance
+    let otherMemoriesCount: Int?  // nil means new: no scope notice
   }
 
   private struct RenameConflict {
@@ -32,14 +31,14 @@ struct ReviewScreen: View {
   @State private var pendingRenamePrompt: RenamePrompt?
   @FocusState private var isDateFocused: Bool
 
-  // F8.4: cada accion sustituye la vista enfocada; sin destino explicito VoiceOver vuelve al principio
+  /// Each action replaces the focused view; without an explicit target VoiceOver jumps back to the top.
   private enum ReviewFocus: Hashable {
     case item(ReviewItemID)
     case removal(ReviewItemID)
   }
   @AccessibilityFocusState private var focused: ReviewFocus?
 
-  // renaming solo lo usan las previews: arrancan con el alert de renombrar ya abierto
+  /// renaming is only for previews, which open with the rename alert already up.
   init(
     initial: ReviewState, narrative: String, renaming itemID: ReviewItemID? = nil,
     onSave: @escaping (ReviewState, String) -> Void
@@ -95,7 +94,7 @@ struct ReviewScreen: View {
         }
         .padding(Spacing.margenPantalla)
       }
-      // tokens.md §1.8: debajo de la barra de vidrio siempre queda fondo
+      // There is always background under the glass bar.
       .background(Color.fondo)
       .navigationTitle("Review")
       .navigationBarTitleDisplayMode(.inline)
@@ -138,7 +137,7 @@ struct ReviewScreen: View {
     }
   }
 
-  // MARK: renombrar — helpers puros de presentacion, la decision (aplicar/bloquear) es de ReviewState
+  // MARK: rename helpers — presentation only, ReviewState decides
 
   private var isRenamePromptPresented: Binding<Bool> {
     Binding(get: { renamePrompt != nil }, set: { if !$0 { renamePrompt = nil } })
@@ -149,7 +148,7 @@ struct ReviewScreen: View {
   }
 
   private var renameAlertTitle: Text {
-    // nunca se ve: el alert solo se presenta cuando renamePrompt no es nil (isRenamePromptPresented)
+    // Never seen: the alert only presents while renamePrompt is set.
     guard let renamePrompt else { return Text(verbatim: "") }
     return renamePrompt.otherMemoriesCount == nil
       ? Text("Rename \(renamePrompt.currentName)?")
@@ -174,7 +173,7 @@ struct ReviewScreen: View {
     renameText = currentName
   }
 
-  // DEC-26/DEC-48: nombra al conflicto por su nombre visible actual, pendiente si lo tiene
+  /// Names the conflict by its current visible name, the pending one if it has one.
   private func confirmRename(_ prompt: RenamePrompt) {
     let trimmed = renameText.trimmingCharacters(in: .whitespacesAndNewlines)
     switch reviewState.rename(prompt.itemID, to: trimmed) {
@@ -193,7 +192,7 @@ struct ReviewScreen: View {
     }
   }
 
-  // MARK: relato — contrato de accesibilidad de Hilo: nunca se trunca, se lee como un bloque
+  // MARK: narrative — never truncated, read as one block
 
   private var narrativeSection: some View {
     VStack(alignment: .leading, spacing: Spacing.espacio1) {
@@ -207,7 +206,7 @@ struct ReviewScreen: View {
     }
   }
 
-  // MARK: sin nada reconocido — anexo DEC-46
+  // MARK: nothing recognized
 
   private var nothingRecognizedSection: some View {
     VStack(alignment: .leading, spacing: Spacing.espacio1) {
@@ -222,7 +221,7 @@ struct ReviewScreen: View {
     }
   }
 
-  // MARK: bloque 1 — lo que ha entendido, agrupado por tipo, con quitar/deshacer (DEC-17)
+  // MARK: block 1 — what it understood, by type, with remove and undo
 
   @ViewBuilder
   private var understoodSection: some View {
@@ -232,7 +231,7 @@ struct ReviewScreen: View {
         .accessibilityAddTraits(.isHeader)
       ForEach(reviewState.blocks.understoodGroups, id: \.type) { group in
         VStack(alignment: .leading, spacing: Spacing.espacio2) {
-          // P1: el color del tipo va en el simbolo; el texto footnote queda en texto-secundario
+          // The type's colour goes on the symbol; the footnote text stays texto-secundario.
           Label {
             Text(group.type.localizedPluralName(locale: interfaceLocale))
               .foregroundStyle(Color.textoSecundario)
@@ -254,7 +253,7 @@ struct ReviewScreen: View {
     let layout = dynamicTypeSize.rowLayout(spacing: Spacing.espacio2)
     return layout {
       if row.isRemoved {
-        // quitado: no se ofrece renombrar hasta deshacer (regla del proyecto, F4.1 rename())
+        // Removed: renaming isn't offered until it is undone.
         Label {
           Text(row.name)
             .chipElemento()
@@ -292,7 +291,7 @@ struct ReviewScreen: View {
       }
 
       if row.isRemoved {
-        // ya lo dice la etiqueta del chip: VoiceOver no lo lee dos veces
+        // The chip's label already says it: VoiceOver doesn't read it twice.
         Text("Removed from this memory")
           .metadato()
           .foregroundStyle(Color.textoSecundario)
@@ -328,14 +327,14 @@ struct ReviewScreen: View {
     .background(Color.superficieHundida, in: chipShape)
   }
 
-  // apilado, la capsula se come las esquinas del texto: pasa a la forma de las tarjetas
+  /// Stacked, the capsule eats the text's corners, so it takes the card shape.
   private var chipShape: AnyShape {
     dynamicTypeSize.isAccessibilitySize
       ? AnyShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
       : AnyShape(Capsule())
   }
 
-  // MARK: bloque 2 — ya conocia, reconocimiento rechazable con un toque, sin dialogo (DEC-22)
+  // MARK: block 2 — already known, rejectable with one tap, no dialog
 
   @ViewBuilder
   private var knownSection: some View {
@@ -350,7 +349,7 @@ struct ReviewScreen: View {
   }
 
   private func knownRow(_ known: ReviewBlocks.Known) -> some View {
-    // por la linea base: el nombre crece a 44pt de toque y el simbolo debe seguir a su altura
+    // By baseline: the name grows to a 44 pt target and the symbol must stay level with it.
     let layout = dynamicTypeSize.rowLayout(alignment: .firstTextBaseline, spacing: Spacing.espacio3)
     return layout {
       Image(systemName: known.type.symbolName)
@@ -376,7 +375,7 @@ struct ReviewScreen: View {
         )
         .accessibilityHint("Double tap to rename")
         .accessibilityFocused($focused, equals: .item(known.id))
-        // ya lo dice la etiqueta del nombre: VoiceOver no lo lee dos veces
+        // The name's label already says it: VoiceOver doesn't read it twice.
         Text(
           "\(known.type.localizedName(locale: interfaceLocale)) · in \(known.otherMemoriesCount) memories"
         )
@@ -401,7 +400,7 @@ struct ReviewScreen: View {
     .clipShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
   }
 
-  // MARK: bloque 3 — duda de identidad, dos respuestas de igual peso, ninguna preseleccionada
+  // MARK: block 3 — identity doubt, two answers of equal weight, neither preselected
 
   private struct DoubtCard: Identifiable {
     let id: String
@@ -411,8 +410,8 @@ struct ReviewScreen: View {
     let candidate: ReviewBlocks.Doubtful.Candidate
   }
 
-  // una tarjeta por candidato: si un item tiene mas de uno (identityDoubt raro con varias
-  // coincidencias), se apilan varias preguntas binarias en vez de una sola con N respuestas
+  /// One card per candidate: an item with several matches stacks binary questions instead of
+  /// one question with N answers.
   private var doubtCards: [DoubtCard] {
     reviewState.blocks.doubtful.flatMap { item in
       item.candidates.map { candidate in
@@ -445,7 +444,7 @@ struct ReviewScreen: View {
       Text("\(card.candidate.name) appears in \(card.candidate.otherMemoriesCount) memories")
         .metadato()
         .foregroundStyle(Color.textoSecundario)
-      // tokens §2.2: en AX las dos respuestas se apilan, con el mismo peso
+      // At accessibility sizes the two answers stack, with equal weight.
       let answersLayout = dynamicTypeSize.rowLayout(spacing: Spacing.espacio2)
       answersLayout {
         Button {
@@ -474,7 +473,7 @@ struct ReviewScreen: View {
     .clipShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
   }
 
-  // MARK: sin conexiones — el comienzo, nunca un fallo (anexo DEC-46)
+  // MARK: no connections — the beginning, never a failure
 
   private var beginningSection: some View {
     VStack(alignment: .leading, spacing: Spacing.espacio1) {
@@ -495,14 +494,14 @@ struct ReviewScreen: View {
     .clipShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
   }
 
-  // MARK: bloque 4 — la fecha, editable como texto, nunca reanalizada (contrato 2)
+  // MARK: block 4 — the date, editable as text, never re-analysed
 
   private var dateSection: some View {
     VStack(alignment: .leading, spacing: Spacing.espacio1) {
       Text("Date")
         .tituloSeccion()
         .accessibilityAddTraits(.isHeader)
-      // la fecha es texto del usuario: a AX5 crece hacia abajo en vez de desplazarse de lado
+      // The date is the user's text: at AX5 it grows downwards instead of scrolling sideways.
       ZStack(alignment: .topLeading) {
         TextField(text: $dateText, axis: .vertical) { EmptyView() }
           .fechaUsuario()
@@ -510,7 +509,7 @@ struct ReviewScreen: View {
           .accessibilityLabel("Date")
           .accessibilityHint("Add a date in your words")
           .accessibilityIdentifier("review.date")
-        // el placeholder del sistema no reparte lineas y a AX5 se cortaba
+        // The system placeholder doesn't wrap, and was cut off at AX5.
         if dateText.isEmpty {
           Text("Add a date in your words")
             .fechaUsuario()
@@ -523,17 +522,17 @@ struct ReviewScreen: View {
       .padding(Spacing.espacio2)
       .background(Color.superficieHundida)
       .clipShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
-      // el campo mide una linea: todo el fondo enfoca, para que el toque llegue a 44pt
+      // The field is one line tall: the whole background focuses, so the tap target reaches 44 pt.
       .contentShape(Rectangle())
       .onTapGesture { isDateFocused = true }
     }
   }
 
-  // MARK: guardar — siempre disponible, ninguna duda lo bloquea (contrato 2)
+  // MARK: save — always available, no doubt blocks it
 
   private var saveButton: some View {
     Button {
-      // la hoja no se cierra aqui: pasa al momento de la conexion o la cierra el coordinador
+      // The sheet doesn't close here: it moves to the connection moment, or the coordinator closes it.
       onSave(reviewState, dateText)
     } label: {
       Text("Save memory")

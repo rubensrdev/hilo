@@ -1,6 +1,6 @@
 import Foundation
 
-// contrato 6: idioma de la interfaz, no del sistema (sistema en frances → interfaz en ingles)
+/// The interface language, not the system's: a French system gets an English interface.
 nonisolated enum InterfaceLocale {
   static func resolve(
     _ environment: Locale, localizations: [String] = Bundle.main.localizations,
@@ -21,7 +21,7 @@ extension ElementType {
     }
   }
 
-  // encabezados de grupo en Revision (bloque "Lo que ha entendido")
+  /// Group headers in the review's understood block.
   nonisolated func localizedPluralName(locale: Locale) -> String {
     switch self {
     case .person: String(localized: LocalizedStringResource("People", locale: locale))
@@ -32,15 +32,15 @@ extension ElementType {
 }
 
 extension [String] {
-  // los nombres van tal como el usuario los confirmo; solo la union sigue el idioma (anexo DEC-46)
+  /// Names go as the user confirmed them; only the conjunction follows the language.
   nonisolated func joinedAsList(locale: Locale) -> String {
     formatted(.list(type: .and).locale(locale))
   }
 }
 
 extension Element {
-  // F5.5: nombre, tipo y recuento — reutiliza las claves ya traducidas de ReviewCopy.elementLabel,
-  // asi VoiceOver no depende del "·" visual (footnote de tipo+recuento) para transmitir el tipo
+  /// Reuses ReviewCopy.elementLabel's translated keys, so VoiceOver doesn't rely on the visual "·"
+  /// to convey the type.
   nonisolated func accessibilityLabel(memoryCount: Int?, locale: Locale) -> String {
     let typeName = type.localizedName(locale: locale)
     guard let memoryCount else {

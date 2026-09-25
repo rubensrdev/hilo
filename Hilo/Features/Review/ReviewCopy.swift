@@ -1,8 +1,8 @@
 import Foundation
 
-// contrato 6: textos anunciables de la revision, sin concordancia de genero
+/// No gender agreement in any of these strings.
 nonisolated enum ReviewCopy {
-  // contrato 6: nombre, tipo y en cuantos recuerdos; nil = nuevo, sin recuerdos que contar
+  /// nil means new: there are no memories to count.
   static func elementLabel(name: String, type: ElementType, otherMemories: Int?, locale: Locale)
     -> String
   {
@@ -22,7 +22,7 @@ nonisolated enum ReviewCopy {
         "\(name), \(type.localizedName(locale: locale)), removed from this memory", locale: locale))
   }
 
-  // DEC-49: la respuesta de la duda dice que es otro de su mismo tipo
+  /// Rejecting the doubt says it is another one of the same type.
   static func doubtRejection(type: ElementType, locale: Locale) -> String {
     switch type {
     case .person: String(localized: LocalizedStringResource("Someone else", locale: locale))

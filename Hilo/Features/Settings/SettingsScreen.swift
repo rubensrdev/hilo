@@ -1,6 +1,5 @@
 import SwiftUI
 
-// F8 contrato 1: S7 es una hoja, superficie del sistema como contenedor (tokens.md §7)
 struct SettingsScreen: View {
   @Bindable var state: SettingsState
   @Environment(\.dismiss) private var dismiss
@@ -11,7 +10,7 @@ struct SettingsScreen: View {
 
   var body: some View {
     NavigationStack {
-      // F8.5 D3: tarjetas propias, no List — su recorte no admite contorno-tarjeta (alto contraste)
+      // Cards of its own, not a List: a List's clipping can't take the high-contrast card outline.
       ScrollView {
         VStack(alignment: .leading, spacing: Spacing.separacionSecciones) {
           privacySection
@@ -43,7 +42,7 @@ struct SettingsScreen: View {
       } message: {
         Text("Your own memories stay. Only the example memories are deleted.")
       }
-      // regla 25, doble confirmacion: dos alertas encadenadas por el paso del estado
+      // Rule 25, double confirmation: two alerts chained through the state's step.
       .alert("Delete everything?", isPresented: $state.isFirstWipeConfirmationPresented) {
         Button("Continue", role: .destructive) { state.continueWipe() }
         Button("Cancel", role: .cancel) { state.cancelWipe() }
@@ -63,7 +62,7 @@ struct SettingsScreen: View {
     }
   }
 
-  // MARK: privacidad — amplia la afirmacion del vacio, no la repite (§9.2)
+  // MARK: privacy — expands on the empty state's promise without repeating it
 
   private var privacySection: some View {
     section(header: "Privacy") {
@@ -76,7 +75,7 @@ struct SettingsScreen: View {
     }
   }
 
-  // MARK: memoria de ejemplo — cargar o borrar segun este (F2 contrato 5 y 6)
+  // MARK: example memory — load or delete, depending on whether it is there
 
   private var exampleMemorySection: some View {
     section(
@@ -112,7 +111,7 @@ struct SettingsScreen: View {
     }
   }
 
-  // MARK: borrado total (regla 25)
+  // MARK: delete everything (rule 25)
 
   private var wipeSection: some View {
     section(
@@ -131,7 +130,7 @@ struct SettingsScreen: View {
     }
   }
 
-  // MARK: informacion del producto — nombre y version, sin enlaces
+  // MARK: product information — name and version, no links
 
   private var aboutSection: some View {
     section(header: "About") {
@@ -151,7 +150,7 @@ struct SettingsScreen: View {
   }
 
   #if DEBUG
-    // F5: bateria de docs/validacion-manual — nunca compilado en Release
+    /// The docs/validacion-manual battery; never compiled into Release.
     private var debugSection: some View {
       section(header: "Debug") {
         Button {
@@ -166,7 +165,7 @@ struct SettingsScreen: View {
     }
   #endif
 
-  // MARK: seccion como tarjeta — encabezado para el rotor, contenido sobre superficie-tarjeta
+  // MARK: section as a card — a rotor header, content on the card surface
 
   private func section<Content: View>(
     header: LocalizedStringKey? = nil, footer: LocalizedStringKey? = nil,

@@ -1,6 +1,6 @@
 import SwiftUI
 
-// F5 alcance + DEC-59: la pestaña existe y es tocable; su contenido real es de F6
+/// The tab exists and responds to taps; its content is not built yet.
 struct AskScreen: View {
   var body: some View {
     NavigationStack {

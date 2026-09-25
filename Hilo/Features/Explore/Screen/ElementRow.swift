@@ -1,6 +1,5 @@
 import SwiftUI
 
-// contrato 4: simbolo, color y texto del tipo siempre juntos (P1); nombre y numero de recuerdos
 struct ElementRow: View {
   let element: Element
   let memoryCount: Int
@@ -17,11 +16,11 @@ struct ElementRow: View {
 
   var body: some View {
     HStack(alignment: .top, spacing: Spacing.espacio3) {
-      // F5.5: sin ocultar, VoiceOver anunciaba el simbolo SF ademas del texto del tipo (doble anuncio)
+      // Hidden, or VoiceOver announces the SF Symbol on top of the type's text.
       Image(systemName: element.type.symbolName)
         .foregroundStyle(element.type.color)
         .accessibilityHidden(true)
-      // P2 (F8.4): en tamaños AX el recuento baja bajo el tipo en vez de compartir la linea
+      // At accessibility sizes the count drops below the type instead of sharing its line.
       let layout = dynamicTypeSize.rowLayout(alignment: .top, spacing: Spacing.espacio1)
       layout {
         VStack(alignment: .leading, spacing: Spacing.espacio1) {
@@ -39,9 +38,9 @@ struct ElementRow: View {
       }
     }
     .frame(maxWidth: .infinity, minHeight: Spacing.altoFilaMinimo, alignment: .leading)
-    // sin fondo propio, el Spacer central era transparente al toque y el NavigationLink fallaba ahi
+    // Without its own shape, the central Spacer ignored taps and the NavigationLink missed them.
     .contentShape(Rectangle())
-    // F8.4: el anuncio sale de la funcion pura probada, no de los textos visibles
+    // The announcement comes from the tested pure function, not from the visible texts.
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(
       element.accessibilityLabel(memoryCount: memoryCount, locale: interfaceLocale))

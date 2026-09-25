@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 7 + regla 17: el texto es lo unico que se muestra, el año solo ordena y agrupa
 nonisolated struct MemoryDateTests {
   @Test(arguments: ["", "   ", "\n\t"])
   func `rejects a blank date text`(text: String) {
@@ -16,7 +15,6 @@ nonisolated struct MemoryDateTests {
     #expect(date.text == original)
   }
 
-  // contrato 2 (DEC-44): el año deducido solo se guarda si el texto de la fecha al guardar es identico al extraido
   @Test func `keeps text and deduced year when the saved text matches the extracted text exactly`()
     throws
   {
@@ -40,7 +38,6 @@ nonisolated struct MemoryDateTests {
   }
 
   @Test func `drops the deduced year when the saved text was edited or rewritten`() throws {
-    // caso del spec, comportamiento linea 128: "el verano del 87" editado a "el verano del 88"
     let resolved = try #require(
       MemoryDate.resolving(
         extractedText: "el verano del 87", deducedYear: 1987, textAtSave: "el verano del 88"))
@@ -52,7 +49,7 @@ nonisolated struct MemoryDateTests {
   func `a date written by hand with nothing extracted keeps the text but never invents a year`()
     throws
   {
-    // contrato 2: nil nunca es igual al texto escrito, asi que siempre cae en la fila "editado", sin año
+    // nil never equals the written text, so it always falls in the edited row, with no year.
     let resolved = try #require(
       MemoryDate.resolving(extractedText: nil, deducedYear: nil, textAtSave: "en Navidad del 92"))
     #expect(resolved.text == "en Navidad del 92")

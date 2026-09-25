@@ -1,7 +1,7 @@
 import Foundation
 import ImageIO
 
-// ADR-000 §4: nunca UIKit; ImageIO decodifica ya reducida y con la orientacion aplicada
+/// No UIKit (ADR-000 §4): ImageIO decodes it already downscaled, with the orientation applied.
 nonisolated enum PhotoThumbnail {
   static func image(from data: Data, maxPixelSize: Int) -> CGImage? {
     guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }

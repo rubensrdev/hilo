@@ -1,7 +1,6 @@
 import Foundation
 import OSLog
 
-// contrato 1: toda la logica de S2 Captura vive aqui, la vista solo lee y emite intencion
 @Observable
 final class CaptureState {
   enum Phase: Equatable {
@@ -17,19 +16,18 @@ final class CaptureState {
     }
   }
 
-  // editar el relato es la siguiente intencion: el aviso anterior ya no aplica
+  /// Editing the narrative is the next intent, so the previous notice no longer applies.
   var narrative: String = "" { didSet { notice = nil } }
   var photoData: Data?
   private(set) var phase: Phase = .capturing
   private(set) var extractedSoFar: ExtractedMemory?
   private(set) var notice: ReviewNotice?
-  // aqui no hay recuerdo guardado detras: es un error de verdad, no un aviso (DEC-43 no aplica)
+  /// The direct save failed with nothing saved behind it: a real error, not a notice.
   private(set) var saveWithoutAnalyzingFailed = false
-  // DEC-45: una vez fijado por el guardado automatico del error, sigue apuntando al
-  // mismo recuerdo hasta que la captura se vacia — asi el reintento actualiza
-  // en vez de insertar
+  /// Once the error's auto-save sets it, it keeps pointing at that memory until the capture clears,
+  /// so a retry updates instead of inserting.
   private(set) var savedMemoryID: MemoryID?
-  // DEC-47: cerrar la revision vuelve aqui; en el reintento es el error, nunca el formulario
+  /// Closing the review returns here: on a retry that is the error, never the form.
   private var phaseBeforeComprehension: Phase = .capturing
   var onReviewSaved: (MemoryID) -> Void = { _ in }
   var onReviewSaveFailed: () -> Void = {}
@@ -41,7 +39,7 @@ final class CaptureState {
   private var comprehensionTask: Task<Void, Never>?
   private var photoLoadTask: Task<Void, Never>?
   @ObservationIgnored private var isSavingFailedNarrative = false
-  private let logger = Logger(subsystem: "com.hilo.app", category: "captura")
+  private let logger = Logger(subsystem: "com.hilo.app", category: "capture")
 
   private enum SaveError: Error {
     case blankNarrative
@@ -62,12 +60,11 @@ final class CaptureState {
     !narrative.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && phase == .capturing
   }
 
-  // contrato 1: salida secundaria siempre visible, pero un relato vacio no se guarda
-  // (Memory.init? lo rechazaria) y guardar a medio comprender abriria una carrera con
-  // el guardado automatico del error
+  /// Always visible, but an empty narrative can't be saved, and saving mid-comprehension would
+  /// race the error's auto-save.
   var canSaveWithoutAnalyzing: Bool { canUnderstand }
 
-  // DEC-42: la misma regla que decide los botones del aviso (CaptureCopy)
+  /// The same rule that decides the notice's buttons.
   var canRetry: Bool {
     guard case .notAnalyzed(let reason) = phase else { return false }
     return reason.allowsRetry
@@ -77,8 +74,7 @@ final class CaptureState {
     runComprehension()
   }
 
-  // DEC-16/DEC-45: mismo camino, pero savedMemoryID ya esta fijado desde el fallo
-  // anterior, asi que onUnderstood recibe el id a actualizar en vez de nil
+  /// Same path as understanding, but savedMemoryID is already set, so onUnderstood gets the id to update.
   func retry() {
     runComprehension()
   }
@@ -86,25 +82,25 @@ final class CaptureState {
   func saveWithoutAnalyzing() async {
     guard canSaveWithoutAnalyzing else { return }
     notice = nil
-    // la fase cambia antes del await: un segundo toque durante el guardado no puede duplicar
+    // The phase changes before the await, so a second tap during the save can't duplicate it.
     phase = .savingWithoutAnalyzing
     photoLoadTask?.cancel()
     do {
       _ = try await persist(narrative: narrative)
-      // mismo camino que guardar desde la revision: vaciar es lo que impide un segundo guardado
+      // Same as saving from the review: clearing is what prevents a second save.
       resetForNewMemory()
       notice = .savedWithoutAnalyzing
     } catch {
-      // solo el tipo: el error no debe arrastrar al log nada del usuario
+      // Only the error type: nothing the user wrote reaches the log.
       logger.error(
-        "No se pudo guardar sin analizar: \(String(describing: type(of: error)), privacy: .public)"
+        "Could not save without analyzing: \(String(describing: type(of: error)), privacy: .public)"
       )
       phase = .capturing
       saveWithoutAnalyzingFailed = true
     }
   }
 
-  // la carga termina cuando quiere: solo cuenta la ultima eleccion, y solo mientras se captura
+  /// Loads finish whenever they like: only the latest pick counts, and only while capturing.
   @discardableResult
   func loadPhoto(_ load: @escaping @MainActor () async -> Data?) -> Task<Void, Never> {
     photoLoadTask?.cancel()
@@ -126,7 +122,7 @@ final class CaptureState {
     saveWithoutAnalyzingFailed = false
   }
 
-  // sin tiempo limite: el usuario decide cuando parar, y vuelve al instante a donde estaba
+  /// No time limit: the user decides when to stop, and gets back to where they were at once.
   func cancel() {
     comprehensionTask?.cancel()
     guard phase == .comprehending, !isSavingFailedNarrative else { return }
@@ -134,34 +130,34 @@ final class CaptureState {
     extractedSoFar = nil
   }
 
-  // DEC-47: el guard lo hace inocuo si onDismiss llega despues de guardar
+  /// The guard makes it harmless when onDismiss arrives after saving.
   func reviewDismissed() {
     guard phase == .reviewing else { return }
     phase = phaseBeforeComprehension
     extractedSoFar = nil
   }
 
-  // DEC-47: vuelve como al cerrar la revision, pero diciendo que no se pudo abrir
+  /// Returns as when the review closes, but says it couldn't open.
   func reviewPreparationFailed() {
     guard phase == .reviewing else { return }
     reviewDismissed()
     notice = .reviewUnavailable
   }
 
-  // DEC-18: el recuerdo ya esta guardado sin analizar, reconocer el aviso solo vacia la captura
+  /// The memory is already saved unanalyzed; acknowledging only clears the capture.
   func acknowledgeNotAnalyzed() {
     guard case .notAnalyzed = phase else { return }
     resetForNewMemory()
   }
 
-  // DEC-47: salir de .reviewing antes de que la hoja se cierre deja inocuo su onDismiss
+  /// Leaving .reviewing before the sheet closes makes its onDismiss harmless.
   func reviewConfirmed(_ reviewState: ReviewState, dateTextAtSave: String) {
     guard phase == .reviewing else { return }
     phase = .savingReview
     let text = narrative
     let photo = photoData
     let existingID = savedMemoryID
-    // self fuerte: un guardado del texto del usuario no se salta aunque la captura desaparezca
+    // Strong self: saving the user's text is never skipped, even if the capture goes away.
     Task {
       do {
         let savedID = try await self.persistReview(
@@ -170,9 +166,9 @@ final class CaptureState {
         self.resetForNewMemory()
         self.onReviewSaved(savedID)
       } catch {
-        // solo el tipo: el error no debe arrastrar al log nada del usuario
+        // Only the error type: nothing the user wrote reaches the log.
         self.logger.error(
-          "No se pudo guardar la revision: \(String(describing: type(of: error)), privacy: .public)"
+          "Could not save the review: \(String(describing: type(of: error)), privacy: .public)"
         )
         self.phase = self.phaseBeforeComprehension
         self.extractedSoFar = nil
@@ -194,11 +190,11 @@ final class CaptureState {
   }
 
   private func runComprehension() {
-    // un doble toque no deja una comprension huerfana que cancelar ya no podria parar
+    // A double tap must not leave an orphaned comprehension that cancel could no longer stop.
     guard phase != .comprehending else { return }
     phaseBeforeComprehension = phase
     phase = .comprehending
-    // lo que se lee es lo que habia al tocar: una foto que llegue despues no entra
+    // What is read is what was there at the tap: a photo arriving later is left out.
     photoLoadTask?.cancel()
     notice = nil
     extractedSoFar = nil
@@ -211,7 +207,7 @@ final class CaptureState {
       ) { partial in
         if !Task.isCancelled { self.extractedSoFar = partial }
       }
-      // cancel() ya ha devuelto la captura: un resultado tardio no abre la revision
+      // cancel() has already given the capture back: a late result must not open the review.
       guard !Task.isCancelled else { return }
       await self.handle(outcome)
     }
@@ -223,17 +219,17 @@ final class CaptureState {
       phase = .reviewing
       onUnderstood(extracted, narrative, photoData, savedMemoryID)
     case .notAnalyzed(let text, let reason):
-      // contrato 1 + DEC-43: con el texto guardandose, cancelar ya no puede devolver al formulario
+      // With the text being saved, cancelling can no longer go back to the form.
       isSavingFailedNarrative = true
       defer { isSavingFailedNarrative = false }
-      // DEC-45: en el reintento el relato ya esta guardado, no se inserta otra copia
+      // On a retry the narrative is already saved: don't insert another copy.
       if savedMemoryID == nil {
         do {
           savedMemoryID = try await persist(narrative: text)
         } catch {
-          // sin recuerdo guardado detras no se puede decir «guardado»: mismo error que el guardado directo
+          // With no saved memory behind it, it can't say "saved": same error as a direct save.
           logger.error(
-            "No se pudo guardar el relato tras el error de comprension: \(String(describing: type(of: error)), privacy: .public)"
+            "Could not save the narrative after the comprehension error: \(String(describing: type(of: error)), privacy: .public)"
           )
           phase = .capturing
           extractedSoFar = nil
@@ -248,7 +244,7 @@ final class CaptureState {
     }
   }
 
-  // DEC-45: con un recuerdo ya guardado por el error, se analiza ese en vez de insertar otro
+  /// With a memory already saved by the error, analyses that one instead of inserting another.
   private func persistReview(
     _ reviewState: ReviewState, dateTextAtSave: String, narrative text: String, photoData: Data?,
     existingID: MemoryID?
@@ -267,7 +263,7 @@ final class CaptureState {
       outcome: reviewState.outcome(memoryID: memory.id, dateTextAtSave: dateTextAtSave))
   }
 
-  // un relato que Memory rechaza es un fallo, nunca un «guardado» sin recuerdo detras
+  /// A narrative Memory rejects is a failure, never a "saved" with no memory behind it.
   private func persist(narrative text: String) async throws -> MemoryID {
     guard let memory = Memory(narrative: text, date: nil, savedAt: Date()) else {
       throw SaveError.blankNarrative

@@ -1,18 +1,16 @@
 import SwiftUI
 
-// contrato 1: selector superior Recuerdos <-> Elementos (dos vistas del mismo material),
-// contar un recuerdo y Ajustes en la barra de herramientas, en todos los tamaños de texto (DEC-12)
 struct MemoryScreen: View {
   @Bindable var state: ExploreState
   @Binding var isCapturePresented: Bool
-  // creado al tocar el engranaje: en el closure de la hoja se reevaluaria con cada cambio de ExploreState
+  /// Created on the gear tap: inside the sheet's closure it would be re-evaluated on every ExploreState change.
   @State private var settingsState: SettingsState?
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   var body: some View {
     NavigationStack {
       VStack(spacing: 0) {
-        // F8.5 D4: en la barra truncaba a tamaño por defecto (tokens §2.2); a ancho completo como en 02a
+        // In the bar it truncated at the default text size; full width instead.
         viewPicker
           .padding(.horizontal, Spacing.margenPantalla)
           .padding(.vertical, Spacing.espacio2)
@@ -28,9 +26,8 @@ struct MemoryScreen: View {
       .navigationTitle("Memory")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
-        // .primaryAction/.secondaryAction pueden colapsar en el menu de desbordamiento del
-        // sistema segun el espacio disponible; DEC-12 y DEC-59 piden los dos siempre alcanzables,
-        // nunca detras de un "...", asi que van en topBarTrailing (posicional, nunca colapsa)
+        // .primaryAction and .secondaryAction can collapse into the overflow menu; both must always be
+        // reachable, so they go in .topBarTrailing, which is positional and never collapses.
         ToolbarItem(placement: .topBarTrailing) {
           Button {
             settingsState = state.makeSettingsState()
@@ -51,8 +48,8 @@ struct MemoryScreen: View {
           .accessibilityIdentifier("explore.openCapture")
         }
       }
-      // fuera del LazyVStack de MemoriesView a proposito: Apple pide no colgar
-      // navigationDestination de un contenedor "lazy" para que la pila siempre lo vea
+      // Outside MemoriesView's LazyVStack on purpose: Apple advises against hanging
+      // navigationDestination off a lazy container.
       .navigationDestination(for: MemoryID.self) { memoryID in
         let detailState = state.makeDetailState(for: memoryID)
         MemoryDetailScreen(state: detailState, reviewCoordinator: detailState.reviewCoordinator)
@@ -65,7 +62,7 @@ struct MemoryScreen: View {
     .sheet(item: $settingsState) { SettingsScreen(state: $0) }
   }
 
-  // «People, places & objects» no cabe en un segmento a tamaños AX: .menu enseña el texto entero (F5.5)
+  /// "People, places & objects" doesn't fit a segment at accessibility sizes: .menu shows the whole text.
   @ViewBuilder
   private var viewPicker: some View {
     let picker = Picker("View", selection: $state.selectedView) {
@@ -92,7 +89,6 @@ struct MemoryScreen: View {
   #Preview("Dark", traits: .modifier(ExploreScenarios(.normal))) {
     ExplorePreviewScreen().preferredColorScheme(.dark)
   }
-  // F5.5: el selector superior cambia a .menu en AX para que "People, places & objects" no trunque
   #Preview("AX5", traits: .modifier(ExploreScenarios(.normal))) {
     ExplorePreviewScreen().dynamicTypeSize(.accessibility5)
   }

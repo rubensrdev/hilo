@@ -1,6 +1,5 @@
 import SwiftUI
 
-// contrato 2 + contrato 3: los cuatro estados de Recuerdos — vacio, un solo recuerdo, normal, buscando
 struct MemoriesView: View {
   let state: ExploreState
   let openCapture: () -> Void
@@ -28,7 +27,7 @@ struct MemoriesView: View {
     .background(Color.fondo)
   }
 
-  // MARK: vacio — promesa, privacidad una sola vez, dos salidas
+  // MARK: empty — the promise, privacy said once, two ways out
 
   private var emptyState: some View {
     VStack(alignment: .leading, spacing: Spacing.espacio4) {
@@ -63,7 +62,7 @@ struct MemoriesView: View {
     }
   }
 
-  // MARK: un solo recuerdo — empuja explicitamente al segundo (contrato 2)
+  // MARK: a single memory — nudges towards the second
 
   private func singleState(_ memory: Memory) -> some View {
     VStack(alignment: .leading, spacing: Spacing.espacio4) {
@@ -88,7 +87,7 @@ struct MemoriesView: View {
     }
   }
 
-  // MARK: normal — agrupado por decada, sin tope (DEC-21)
+  // MARK: normal — grouped by decade, uncapped
 
   private func normalState(_ groups: [MemoryGroup]) -> some View {
     LazyVStack(alignment: .leading, spacing: Spacing.separacionSecciones) {
@@ -106,15 +105,15 @@ struct MemoriesView: View {
           Text(ExploreCopy.decadeHeader(group.decade, locale: interfaceLocale))
             .encabezadoEpoca()
             .foregroundStyle(Color.textoPrimario)
-            // fuera de un List, Section no marca isHeader por si sola: sin esto el rotor de
-            // encabezados de VoiceOver no encuentra las decadas (F5.5)
+            // Outside a List, Section doesn't mark itself as a header: without this the VoiceOver rotor
+            // can't find the decades.
             .accessibilityAddTraits(.isHeader)
         }
       }
     }
   }
 
-  // MARK: buscando — con y sin resultados (contrato 3), nunca el vacio de primera vez
+  // MARK: searching — with and without results, never the first-time empty state
 
   private func searchingState(_ results: [MemorySearchResult]) -> some View {
     Group {

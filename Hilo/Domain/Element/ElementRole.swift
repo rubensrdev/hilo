@@ -1,6 +1,6 @@
 import Foundation
 
-// contrato 8: el papel es texto libre del usuario, igual que el nombre nunca se reescribe
+/// Free text from the user, never rewritten, like the element's name.
 nonisolated struct ElementRole: Sendable, Equatable {
   let text: String
 

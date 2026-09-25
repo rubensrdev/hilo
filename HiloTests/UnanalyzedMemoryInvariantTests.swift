@@ -4,7 +4,7 @@ import Testing
 
 @testable import Hilo
 
-// DEC-45: ningun camino que deja un recuerdo sin analizar le da apariciones; la ampliacion 7 lo rompera
+/// No path that leaves a memory unanalyzed gives it appearances.
 struct UnanalyzedMemoryInvariantTests {
   @Test func `Saving without analyzing leaves no appearances on the memory`() async throws {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -43,7 +43,7 @@ struct UnanalyzedMemoryInvariantTests {
     let actor = PersistenceActor(modelContainer: container)
     let memory = try #require(Memory(narrative: "Irene y Lucía en el pantano.", savedAt: Date()))
     let memoryID = try await actor.save(memory, isAnalyzed: false, isExample: false)
-    // Irene es nueva y se inserta antes; Lucía se da por conocida pero no esta en el almacen
+    // Irene is new and inserted first; Lucía is taken as known but is not in the store.
     let ghost = try #require(Element(displayName: "Lucía", type: .person))
     let extracted = ExtractedMemory(
       elements: [
@@ -56,7 +56,7 @@ struct UnanalyzedMemoryInvariantTests {
     await #expect(throws: PersistenceActor.WriteError.elementNotFound) {
       try await actor.completeAnalysis(of: memoryID, outcome: outcome)
     }
-    // otra escritura en el mismo actor: sin rollback, lo pendiente del fallo se guardaria aqui
+    // Another write on the same actor: without a rollback, the failure's pending changes would be saved here.
     _ = try await actor.save(try #require(Element(displayName: "el pantano", type: .place)))
 
     try Self.expectInvariant(in: container)
@@ -112,12 +112,12 @@ struct UnanalyzedMemoryInvariantTests {
     elements: [ExtractedElement(name: "Lucía", type: .person, role: "mi hija")],
     dateText: nil, deducedYear: nil)
 
-  // el oraculo lee el almacen directamente, sin pasar por el codigo que se prueba
+  /// The oracle reads the store directly, bypassing the code under test.
   private static func expectInvariant(in container: ModelContainer) throws {
     let context = ModelContext(container)
     let unanalyzed = try context.fetch(
       FetchDescriptor<MemoryRecord>(predicate: #Predicate { !$0.isAnalyzed }))
-    try #require(!unanalyzed.isEmpty, "el camino deberia dejar al menos un recuerdo sin analizar")
+    try #require(!unanalyzed.isEmpty, "the path should leave at least one unanalyzed memory")
     let unanalyzedIDs = Set(unanalyzed.map(\.id))
     let offending = try context.fetch(FetchDescriptor<AppearanceRecord>())
       .compactMap { $0.memory?.id }
@@ -126,7 +126,7 @@ struct UnanalyzedMemoryInvariantTests {
   }
 }
 
-// espera acotada a una condicion observable, sin exponer las Task internas
+/// A bounded wait on an observable condition, without exposing the inner Tasks.
 private func waitUntil(
   attempts: Int = 200, sleepEach: Duration = .milliseconds(5), _ condition: () -> Bool
 ) async {

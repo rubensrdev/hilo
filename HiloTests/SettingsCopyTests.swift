@@ -3,7 +3,6 @@ import Testing
 
 @testable import Hilo
 
-// F8 contrato 1: la version y los dos pasos del borrado total, en los dos idiomas
 nonisolated struct SettingsCopyTests {
   private static let english = Locale(identifier: "en")
   private static let spanish = Locale(identifier: "es")
@@ -13,7 +12,6 @@ nonisolated struct SettingsCopyTests {
     #expect(SettingsCopy.versionLine("1.0", locale: Self.spanish) == "Versión 1.0")
   }
 
-  // el texto dice exactamente que desaparece: recuerdos, personas/lugares/objetos y fotos
   @Test func `The first wipe step says exactly what disappears, in both languages`() {
     #expect(
       SettingsCopy.wipeFirstStepBody(locale: Self.english)

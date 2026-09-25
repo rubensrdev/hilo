@@ -1,7 +1,6 @@
 import Foundation
 import OSLog
 
-// contratos 1-4 (S1 Memoria): las dos vistas y los cuatro estados de Recuerdos viven aqui, no en la vista
 @Observable
 final class ExploreState {
   enum SelectedView: Equatable {
@@ -9,7 +8,6 @@ final class ExploreState {
     case elements
   }
 
-  // contrato 2: los cuatro estados de la vista de Recuerdos
   enum MemoriesDisplay: Equatable {
     case empty
     case single(Memory)
@@ -28,9 +26,9 @@ final class ExploreState {
   private let persistenceActor: PersistenceActor
   private let comprehender: MemoryComprehending
   private let interfaceLanguage: String
-  // el ancho del extracto depende de la tipografia y la tarjeta (F5.5), no de Domain: se inyecta
+  /// The extract width depends on the type style and the card, not on Domain, so it is injected.
   private let defaultExtractLength: Int
-  private let logger = Logger(subsystem: "com.hilo.app", category: "explorar")
+  private let logger = Logger(subsystem: "com.hilo.app", category: "explore")
 
   init(
     persistenceActor: PersistenceActor, comprehender: MemoryComprehending,
@@ -46,7 +44,7 @@ final class ExploreState {
     !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
   }
 
-  // contrato 3, DEC-57: buscando manda siempre sobre el recuento, incluso con 0 o 1 recuerdo
+  /// Searching always wins over the count, even with zero or one memory.
   var memoriesDisplay: MemoriesDisplay {
     if isSearching {
       return .searching(
@@ -59,7 +57,7 @@ final class ExploreState {
     return .normal(MemoryGrouping.grouped(memories))
   }
 
-  // DEC-13: filtro de tipo de seleccion unica; sin orden fijado por la spec, alfabetico por defecto
+  /// Single-selection type filter; the spec sets no order, so alphabetical.
   var filteredElements: [Element] {
     let base =
       selectedElementTypeFilter.map { type in elements.filter { $0.type == type } } ?? elements
@@ -72,8 +70,8 @@ final class ExploreState {
     ElementMemories.count(for: element.id, in: appearances)
   }
 
-  // contrato 4 (S4): cada detalle crea su propio understandLater/reviewCoordinator (comentario en
-  // UnderstandLaterState.swift); S1 recarga en cuanto el detalle edita, borra o completa un analisis
+  /// Each detail builds its own understandLater and reviewCoordinator. The list reloads as soon as
+  /// the detail edits, deletes or finishes an analysis.
   func makeDetailState(for memoryID: MemoryID) -> MemoryDetailState {
     MemoryDetailState(
       memoryID: memoryID, persistenceActor: persistenceActor, comprehender: comprehender,
@@ -81,14 +79,14 @@ final class ExploreState {
     ) { [weak self] in await self?.load() }
   }
 
-  // contrato 4 (S5): sin ReviewCoordinator/UnderstandLaterState — renombrar no reanaliza nada
+  /// No review coordinator: renaming never re-analyses.
   func makeElementDetailState(for elementID: ElementID) -> ElementDetailState {
     ElementDetailState(
       elementID: elementID, persistenceActor: persistenceActor
     ) { [weak self] in await self?.load() }
   }
 
-  // F8 contrato 1 (S7): el ejemplo recarga S1; el borrado total lo devuelve al vacio de primera vez
+  /// Loading the example reloads the list; a full wipe takes it back to the first-time empty state.
   func makeSettingsState() -> SettingsState {
     SettingsState(
       persistenceActor: persistenceActor, version: ProductVersion.read(),
@@ -112,9 +110,9 @@ final class ExploreState {
       elements = try await fetchedElements
       appearances = try await fetchedAppearances
     } catch {
-      // solo el tipo: el error no debe arrastrar al log nada del usuario
+      // Only the error type: nothing the user wrote reaches the log.
       logger.error(
-        "No se pudo cargar la memoria: \(String(describing: type(of: error)), privacy: .public)")
+        "Could not load the memory: \(String(describing: type(of: error)), privacy: .public)")
     }
   }
 
@@ -123,7 +121,7 @@ final class ExploreState {
       try await persistenceActor.loadExampleMemory(language: language, loadedAt: Date())
     } catch {
       logger.error(
-        "No se pudo cargar la memoria de ejemplo: \(String(describing: type(of: error)), privacy: .public)"
+        "Could not load the example memory: \(String(describing: type(of: error)), privacy: .public)"
       )
     }
     await load()

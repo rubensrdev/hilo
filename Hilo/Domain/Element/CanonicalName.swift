@@ -1,6 +1,6 @@
 import Foundation
 
-// contrato 1: unico nombre que se compara, nunca se muestra
+/// The only name that is compared; it is never shown.
 nonisolated enum CanonicalName {
   private static let leadingWords: Set<String> = [
     "el", "la", "los", "las", "lo", "un", "una", "mi", "mis", "tu", "tus", "su", "sus",
@@ -16,7 +16,7 @@ nonisolated enum CanonicalName {
       .filter { !$0.isEmpty }
       .joined(separator: " ")
 
-    // locale: nil usaria el idioma del sistema (ver doc NSString); fijamos POSIX para que el plegado no dependa del dispositivo
+    // POSIX, so folding never depends on the device's language.
     let folded = normalized.folding(
       options: [.diacriticInsensitive, .caseInsensitive],
       locale: Locale(identifier: "en_US_POSIX")

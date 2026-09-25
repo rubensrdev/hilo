@@ -1,6 +1,5 @@
 import SwiftUI
 
-// contrato 5: el recuerdo ya guardado y sus conexiones formandose, cada una con su motivo
 struct ConnectionMomentScreen: View {
   let moment: ConnectionMoment
   @Environment(\.dismiss) private var dismiss
@@ -24,7 +23,7 @@ struct ConnectionMomentScreen: View {
       .safeAreaInset(edge: .bottom) { doneButton }
     }
     .onAppear {
-      // tokens §5: el anuncio no cambia con Reducir movimiento, solo el trazo
+      // The announcement doesn't change with Reduce Motion; only the stroke does.
       AccessibilityNotification.Announcement(
         ReviewCopy.momentAnnouncement(connectedCount: moment.rows.count, locale: interfaceLocale)
       ).post()
@@ -34,7 +33,7 @@ struct ConnectionMomentScreen: View {
     }
   }
 
-  // P1: el color semantico va en el simbolo, nunca en el texto
+  /// The semantic colour goes on the symbol, never on the text.
   private var savedLabel: some View {
     Label {
       Text("Memory saved")
@@ -78,7 +77,7 @@ struct ConnectionMomentScreen: View {
       .accessibilityAddTraits(.isHeader)
 
       HStack(spacing: 0) {
-        // con Reducir movimiento el trazo ya esta completo: solo funde el conjunto
+        // With Reduce Motion the stroke is already complete: only the group fades in.
         Rectangle()
           .fill(Color.acentoHilo)
           .frame(width: Spacing.trazoConexion)
@@ -108,7 +107,7 @@ struct ConnectionMomentScreen: View {
       Text(row.narrative)
         .relatoExtracto()
         .lineLimit(2)
-      // regla 4 del diseño: una conexion siempre ensena su motivo; los nombres, sin traducir
+      // A connection always shows its motive; the names are never translated.
       Label {
         Text(
           ConnectionCopy.connectionMotive(
@@ -129,7 +128,7 @@ struct ConnectionMomentScreen: View {
         names: row.motiveNames, narrative: row.narrative, locale: interfaceLocale))
   }
 
-  // «Done» no es acento: la accion ya ha ocurrido
+  /// "Done" is not the accent: the action has already happened.
   private var doneButton: some View {
     Button {
       dismiss()
@@ -142,7 +141,7 @@ struct ConnectionMomentScreen: View {
     .accessibilityIdentifier("moment.done")
     .padding(.horizontal, Spacing.margenPantalla)
     .padding(.vertical, Spacing.espacio2)
-    // el relleno de .bordered es translucido: sin fondo opaco se leia el motivo de debajo
+    // .bordered fills are translucent: without an opaque background the motive showed through.
     .background(Color.fondo)
   }
 }

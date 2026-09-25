@@ -1,9 +1,7 @@
 import SwiftUI
 
-// contrato 4: roles tipograficos de tokens.md §2, cada uno fija su text style
-// del sistema; New York solo en las tres entradas de §2.1 "palabras del usuario"
-// relato: tokens.md pide "interlineado amplio" sin dar un valor numerico exacto,
-// a diferencia del resto del documento — sin token no hay lineSpacing que poner
+/// New York only for the three roles that carry the user's own words. tokens.md asks the
+/// narrative for generous leading without giving a value, so no lineSpacing is set.
 extension View {
   func tituloPantalla() -> some View {
     font(.largeTitle)

@@ -1,6 +1,6 @@
 import Foundation
 
-// contrato 7 + regla 17: el texto es lo unico que se muestra, el año solo ordena y agrupa
+/// Rule 17: only the text is shown; the year only sorts and groups.
 nonisolated struct MemoryDate: Sendable, Equatable {
   let text: String
   let deducedYear: Int?
@@ -11,13 +11,13 @@ nonisolated struct MemoryDate: Sendable, Equatable {
     self.deducedYear = deducedYear
   }
 
-  // contrato 2 (DEC-44): el año deducido solo sobrevive si el texto no cambio ni un espacio
+  /// The deduced year survives only if the text is saved exactly as extracted, down to a space.
   static func resolving(extractedText: String?, deducedYear: Int?, textAtSave: String)
     -> MemoryDate?
   {
     let trimmed = textAtSave.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !trimmed.isEmpty else { return nil }  // borrado
-    guard extractedText == trimmed else { return MemoryDate(text: trimmed, deducedYear: nil) }  // editado / a mano
-    return MemoryDate(text: trimmed, deducedYear: deducedYear)  // sin cambiar
+    guard !trimmed.isEmpty else { return nil }  // cleared
+    guard extractedText == trimmed else { return MemoryDate(text: trimmed, deducedYear: nil) }  // edited or hand-typed
+    return MemoryDate(text: trimmed, deducedYear: deducedYear)  // unchanged
   }
 }

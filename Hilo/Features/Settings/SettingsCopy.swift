@@ -1,12 +1,11 @@
 import Foundation
 
-// F8 contrato 1: version del producto y los dos pasos del borrado total, testables en EN/ES
 nonisolated enum SettingsCopy {
   static func versionLine(_ version: String, locale: Locale) -> String {
     String(localized: LocalizedStringResource("Version \(version)", locale: locale))
   }
 
-  // el texto dice exactamente que desaparece, sin asustar ni banalizar
+  /// Says exactly what disappears, without alarming or trivialising.
   static func wipeFirstStepBody(locale: Locale) -> String {
     String(
       localized: LocalizedStringResource(

@@ -1,8 +1,6 @@
 import Foundation
 import OSLog
 
-// contrato 4 (S5): el elemento, sus recuerdos propios en el orden de DEC-35, el rango temporal
-// (DEC-57, hueco A1), renombrar y añadir alias con las validaciones de F1 (contrato 5, DEC-26)
 @Observable
 final class ElementDetailState {
   enum EditOutcome: Equatable {
@@ -19,7 +17,7 @@ final class ElementDetailState {
   private let persistenceActor: PersistenceActor
   private let onMaterialChanged: () async -> Void
   private var allElements: [Element] = []
-  private let logger = Logger(subsystem: "com.hilo.app", category: "explorar")
+  private let logger = Logger(subsystem: "com.hilo.app", category: "explore")
 
   init(
     elementID: ElementID, persistenceActor: PersistenceActor,
@@ -30,9 +28,8 @@ final class ElementDetailState {
     self.onMaterialChanged = onMaterialChanged
   }
 
-  // DEC-57 (A1): las palabras del usuario del recuerdo mas antiguo y del mas reciente, en ese
-  // orden; ownMemories ya viene ordenado por DEC-35 (mas reciente primero), asi que los extremos
-  // son first/last. Con menos de dos recuerdos propios no hay rango que mostrar.
+  /// The user's words for the oldest and newest memories. ownMemories is newest first, so the ends
+  /// are last and first; with fewer than two there is no range.
   var dateRangeDisplay: String? {
     guard ownMemories.count > 1 else { return nil }
     let newestText = ownMemories.first?.date?.text
@@ -45,8 +42,7 @@ final class ElementDetailState {
     }
   }
 
-  // solo cuando los dos extremos existen: el label compuesto de VoiceOver (evita leer el guion
-  // medio de dateRangeDisplay como si fuera texto) no aplica cuando solo hay un lado que mostrar
+  /// Only when both ends exist: the composed VoiceOver label doesn't apply with a single side.
   var dateRangeEndpoints: (oldest: String, newest: String)? {
     guard ownMemories.count > 1, let oldest = ownMemories.last?.date?.text,
       let newest = ownMemories.first?.date?.text
@@ -58,8 +54,8 @@ final class ElementDetailState {
     await refresh()
   }
 
-  // contrato 5 + DEC-26: el dominio rechaza la colision antes de escribir; regla 1, un elemento
-  // sin nombre no existe, asi que un nombre vacio ni se intenta persistir
+  /// The domain rejects a collision before writing. Rule 1: an element without a name doesn't
+  /// exist, so an empty name is never persisted.
   func rename(to newName: String) async -> EditOutcome {
     guard let element else { return .failed }
     let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -77,15 +73,15 @@ final class ElementDetailState {
         return .applied
       } catch {
         logger.error(
-          "No se pudo renombrar el elemento: \(String(describing: type(of: error)), privacy: .public)"
+          "Could not rename the element: \(String(describing: type(of: error)), privacy: .public)"
         )
         return .failed
       }
     }
   }
 
-  // mismo camino de colision que renombrar; un alias que ya coincide con el propio nombre o con
-  // un alias existente no se duplica, y eso no es un error (exito silencioso)
+  /// Same collision path as renaming. An alias matching the name or an existing alias isn't
+  /// duplicated, and that is not an error.
   func addAlias(_ alias: String) async -> EditOutcome {
     guard let element else { return .failed }
     let trimmed = alias.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -104,7 +100,7 @@ final class ElementDetailState {
         return .applied
       } catch {
         logger.error(
-          "No se pudo añadir el alias: \(String(describing: type(of: error)), privacy: .public)")
+          "Could not add the alias: \(String(describing: type(of: error)), privacy: .public)")
         return .failed
       }
     }
@@ -136,7 +132,7 @@ final class ElementDetailState {
         .sorted(by: Memory.isOrderedBefore)
     } catch {
       logger.error(
-        "No se pudo cargar el detalle del elemento: \(String(describing: type(of: error)), privacy: .public)"
+        "Could not load the element detail: \(String(describing: type(of: error)), privacy: .public)"
       )
     }
   }

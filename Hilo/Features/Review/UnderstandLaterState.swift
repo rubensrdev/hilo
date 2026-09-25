@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-// F5.3: el detalle lo crea y lo conecta a la hoja, como HiloApp hace con la captura
+/// The memory detail creates it and wires it to the sheet, as HiloApp does for capture.
 @Observable
 final class UnderstandLaterState {
   enum Phase: Equatable {
@@ -26,7 +26,7 @@ final class UnderstandLaterState {
   private let interfaceLanguage: String
   private let onUnderstood: (ExtractedMemory, String, Data?, MemoryID?) -> Void
   private var reviewingMemoryID: MemoryID?
-  private let logger = Logger(subsystem: "com.hilo.app", category: "revision")
+  private let logger = Logger(subsystem: "com.hilo.app", category: "review")
 
   init(
     comprehender: MemoryComprehending, persistenceActor: PersistenceActor,
@@ -39,22 +39,22 @@ final class UnderstandLaterState {
     self.onUnderstood = onUnderstood
   }
 
-  // DEC-45: comprende el relato guardado ahora, no el de cuando se guardo
+  /// Comprehends the narrative as it is saved now, not as it was first saved.
   func start(memoryID: MemoryID) async {
     switch phase {
     case .idle, .notAnalyzed: break
     case .comprehending, .reviewing, .saving: return
     }
-    // la fase cambia antes del await: un segundo toque no abre otra comprension
+    // The phase changes before the await, so a second tap can't open another comprehension.
     phase = .comprehending
     notice = nil
     let memory: Memory?
     do {
       memory = try await persistenceActor.unanalyzedMemory(id: memoryID)
     } catch {
-      // solo el tipo: el error no debe arrastrar al log nada del usuario
+      // Only the error type: nothing the user wrote reaches the log.
       logger.error(
-        "No se pudo leer el recuerdo: \(String(describing: type(of: error)), privacy: .public)")
+        "Could not read the memory: \(String(describing: type(of: error)), privacy: .public)")
       memory = nil
     }
     guard let memory else {
@@ -69,7 +69,7 @@ final class UnderstandLaterState {
     case .understood(let understood):
       extracted = understood
     case .notAnalyzed(_, let reason):
-      // contrato 4: se dice por que; el recuerdo ya esta guardado, no hay nada que guardar
+      // Says why; the memory is already saved, so there is nothing to save.
       phase = .notAnalyzed(reason)
       return
     case .cancelled:
@@ -81,7 +81,7 @@ final class UnderstandLaterState {
     onUnderstood(extracted, memory.narrative, nil, memoryID)
   }
 
-  // DEC-47: el guard lo hace inocuo si onDismiss llega despues de guardar
+  /// The guard makes it harmless when onDismiss arrives after saving.
   func reviewDismissed() {
     guard phase == .reviewing else { return }
     reviewingMemoryID = nil
@@ -98,7 +98,7 @@ final class UnderstandLaterState {
     guard phase == .reviewing, let memoryID = reviewingMemoryID else { return }
     phase = .saving
     reviewingMemoryID = nil
-    // self fuerte: el guardado de lo que el usuario confirmo no se salta aunque el estado desaparezca
+    // Strong self: saving what the user confirmed is never skipped, even if the state goes away.
     Task {
       do {
         try await self.persistenceActor.completeAnalysis(
@@ -108,7 +108,7 @@ final class UnderstandLaterState {
         self.onReviewSaved(memoryID)
       } catch {
         self.logger.error(
-          "No se pudo guardar la revision: \(String(describing: type(of: error)), privacy: .public)"
+          "Could not save the review: \(String(describing: type(of: error)), privacy: .public)"
         )
         self.phase = .idle
         self.notice = .reviewNotSaved

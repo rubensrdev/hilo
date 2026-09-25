@@ -1,6 +1,6 @@
 import SwiftUI
 
-// F8.4: captura y comprender mas tarde anuncian lo mismo — empieza a leer, o fallo y por que
+/// Capture and understanding later announce the same things: reading started, or it failed and why.
 private struct ComprehensionAnnouncements: ViewModifier {
   let isReading: Bool
   let failure: MemoryComprehensionReason?

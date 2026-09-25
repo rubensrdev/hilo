@@ -1,7 +1,6 @@
 import PhotosUI
 import SwiftUI
 
-// contrato 1: S2 Captura, cinco estados — la vista solo lee CaptureState y emite intencion
 struct CaptureScreen: View {
   @Bindable var state: CaptureState
   @State private var photosPickerItem: PhotosPickerItem?
@@ -27,11 +26,11 @@ struct CaptureScreen: View {
         }
         .padding(Spacing.margenPantalla)
       }
-      // tokens.md §1.8: debajo de la barra de vidrio siempre queda fondo
+      // There is always background under the glass bar.
       .background(Color.fondo)
       .navigationTitle("Tell a memory")
       .navigationBarTitleDisplayMode(.inline)
-      // en la barra: con un relato largo siempre esta a la vista, y las fichas no lo desplazan
+      // In the bar, so it stays in view with a long narrative and the chips never push it away.
       .toolbar {
         if state.phase == .comprehending {
           ToolbarItem(placement: .cancellationAction) {
@@ -43,7 +42,7 @@ struct CaptureScreen: View {
       }
     }
     .onDisappear { state.cancel() }
-    // bloqueante y con tono de error: aqui no hay ningun recuerdo guardado detras
+    // Blocking and error-toned: no memory has been saved behind it.
     .alert(
       "Your memory couldn't be saved",
       isPresented: Binding(
@@ -58,11 +57,11 @@ struct CaptureScreen: View {
       guard let newValue else { return }
       state.loadPhoto { try? await newValue.loadTransferable(type: Data.self) }
     }
-    // al vaciarse la captura, la misma foto debe poder elegirse otra vez
+    // Once the capture is cleared, the same photo must be selectable again.
     .onChange(of: state.photoData) { _, newValue in
       if newValue == nil { photosPickerItem = nil }
     }
-    // contrato 6: el mismo anuncio con o sin Reducir movimiento, solo cambia la animacion
+    // The same announcement with or without Reduce Motion; only the animation changes.
     .onChange(of: state.extractedSoFar?.elements.map(\.name) ?? []) { previousNames, _ in
       guard
         let announcement = CaptureCopy.elementsAppeared(
@@ -80,7 +79,7 @@ struct CaptureScreen: View {
       isReading: state.phase == .comprehending, failure: state.phase.notAnalyzedReason)
   }
 
-  // MARK: capturando (vacio, escribiendo, con foto, comprendiendo)
+  // MARK: capturing (empty, typing, with a photo, comprehending)
 
   @ViewBuilder
   private var captureForm: some View {
@@ -116,7 +115,7 @@ struct CaptureScreen: View {
     .disabled(state.phase != .capturing)
   }
 
-  // se decodifica al tamaño al que se ve: el lado mayor es el ancho de la miniatura 3:2
+  /// Decoded at display size: the long side is the width of the 3:2 thumbnail.
   private var thumbnailPixelSize: Int {
     Int((Spacing.altoFotoCaptura * Spacing.proporcionFotoTarjeta * displayScale).rounded(.up))
   }
@@ -127,7 +126,7 @@ struct CaptureScreen: View {
       let thumbnail = PhotoThumbnail.image(from: photoData, maxPixelSize: thumbnailPixelSize)
     {
       HStack(alignment: .top, spacing: Spacing.espacio3) {
-        // el hueco fija el tamaño visible; la foto lo llena sin desbordar el marco de VoiceOver
+        // The spacer fixes the visible size; the photo fills it without overflowing the VoiceOver frame.
         Color.clear
           .aspectRatio(Spacing.proporcionFotoTarjeta, contentMode: .fit)
           .frame(height: Spacing.altoFotoCaptura)
@@ -137,7 +136,7 @@ struct CaptureScreen: View {
               .scaledToFill()
           }
           .clipShape(RoundedRectangle(cornerRadius: Spacing.radioFoto, style: .continuous))
-          // no es decorativa: el usuario tiene que saber que hay foto
+          // Not decorative: the user needs to know there is a photo.
           .accessibilityElement(children: .ignore)
           .accessibilityLabel("Attached photo")
           .accessibilityAddTraits(.isImage)
@@ -164,7 +163,7 @@ struct CaptureScreen: View {
     }
   }
 
-  // MARK: comprendiendo — mov-aparicion-elemento (tokens.md §5)
+  // MARK: comprehending
 
   @ViewBuilder
   private var comprehendingSection: some View {
@@ -184,7 +183,7 @@ struct CaptureScreen: View {
 
   private func elementChip(_ element: ExtractedElement) -> some View {
     Label {
-      // color, simbolo y texto siempre juntos, tambien mientras lee
+      // Colour, symbol and text travel together, also while reading.
       ViewThatFits(in: .horizontal) {
         HStack(alignment: .firstTextBaseline, spacing: Spacing.espacio2) { chipTexts(element) }
         VStack(alignment: .leading, spacing: Spacing.espacio1) { chipTexts(element) }
@@ -211,7 +210,7 @@ struct CaptureScreen: View {
       .foregroundStyle(Color.textoSecundario)
   }
 
-  // MARK: acciones — contrato 1, "guardar sin analizar" siempre visible
+  // MARK: actions — "save without analyzing" is always visible
 
   @ViewBuilder
   private var actions: some View {
@@ -241,7 +240,7 @@ struct CaptureScreen: View {
     .accessibilityIdentifier("capture.saveWithoutAnalyzing")
   }
 
-  // MARK: error de comprension — DEC-43 (estado-aviso) + anexo DEC-46
+  // MARK: comprehension error
 
   @ViewBuilder
   private func errorState(_ reason: MemoryComprehensionReason) -> some View {
@@ -285,7 +284,7 @@ struct CaptureScreen: View {
     }
   }
 
-  // DEC-18: el recuerdo ya esta guardado, estos botones solo vacian la captura
+  /// The memory is already saved; these buttons only clear the capture.
   private func acknowledgeButton(_ title: LocalizedStringKey) -> some View {
     Button {
       state.acknowledgeNotAnalyzed()
@@ -299,7 +298,7 @@ struct CaptureScreen: View {
     .accessibilityIdentifier("capture.acknowledge")
   }
 
-  // MARK: aviso de la revision y confirmacion del guardado — punto 3 de F4.6
+  // MARK: review notice and save confirmation
 
   private func noticeBanner(_ notice: ReviewNotice) -> some View {
     Label {
@@ -330,16 +329,16 @@ struct CaptureScreen: View {
     }
   }
 
-  // MARK: ayudas — placeholder de contrato 1 (simbolo/color/nombre por tipo: DesignSystem)
+  // MARK: helpers
 
-  // contrato 1: el texto de ayuda enseña con un recuerdo de ejemplo real, nunca una instruccion
+  /// The hint teaches with a real example memory, never with an instruction.
   private static func placeholder(locale: Locale) -> String {
     ExampleMemoryContent.seeds(for: ExampleMemoryLanguage(interfaceLocale: locale)).first?
       .narrative ?? ""
   }
 }
 
-// nonisolated: el label de PhotosPicker se construye fuera del main actor; su body si corre en el
+/// PhotosPicker builds its label off the main actor; the body still runs on it.
 private nonisolated struct AddPhotoLabel: View {
   var body: some View {
     Label("Add a photo", systemImage: "photo")

@@ -4,9 +4,8 @@ import Testing
 
 @testable import Hilo
 
-// contrato 1 (S2 Captura): CaptureState gobierna narrativa, comprension en vivo y guardado sin analizar
 struct CaptureStateTests {
-  // nonisolated: el macro de @Test(arguments:) la lee fuera de todo contexto de actor
+  /// nonisolated: the @Test(arguments:) macro reads it outside any actor context.
   private nonisolated static let errorsAndReasons:
     [(
       MemoryComprehensionError, MemoryComprehensionReason
@@ -54,7 +53,7 @@ struct CaptureStateTests {
 
     state.understandAndSave()
 
-    // transicion sincrona (paso 1 del contrato): ya vale antes de que la Task interna progrese
+    // A synchronous transition: already true before the inner Task makes progress.
     #expect(state.phase == .comprehending)
     #expect(state.canUnderstand == false)
     #expect(state.canSaveWithoutAnalyzing == false)
@@ -63,7 +62,7 @@ struct CaptureStateTests {
     await waitUntil { state.phase == .capturing }
   }
 
-  // MARK: canRetry — DEC-42, solo el generico ofrece reintentar
+  // MARK: canRetry — only the generic reason offers a retry
 
   @Test func `canRetry is false before any comprehension has run`() throws {
     let state = try Self.makeState(script: .fails(.noResponse))
@@ -85,7 +84,7 @@ struct CaptureStateTests {
     await waitUntil { state.phase == .capturing }
   }
 
-  // MARK: comprension exitosa
+  // MARK: successful comprehension
 
   @Test
   func
@@ -140,7 +139,7 @@ struct CaptureStateTests {
     #expect(call.3 == nil)
   }
 
-  // MARK: los 7 caminos de fallo — contrato 4, guardado automatico sin analizar
+  // MARK: the seven failure paths, auto-saved without analysis
 
   @Test(arguments: errorsAndReasons)
   func
@@ -163,8 +162,8 @@ struct CaptureStateTests {
     await waitUntil { state.phase != .comprehending }
 
     #expect(state.phase == .notAnalyzed(pair.1))
-    // anexo DEC-46: guardarraiz y rechazo comparten texto y botones con el generico,
-    // reintentar incluido; solo desbordamiento e idioma cierran con un unico boton
+    // Guardrail and refusal share text and buttons with the generic reason, retry included;
+    // only overflow and language close with a single button.
     #expect(state.canRetry == (pair.1 == .generic || pair.1 == .guardrail))
     #expect(understoodCallCount == 0)
     let savedID = try #require(state.savedMemoryID)
@@ -175,7 +174,7 @@ struct CaptureStateTests {
     #expect(MemoryID(value: record.id) == savedID)
   }
 
-  // MARK: reintento — DEC-45, actualiza el mismo recuerdo en vez de insertar otro
+  // MARK: retry — updates the same memory instead of inserting another
 
   @Test
   func
@@ -188,7 +187,7 @@ struct CaptureStateTests {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
     var understoodCalls: [(ExtractedMemory, String, Data?, MemoryID?)] = []
-    // el mismo comprehender debe fallar la primera vez y acertar en el reintento (DEC-45)
+    // The same comprehender must fail the first time and succeed on the retry.
     let comprehender = SequencedComprehender(
       scripts: [.fails(.noResponse), .succeeds(partials: [], final: final)])
     let state = CaptureState(
@@ -337,7 +336,7 @@ struct CaptureStateTests {
     #expect(records.count == 1)
     let record = try #require(records.first)
     #expect(record.narrative == "La tarde que llovió en la verbena.")
-    // la foto se guarda sin metadatos, asi que basta con que no se haya perdido al vaciar
+    // The photo is stored stripped of metadata, so it is enough that it survived the clear.
     #expect(record.photoData != nil)
     #expect(record.isAnalyzed == false)
   }
@@ -367,7 +366,7 @@ struct CaptureStateTests {
     #expect(state.narrative == "")
   }
 
-  // MARK: cancelacion — hueco de auditoria de concurrencia que F3 dejo sin cubrir
+  // MARK: cancellation
 
   @Test
   func
@@ -409,7 +408,7 @@ struct CaptureStateTests {
     #expect(try await actor.fetchMemories().isEmpty)
   }
 
-  // MARK: salir de la revision — DEC-47, contrato 2
+  // MARK: leaving the review
 
   @Test func `A successful comprehension leaves the capture reviewing instead of comprehending`()
     async throws
@@ -517,14 +516,14 @@ struct CaptureStateTests {
       try await Self.reviewState(for: try #require(understood.first), actor: actor),
       dateTextAtSave: "")
     await waitUntil { state.phase == .capturing }
-    // onDismiss llega tambien despues de guardar: no debe devolver nada a la captura vacia
+    // onDismiss also arrives after saving: it must not hand anything back to the empty capture.
     state.reviewDismissed()
 
     #expect(state.narrative == "")
     #expect(state.phase == .capturing)
   }
 
-  // MARK: guardar desde la revision — F4.5.2, contrato 2 + DEC-40 + DEC-45
+  // MARK: saving from the review
 
   @Test
   func `Saving the review persists one analyzed memory with its elements and empties the capture`()
@@ -599,7 +598,7 @@ struct CaptureStateTests {
     #expect(state.narrative == "")
   }
 
-  // DEC-47: deslizar con el guardado en vuelo dispara onDismiss
+  /// Swiping with the save in flight triggers onDismiss.
   @Test
   func
     `Dismissing right after confirming the save does not bring the narrative back or duplicate the memory`()
@@ -647,7 +646,7 @@ struct CaptureStateTests {
 
     state.understandAndSave()
     await waitUntil { understood.count == 1 }
-    // un elemento conocido que no esta en el almacen: la aparicion confirmada no encuentra su elemento
+    // A known element missing from the store: the confirmed appearance can't find its element.
     let ghost = try #require(Element(displayName: "Lucía", type: .person))
     state.reviewConfirmed(
       ReviewState(
@@ -661,7 +660,7 @@ struct CaptureStateTests {
     #expect(state.extractedSoFar == nil)
     #expect(state.canUnderstand)
 
-    // el mismo relato se puede volver a comprender y guardar, sin arrastrar nada del intento fallido
+    // The same narrative can be understood and saved again, carrying nothing from the failed attempt.
     state.understandAndSave()
     await waitUntil { understood.count == 2 }
     state.reviewConfirmed(
@@ -675,7 +674,6 @@ struct CaptureStateTests {
     #expect(try await actor.fetchAppearances().count == 1)
   }
 
-  // DEC-40: el renombrado pendiente de la revision se aplica al guardar
   @Test func `A pending rename is applied to the stored element when the review is saved`()
     async throws
   {
@@ -705,7 +703,7 @@ struct CaptureStateTests {
     #expect(try await actor.fetchElements().map(\.displayName) == ["abuelo Ramón"])
   }
 
-  // MARK: aviso del guardado — F4.5.3, el coordinador decide si hay momento de la conexion
+  // MARK: save notice — the coordinator decides whether there is a connection moment
 
   @Test
   func `A saved review reports the stored memory's id once the capture is already empty`()
@@ -756,7 +754,7 @@ struct CaptureStateTests {
 
     state.understandAndSave()
     await waitUntil { understood.count == 1 }
-    // un elemento conocido que no esta en el almacen: la aparicion confirmada no encuentra su elemento
+    // A known element missing from the store: the confirmed appearance can't find its element.
     let ghost = try #require(Element(displayName: "Lucía", type: .person))
     state.reviewConfirmed(
       ReviewState(
@@ -768,7 +766,7 @@ struct CaptureStateTests {
     #expect(savedReports == 0)
   }
 
-  // MARK: avisos — punto 3 de F4.6, al primer fallo y sin contar intentos
+  // MARK: notices — on the first failure, without counting attempts
 
   @Test func `A review that cannot be prepared returns to the capture with a notice`()
     async throws
@@ -787,7 +785,7 @@ struct CaptureStateTests {
     #expect(state.canUnderstand)
   }
 
-  // DEC-47: igual que al cerrar la revision, el reintento vuelve al error, no al formulario
+  /// As when the review closes, a retry goes back to the error, not to the form.
   @Test func `A review that cannot be prepared after a retry returns to the error with a notice`()
     async throws
   {
@@ -856,7 +854,7 @@ struct CaptureStateTests {
 
     state.understandAndSave()
     await waitUntil { understood.count == 1 }
-    // un elemento conocido que no esta en el almacen: la aparicion confirmada no encuentra su elemento
+    // A known element missing from the store: the confirmed appearance can't find its element.
     let ghost = try #require(Element(displayName: "Lucía", type: .person))
     state.reviewConfirmed(
       ReviewState(
@@ -880,7 +878,7 @@ struct CaptureStateTests {
     #expect(state.notice == .savedWithoutAnalyzing)
   }
 
-  // DEC-18: el recuerdo ya se guardo sin analizar; «Leave it as it is» y «Done» solo vacian la captura
+  /// The memory was already saved unanalyzed; «Leave it as it is» and «Done» only clear the capture.
   @Test(arguments: [MemoryComprehensionError.noResponse, .contextOverflow])
   func `Acknowledging the error empties the capture and leaves the saved memory intact`(
     error: MemoryComprehensionError
@@ -925,7 +923,7 @@ struct CaptureStateTests {
     #expect(state.narrative == "La tarde que Diego aprendió a nadar.")
   }
 
-  // MARK: cancelar al comprender — sin tiempo limite, el usuario decide
+  // MARK: cancelling while comprehending — no time limit, the user decides
 
   @Test
   func
@@ -948,7 +946,7 @@ struct CaptureStateTests {
     await waitUntil { state.extractedSoFar != nil }
     state.cancel()
 
-    // al instante: sin esperar a que el modelo responda
+    // At once, without waiting for the model to answer.
     #expect(state.phase == .capturing)
     #expect(state.narrative == "Lucía en la playa de Laredo.")
     #expect(state.photoData == photo)
@@ -957,7 +955,6 @@ struct CaptureStateTests {
     #expect(try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).isEmpty)
   }
 
-  // DEC-45: cancelar un reintento vuelve al error, con el recuerdo ya guardado al que apunta
   @Test func `Cancelling a retry returns to the error with the same saved memory`() async throws {
     let container = try PersistenceContainer.make(inMemory: true)
     let state = CaptureState(
@@ -1008,7 +1005,7 @@ struct CaptureStateTests {
     #expect(state.phase == .capturing)
   }
 
-  // MARK: fallo del guardado directo — aqui no hay recuerdo guardado detras, es un error de verdad
+  // MARK: direct save failure — no memory behind it, so a real error
 
   @Test
   func
@@ -1020,7 +1017,7 @@ struct CaptureStateTests {
       comprehender: FakeMemoryComprehender(script: .fails(.noResponse)),
       persistenceActor: PersistenceActor(modelContainer: container), interfaceLanguage: "es"
     ) { _, _, _, _ in }
-    // una foto que no es una imagen: el actor lanza al quitarle los metadatos, antes de insertar
+    // Not an image: the actor throws while stripping metadata, before inserting.
     let brokenPhoto = Data("no es una imagen".utf8)
     state.narrative = "Un paseo que prefiero guardar tal cual."
     state.photoData = brokenPhoto
@@ -1046,7 +1043,7 @@ struct CaptureStateTests {
       comprehender: FakeMemoryComprehender(script: .fails(error)),
       persistenceActor: PersistenceActor(modelContainer: container), interfaceLanguage: "es"
     ) { _, _, _, _ in }
-    // la foto rota hace lanzar el guardado automatico del error, igual que el directo
+    // The broken photo makes the error's auto-save throw, like the direct save.
     let brokenPhoto = Data("no es una imagen".utf8)
     state.narrative = "Un relato que el modelo no pudo analizar."
     state.photoData = brokenPhoto
@@ -1080,7 +1077,7 @@ struct CaptureStateTests {
     #expect(state.canSaveWithoutAnalyzing)
   }
 
-  // MARK: carga de la foto — una carga tardia nunca cae en otro recuerdo ni en otra eleccion
+  // MARK: photo loading — a late load never lands on another memory or another pick
 
   @Test
   func
@@ -1168,7 +1165,7 @@ struct CaptureStateTests {
     elements: [ExtractedElement(name: "Lucía", type: .person, role: "mi hija")],
     dateText: nil, deducedYear: nil)
 
-  // lo mismo que ReviewCoordinator.present lee del almacen antes de abrir la hoja
+  /// What ReviewCoordinator.present reads from the store before opening the sheet.
   private static func reviewState(
     for extracted: ExtractedMemory, actor: PersistenceActor, excluding: MemoryID? = nil
   ) async throws -> ReviewState {
@@ -1187,7 +1184,7 @@ struct CaptureStateTests {
   }
 }
 
-// espera acotada a una condicion observable, sin exponer la Task interna de CaptureState
+/// A bounded wait on an observable condition, without exposing the inner Tasks.
 private func waitUntil(
   attempts: Int = 200, sleepEach: Duration = .milliseconds(5), _ condition: () -> Bool
 ) async {
@@ -1198,7 +1195,7 @@ private func waitUntil(
   }
 }
 
-// el test decide cuando termina la carga: sin esperas por tiempo
+/// The test decides when the load finishes: no time-based waits.
 @MainActor
 private final class PhotoLoadGate {
   private var continuation: CheckedContinuation<Data?, Never>?

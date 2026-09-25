@@ -3,12 +3,11 @@ import Testing
 
 @testable import Hilo
 
-// regla 4 del diseño + contrato 6: textos de conexion compartidos entre Revision (F4) y Explorar (F5)
 nonisolated struct ConnectionCopyTests {
   private let english = Locale(identifier: "en")
   private let spanish = Locale(identifier: "es")
 
-  // MARK: el comienzo — un nombre y varios
+  // MARK: the beginning — one name and several
 
   @Test func `One first-time name in English repeats the name`() {
     #expect(
@@ -31,7 +30,7 @@ nonisolated struct ConnectionCopyTests {
     )
   }
 
-  // el defecto de F4.5.1: dentro de una frase en ingles la lista salia con "y"
+  /// Regression: inside an English sentence the list came out joined with "y".
   @Test func `Several first-time names in Spanish join with the Spanish conjunction`() {
     #expect(
       ConnectionCopy.firstAppearanceBody(
@@ -40,7 +39,7 @@ nonisolated struct ConnectionCopyTests {
     )
   }
 
-  // MARK: motivo de la conexion — regla 4 del diseño
+  // MARK: connection motive
 
   @Test func `A connection motive lists its names in the interface language`() {
     #expect(
@@ -51,7 +50,7 @@ nonisolated struct ConnectionCopyTests {
         == "Por José y el reloj")
   }
 
-  // F8 contrato 2: el motivo montado con uno y con varios nombres; con cero no existe conexion
+  /// Composed with one name and with several; with none there is no connection.
   @Test func `A connection motive with a single name has no conjunction, in both languages`() {
     #expect(ConnectionCopy.connectionMotive(names: ["José"], locale: english) == "By José")
     #expect(ConnectionCopy.connectionMotive(names: ["José"], locale: spanish) == "Por José")
@@ -66,7 +65,6 @@ nonisolated struct ConnectionCopyTests {
         == "Por José, el reloj y Cádiz")
   }
 
-  // guia de accesibilidad: una conexion anuncia su motivo antes que el recuerdo, que va entero
   @Test func `A connection row announces its motive first and then the whole memory`() {
     let narrative = "José trajo naranjas del pueblo. Fue el último verano."
     #expect(

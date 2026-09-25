@@ -1,8 +1,5 @@
 import SwiftUI
 
-// contrato 4: S5 Detalle de elemento — nombre, tipo, alias, recuerdos propios en el orden de
-// DEC-35, rango temporal si hay mas de uno (DEC-57, hueco A1), renombrar y añadir alias (DEC-26).
-// El retrato (F7) y el tejido (F9) quedan reservados, sin dibujarse: no hay hueco para ellos aqui.
 struct ElementDetailScreen: View {
   @Bindable var state: ElementDetailState
   @Environment(\.locale) private var environmentLocale
@@ -32,8 +29,7 @@ struct ElementDetailScreen: View {
     .background(Color.fondo)
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
-      // texto plano, no un menu "...": la referencia (13) dibuja exactamente eso aqui, a
-      // diferencia de S4; .topBarTrailing nunca colapsa (leccion de DEC-12/DEC-59, F5.2/F5.3)
+      // Plain text, not a "..." menu, as the reference draws it here; .topBarTrailing never collapses.
       ToolbarItem(placement: .topBarTrailing) {
         Button {
           renameText = state.element?.displayName ?? ""
@@ -88,7 +84,7 @@ struct ElementDetailScreen: View {
   }
 
   private var renameTitle: Text {
-    // nunca se ve sin element (isRenamePresented solo se activa con un elemento cargado)
+    // Never seen without an element: the rename prompt only opens once one is loaded.
     guard let element = state.element else { return Text(verbatim: "") }
     return Text("Rename \(element.displayName) everywhere?")
   }
@@ -105,7 +101,7 @@ struct ElementDetailScreen: View {
       isRenamePresented = false
       conflictElementName = name
     case .failed:
-      break  // se queda abierto, mismo texto, para reintentar (criterio de editNarrative en F5.3)
+      break  // stays open with the same text, so the user can retry
     }
   }
 
@@ -149,7 +145,7 @@ struct ElementDetailScreen: View {
   }
 
   private func header(_ element: Element) -> some View {
-    // P2 (F8.4): a tamaños AX el simbolo largeTitle y el nombre no caben en fila
+    // At accessibility sizes the largeTitle symbol and the name don't fit in a row.
     let layout = dynamicTypeSize.rowLayout(alignment: .top, spacing: Spacing.espacio3)
     return layout {
       Image(systemName: element.type.symbolName)
@@ -168,13 +164,13 @@ struct ElementDetailScreen: View {
         .foregroundStyle(Color.textoSecundario)
       }
     }
-    // .combine leeria el "·" del subtitulo tipo+recuento como texto (F5.5); un label
-    // explicito evita eso y reutiliza el mismo patron nombre-tipo-recuento del resto de la app
+    // .combine would read the subtitle's "·" as text; an explicit label avoids it and reuses the
+    // name, type and count pattern from the rest of the app.
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(
       element.accessibilityLabel(memoryCount: state.ownMemories.count, locale: interfaceLocale)
     )
-    // sin navigationTitle (la referencia lo deja vacio): la cabecera es lo que el rotor encuentra
+    // No navigationTitle (the reference leaves it empty): the header is what the rotor finds.
     .accessibilityAddTraits(.isHeader)
   }
 
@@ -192,8 +188,8 @@ struct ElementDetailScreen: View {
     .accessibilityIdentifier("elementDetail.addAlias")
   }
 
-  // DEC-57 (A1): con los dos extremos, un label compuesto para que VoiceOver no lea el guion
-  // medio como texto; con uno solo, el texto visible ya es una frase completa
+  /// With both ends, a composed label so VoiceOver doesn't read the dash; with one, the visible
+  /// text is already a full sentence.
   @ViewBuilder
   private var dateRangeText: some View {
     if let dateRange = state.dateRangeDisplay {

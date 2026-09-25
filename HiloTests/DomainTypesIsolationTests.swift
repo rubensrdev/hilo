@@ -3,7 +3,7 @@ import Testing
 
 @testable import Hilo
 
-// contrato 8 + criterio de aceptación: si el dominio pierde `nonisolated`, este fichero deja de compilar
+/// If the domain loses `nonisolated`, this file stops compiling.
 nonisolated struct DomainTypesIsolationTests {
   static let fixedSavedAt = Date(timeIntervalSince1970: 0)
 

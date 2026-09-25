@@ -1,7 +1,6 @@
 import FoundationModels
 
-// implementacion real de contrato 1 sobre Foundation Models; el patron de sesion/streaming
-// viene validado por el spike F0.2 (ExtractionHarness.swift, nunca mergeado)
+/// The session and streaming pattern is the one the F0.2 spike validated.
 nonisolated struct FoundationModelsMemoryComprehender: MemoryComprehending {
   func comprehend(
     narrative: String,
@@ -10,9 +9,8 @@ nonisolated struct FoundationModelsMemoryComprehender: MemoryComprehending {
     AsyncThrowingStream { continuation in
       let task = Task {
         do {
-          // una sesion por generacion, sin historial
-          // precalentamiento descartado: M5 (spike F0.2, HALLAZGOS.md) midio que prewarm(promptPrefix:)
-          // no baja la latencia al primer fragmento y hace el total mas inestable
+          // One session per generation, no history. No prewarm: the F0.2 spike measured that it doesn't
+          // cut the time to the first chunk and makes the total latency less stable.
           let session = LanguageModelSession(
             instructions: Self.instructions(interfaceLanguage: interfaceLanguage))
           let stream = session.streamResponse(to: narrative, generating: ExtractedMemory.self)
@@ -29,7 +27,7 @@ nonisolated struct FoundationModelsMemoryComprehender: MemoryComprehending {
     }
   }
 
-  // contrato 5: idioma de la interfaz fijo, nombres del usuario nunca traducidos
+  /// Fixed interface language; the user's names are never translated.
   static func instructions(interfaceLanguage: String) -> String {
     let language = languageName(for: interfaceLanguage)
     return """

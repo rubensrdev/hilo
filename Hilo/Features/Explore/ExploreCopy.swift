@@ -1,16 +1,16 @@
 import Foundation
 
-// contrato 6 + tokens.md §1.6: "N" es el numero de recuerdos en los que ya aparece el elemento
+/// "N" is the number of memories the element already appears in.
 nonisolated enum ExploreCopy {
   static func elementMemoryCount(_ count: Int, locale: Locale) -> String {
     String(localized: LocalizedStringResource("in \(count) memories", locale: locale))
   }
 
-  // contrato 2, DEC-14: encabezado de decada, nunca una fecha del usuario (regla 17)
+  /// Rule 17: a decade header, never a date the user wrote.
   static func decadeHeader(_ decade: MemoryDecade, locale: Locale) -> String {
     switch decade {
     case .decade(let startingYear):
-      // sin separador de millares: es un año, no una cantidad
+      // No grouping separator: it's a year, not a quantity.
       String(
         localized: LocalizedStringResource(
           "\(startingYear, format: .number.grouping(.never))s", locale: locale))
@@ -19,8 +19,8 @@ nonisolated enum ExploreCopy {
     }
   }
 
-  // DEC-24 + regla 11: el texto de borrado dice que se va y que se queda, sin plural de catalogo
-  // porque el numero no se muestra, solo cambia la concordancia (mismo patron que ConnectionCopy)
+  /// Says what goes and what stays. No catalog plural: the number isn't shown, only the agreement
+  /// changes, as in ConnectionCopy.
   static func deleteConfirmationBody(surviving: [String], disappearing: [String], locale: Locale)
     -> String
   {
@@ -58,17 +58,16 @@ nonisolated enum ExploreCopy {
     return sentences.joined(separator: " ")
   }
 
-  // DEC-13: String ya localizado, como el nombre plural del tipo del resto de chips (F8.2: salia en ingles)
+  /// An already localized String, like the plural type names on the other chips.
   static func allFilterLabel(locale: Locale) -> String {
     String(localized: LocalizedStringResource("All", locale: locale))
   }
 
-  // contrato 4 (S5): cabecera del detalle de elemento, tipo mas recuento en una sola linea
   static func elementTypeAndCount(_ type: ElementType, count: Int, locale: Locale) -> String {
     "\(type.localizedName(locale: locale)) · \(elementMemoryCount(count, locale: locale))"
   }
 
-  // DEC-57 (A1): VoiceOver no debe leer el guion medio del rango como si fuera texto
+  /// VoiceOver must not read the range's dash as text.
   static func dateRangeAccessibilityLabel(oldest: String, newest: String, locale: Locale) -> String
   {
     String(localized: LocalizedStringResource("From \(oldest) to \(newest)", locale: locale))

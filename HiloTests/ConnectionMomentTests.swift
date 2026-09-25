@@ -3,7 +3,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 5 + DEC-49: el momento de la conexion, solo cuando el recuerdo guardado conecta con algo
 nonisolated struct ConnectionMomentTests {
   @Test
   func `A memory sharing José with another shows one row with that narrative and José as motive`()
@@ -31,7 +30,7 @@ nonisolated struct ConnectionMomentTests {
       ])
   }
 
-  // decision de Rubén (F4.6): el mismo orden que «Lo que ha entendido», nunca el del relato
+  /// Same order as the understood block, never the narrative's.
   @Test func `The motives of one row go by type, people then places then objects`() throws {
     let earlier = try #require(
       Memory(narrative: "José me enseñó el reloj en Granada.", savedAt: Date()))

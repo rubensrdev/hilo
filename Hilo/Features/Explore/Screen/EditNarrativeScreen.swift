@@ -1,7 +1,7 @@
 import SwiftUI
 
-// contrato 4, DEC-19: editar el texto no reanaliza, no toca fecha, foto ni apariciones —
-// un editor minimo propio, no la Revision (F4 excluye "Listas y detalles (F5)" de su alcance)
+/// Editing the text never re-analyses and leaves date, photo and appearances alone, so this is
+/// a minimal editor of its own, not the review.
 struct EditNarrativeScreen: View {
   @State private var draft: String
   @Environment(\.dismiss) private var dismiss

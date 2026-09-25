@@ -5,7 +5,7 @@ import Testing
 
 @testable import Hilo
 
-// F2.2: values Sendable de ida y vuelta por el actor de modelo, sin reglas de dominio de por medio
+/// Sendable values round-trip through the model actor, with no domain rules involved.
 struct PersistenceActorTests {
   static let fixedSavedAt = Date(timeIntervalSince1970: 0)
 
@@ -150,7 +150,6 @@ struct PersistenceActorTests {
     #expect(try await actor.fetchAppearances().isEmpty)
   }
 
-  // contrato 3 + DEC-27: la foto se guarda como pixeles, nunca con sus metadatos de ubicacion
   @Test func `A memory saved with a photo is fetched with pixel data stripped of its GPS metadata`()
     async throws
   {
@@ -187,7 +186,7 @@ struct PersistenceActorTests {
     #expect(try await actor.photoData(for: MemoryID()) == nil)
   }
 
-  // contrato 4 + reglas 11/12: la limpieza de huerfanos ocurre en el camino de escritura
+  /// Orphan cleanup happens on the write path.
   @Test func `Deleting a memory removes an element that only appeared in it`() async throws {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
@@ -286,7 +285,7 @@ struct PersistenceActorTests {
     #expect(!remainingMemories.contains { $0.id == memory.id })
   }
 
-  // F2.5: memoria de ejemplo, carga, borrado e idempotencia
+  /// Example memory: load, delete and idempotency.
   @Test func `Loading the example memory in Spanish produces five memories`() async throws {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
@@ -385,7 +384,7 @@ struct PersistenceActorTests {
     #expect(!elements.contains { $0.displayName == "the watch" })
   }
 
-  // F8 contrato 1: Ajustes ofrece cargar o borrar el ejemplo segun este si esta
+  /// Settings offers to load or delete the example depending on whether it is there.
   @Test func `The store reports whether the example memory is present, ignoring real memories`()
     async throws
   {
@@ -416,7 +415,7 @@ struct PersistenceActorTests {
     #expect(try await actor.fetchElements().isEmpty)
   }
 
-  // F5: set de datos de docs/validacion-manual, Debug-only
+  /// The docs/validacion-manual dataset, Debug only.
   @Test
   func `Loading the debug validation dataset adds the two extra memories to the example five`()
     async throws
@@ -490,7 +489,7 @@ struct PersistenceActorTests {
     #expect(remainingAppearances.filter { $0.elementID == jose.id }.count == 1)
   }
 
-  // contrato 6 + regla 25: el borrado total no deja recuerdos, elementos ni apariciones
+  /// Rule 25: a full wipe leaves no memories, elements or appearances.
   @Test
   func `Wiping all data with memories, elements, appearances and a photo leaves every fetch empty`()
     async throws
@@ -536,7 +535,6 @@ struct PersistenceActorTests {
     #expect(try await actor.fetchMemories().isEmpty)
   }
 
-  // contrato 6: la foto externalizada tambien desaparece del disco, no solo del store
   @Test func `Wiping all data with a real on-disk container frees the externally stored photo`()
     async throws
   {
@@ -550,8 +548,8 @@ struct PersistenceActorTests {
     let container = try ModelContainer(
       for: PersistenceContainer.schema, configurations: [configuration])
     let actor = PersistenceActor(modelContainer: container)
-    // el propio fichero SQLite (y su -wal/-shm) no se encoge al borrar filas: se excluyen
-    // para medir solo lo que Core Data guarda fuera del store, es decir, el dato externo
+    // The SQLite file (and its -wal/-shm) doesn't shrink when rows go, so they are excluded to
+    // measure only what Core Data stores outside the store: the external data.
     let storeFileNames = Set(
       [storeURL.lastPathComponent, "test.store-wal", "test.store-shm"])
     let baselineSize = try Self.externalByteSize(of: storeDirectory, excluding: storeFileNames)
@@ -589,7 +587,7 @@ struct PersistenceActorTests {
     return total
   }
 
-  // ruido por pixel, no un color plano: el JPEG debe pesar lo bastante para forzar almacenamiento externo
+  /// Per-pixel noise, not a flat colour: the JPEG must be heavy enough to force external storage.
   private static func noiseJPEG(width: Int, height: Int) throws -> Data {
     let colorSpace = try #require(CGColorSpace(name: CGColorSpace.sRGB))
     let bytesPerPixel = 4
@@ -615,7 +613,7 @@ struct PersistenceActorTests {
   }
 }
 
-// F4.5.2 + DEC-40: el ReviewOutcome entero se aplica en una sola operacion, o no se aplica
+/// The whole ReviewOutcome applies in one operation, or not at all.
 struct PersistenceActorReviewTests {
   static let fixedSavedAt = Date(timeIntervalSince1970: 0)
 
@@ -705,7 +703,7 @@ struct PersistenceActorReviewTests {
     #expect(appearances.first?.status == .confirmedByUser)
   }
 
-  // regla 7: el nombre usado en este recuerdo pasa a ser alias del elemento existente
+  /// Rule 7: the name used in this memory becomes an alias of the existing element.
   @Test func `An alias added on save makes the element resolve by that name`() async throws {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
@@ -727,7 +725,7 @@ struct PersistenceActorReviewTests {
         == .exactMatch([manuel.id]))
   }
 
-  // regla 10: renombrar un elemento lo renombra en toda la memoria, tambien en recuerdos anteriores
+  /// Rule 10: renaming an element renames it across the memory, earlier memories included.
   @Test
   func `A rename applied on save changes the element's name and canonical name everywhere`()
     async throws
@@ -759,7 +757,7 @@ struct PersistenceActorReviewTests {
     #expect(appearances.allSatisfy { $0.elementID == grandfather.id })
   }
 
-  // DEC-45 + DEC-35: comprender mas tarde actualiza el mismo recuerdo, sin tocar savedAt ni la foto
+  /// Understanding later updates the same memory, without touching savedAt or the photo.
   @Test
   func
     `Completing the analysis updates the same memory without touching savedAt, photo or narrative`()
@@ -796,7 +794,7 @@ struct PersistenceActorReviewTests {
     #expect(appearances.map(\.elementID) == [elena.id])
   }
 
-  // captura y detalle pueden analizar el mismo recuerdo: el segundo no debe duplicar nada
+  /// Capture and detail can both analyse the same memory: the second must not duplicate anything.
   @Test
   func
     `Completing the analysis of a memory already analyzed throws alreadyAnalyzed and changes nothing`()
@@ -840,7 +838,7 @@ struct PersistenceActorReviewTests {
     }
   }
 
-  // DEC-40: "en la misma operacion que el resto" — un fallo a mitad no deja nada a medias
+  /// A failure midway leaves nothing half-done.
   @Test
   func
     `A failure halfway through saving leaves neither the memory nor the new element in the store`()
@@ -860,7 +858,7 @@ struct PersistenceActorReviewTests {
           confirmedAppearances: [.init(elementID: ElementID(), role: nil)]))
     }
 
-    // lo que quedara a medias en el contexto del actor saldria en su siguiente guardado
+    // Anything left half-done in the actor's context would come out on its next save.
     let later = try #require(Element(displayName: "el taller", type: .place))
     _ = try await actor.save(later)
 
@@ -902,11 +900,11 @@ struct PersistenceActorReviewTests {
     #expect(try context.fetch(FetchDescriptor<AppearanceRecord>()).isEmpty)
   }
 
-  // corrección sobre ae9034a: «No se ha guardado nada» es cierto también si falla la escritura final
+  /// «Nothing was saved» must also hold when the final write fails.
   @Test func `A failed final write of an unanalyzed memory leaves nothing pending in the actor`()
     async throws
   {
-    // un almacen de solo lectura: la insercion ya esta hecha cuando save() lanza
+    // A read-only store: the insert is already done when save() throws.
     let storeURL = URL.temporaryDirectory.appending(path: "\(UUID().uuidString).store")
     defer { try? FileManager.default.removeItem(at: storeURL) }
     _ = try ModelContainer(
@@ -921,7 +919,7 @@ struct PersistenceActorReviewTests {
       try await actor.save(memory, isAnalyzed: false, isExample: false)
     }
 
-    // lo pendiente en el contexto del actor es lo que el siguiente guardado escribiria
+    // What is pending in the actor's context is what the next save would write.
     #expect(try await actor.fetchMemories().isEmpty)
     #expect(try await actor.fetchAppearances().isEmpty)
   }

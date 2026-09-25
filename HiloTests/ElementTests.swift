@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 8: un elemento sin nombre no existe, y el nombre mostrado nunca se reescribe
 nonisolated struct ElementTests {
   @Test(arguments: ["", "   ", "\n\t"])
   func `rejects a blank display name`(displayName: String) {
@@ -17,7 +16,7 @@ nonisolated struct ElementTests {
     #expect(element.displayName == original)
   }
 
-  // F2.2: init de reconstruccion conserva el id ya validado; el failable siempre crea uno nuevo
+  /// The rebuild init keeps the validated id; the failable init always creates a new one.
   @Test
   func
     `The reconstruction init keeps the exact id it is given, unlike the failable init which always creates a new one`()

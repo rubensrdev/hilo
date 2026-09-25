@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 3 y 5 (regla 3, regla 7, DEC-22): lo que se guarda al confirmar la revision
 nonisolated struct ReviewStateOutcomeTests {
   private func candidate(_ name: String, _ type: ElementType, role: String? = nil) throws
     -> ReviewCandidate
@@ -73,7 +72,6 @@ nonisolated struct ReviewStateOutcomeTests {
     `a rejected recognition is saved as a new element, and the previous element is left untouched, rule 6`()
     throws
   {
-    // caso del spec, comportamiento linea 123
     let jose = try #require(Element(displayName: "José", type: .person))
     var state = ReviewState(
       candidates: [try candidate("José", .person)],
@@ -156,8 +154,7 @@ nonisolated struct ReviewStateOutcomeTests {
     `saving with an unanswered doubt still creates a separate element, leaving the identity question unresolved`()
     throws
   {
-    // contrato 3: "guardar sin responder una duda deja los elementos separados" — el .doubt sin
-    // responder sigue en el bloque de dudas, pero al guardar se trata como separado/nuevo
+    // An unanswered .doubt stays in the doubt block, but is saved as separate and new.
     let jose = try #require(Element(displayName: "José", type: .person))
     let joseGarciaPerez = try #require(Element(displayName: "José García Pérez", type: .person))
     let state = ReviewState(

@@ -1,8 +1,7 @@
 import Foundation
 
-// contrato 1 + DEC-43: el error de comprension es un aviso, el texto del usuario ya esta a salvo
-// compartido entre Captura (aviso tras comprender) y el detalle de S4 (DEC-16: comprender mas
-// tarde puede fallar igual)
+/// The user's text is already safe, so a comprehension error is a notice. Shared by capture and
+/// by understanding later from the memory detail.
 nonisolated struct ComprehensionNoticeCopy: Sendable, Equatable {
   enum Actions: Sendable, Equatable {
     case retryOrLeave
@@ -17,7 +16,7 @@ nonisolated struct ComprehensionNoticeCopy: Sendable, Equatable {
 }
 
 nonisolated enum ComprehensionCopy {
-  // F8.4: el inicio de la lectura se anuncia, no solo se ve — captura y comprender mas tarde
+  /// The start of reading is announced, not only shown.
   static func readingAnnouncement(locale: Locale) -> String {
     String(localized: LocalizedStringResource("Reading your memory…", locale: locale))
   }
@@ -32,7 +31,7 @@ nonisolated enum ComprehensionCopy {
       actions: reason.allowsRetry ? .retryOrLeave : .done)
   }
 
-  // anexo DEC-46: guardarrail y rechazo usan el texto generico, nunca insinuan nada del recuerdo
+  /// Guardrail and refusal use the generic text and never hint at anything about the memory.
   private static func body(_ reason: MemoryComprehensionReason, locale: Locale) -> String {
     switch reason {
     case .generic, .guardrail:
@@ -55,7 +54,7 @@ nonisolated enum ComprehensionCopy {
 }
 
 extension MemoryComprehensionReason {
-  // DEC-42 + anexo DEC-46: desbordamiento e idioma fallarian igual al reintentar sin cambiar nada
+  /// Overflow and language would fail the same way on a retry with nothing changed.
   nonisolated var allowsRetry: Bool {
     switch self {
     case .generic, .guardrail: true

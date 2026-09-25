@@ -4,7 +4,6 @@ import Testing
 
 @testable import Hilo
 
-// F8 contrato 1 (S7): ejemplo cargar/borrar y borrado total con doble confirmacion, sin la vista
 struct SettingsStateTests {
   private static let fixedSavedAt = Date(timeIntervalSince1970: 0)
 
@@ -24,7 +23,7 @@ struct SettingsStateTests {
     return (state, actor, calls)
   }
 
-  // MARK: memoria de ejemplo
+  // MARK: example memory
 
   @Test func `Loading reports whether the example memory is present`() async throws {
     let (state, actor, _) = try Self.makeState()
@@ -67,7 +66,7 @@ struct SettingsStateTests {
     #expect(remaining.map(\.id) == [real.id])
   }
 
-  // MARK: borrado total — doble confirmacion (regla 25)
+  // MARK: delete everything — double confirmation (rule 25)
 
   @Test func `Requesting the wipe opens the first confirmation only`() throws {
     let (state, _, _) = try Self.makeState()
@@ -102,7 +101,7 @@ struct SettingsStateTests {
     #expect(state.wipeStep == .none)
   }
 
-  // deslizar o tocar fuera de la alerta del sistema la cierra: cuenta como cancelar
+  /// Swiping or tapping outside the system alert closes it: that counts as cancelling.
   @Test func `Dismissing a presented confirmation from the binding cancels that step`() throws {
     let (state, _, _) = try Self.makeState()
     state.requestWipe()
@@ -115,7 +114,7 @@ struct SettingsStateTests {
     #expect(state.wipeStep == .none)
   }
 
-  // el false que el sistema pone al cerrar la primera alerta no puede deshacer el avance al segundo
+  /// The false the system sets when closing the first alert can't undo the move to the second.
   @Test func `Closing the first confirmation binding once at the second step keeps the second`()
     throws
   {
@@ -128,7 +127,7 @@ struct SettingsStateTests {
     #expect(state.wipeStep == .second)
   }
 
-  // el sistema puede poner el binding a false antes de la accion del boton: el avance sobrevive
+  /// The system may set the binding to false before the button's action runs: the advance survives.
   @Test func `Dismissing the first confirmation before continuing still reaches the second step`()
     throws
   {
@@ -162,7 +161,7 @@ struct SettingsStateTests {
     #expect(calls.wiped == 1)
   }
 
-  // "deleting is real": un borrado que falla no se cuenta como hecho ni cierra la hoja
+  /// Deleting is real: a failed wipe is not counted as done and doesn't close the sheet.
   @Test func `A wipe whose write fails reports failure and never notifies as wiped`() async throws {
     let storeURL = URL.temporaryDirectory.appending(path: "\(UUID().uuidString).store")
     defer { try? FileManager.default.removeItem(at: storeURL) }

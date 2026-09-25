@@ -1,5 +1,4 @@
-// contrato 4 (lista de elementos) + S5 (F5.4): cuantos recuerdos distintos tiene un elemento
-// mismo deduplicado que MemorySearch.matchingElementIDs: dos apariciones en un mismo recuerdo cuentan una vez
+/// Distinct memories per element: two appearances in one memory count once, as in MemorySearch.
 nonisolated enum ElementMemories {
   static func memoryIDs(for elementID: ElementID, in appearances: [Appearance]) -> [MemoryID] {
     var order: [MemoryID] = []

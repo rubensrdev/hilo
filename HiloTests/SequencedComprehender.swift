@@ -2,7 +2,7 @@ import Synchronization
 
 @testable import Hilo
 
-// DEC-45: falla la primera vez y acierta en el reintento; Mutex, nunca nonisolated(unsafe)
+/// Fails the first time and succeeds on the retry. Mutex, never nonisolated(unsafe).
 nonisolated final class SequencedComprehender: MemoryComprehending, Sendable {
   private let scripts: [FakeMemoryComprehender.Script]
   private let callIndex = Mutex(0)

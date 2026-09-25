@@ -1,9 +1,7 @@
 import Foundation
 import OSLog
 
-// contrato 4 (S4): el recuerdo, sus elementos propios, sus conexiones con motivo, editar y
-// borrar. Crea su propio understandLater/reviewCoordinator, igual que HiloApp hace con la
-// captura (UnderstandLaterState ya lo anticipa: "F5.3: el detalle lo crea y lo conecta a la hoja")
+/// Builds its own understandLater and reviewCoordinator, the way HiloApp does for capture.
 @Observable
 final class MemoryDetailState {
   let memoryID: MemoryID
@@ -20,7 +18,7 @@ final class MemoryDetailState {
   private let persistenceActor: PersistenceActor
   private let onMaterialChanged: () async -> Void
   private var allAppearances: [Appearance] = []
-  private let logger = Logger(subsystem: "com.hilo.app", category: "explorar")
+  private let logger = Logger(subsystem: "com.hilo.app", category: "explore")
 
   init(
     memoryID: MemoryID, persistenceActor: PersistenceActor, comprehender: MemoryComprehending,
@@ -46,8 +44,8 @@ final class MemoryDetailState {
     later.onReviewSaveFailed = { [weak coordinator] in coordinator?.closeAfterFailedSave() }
   }
 
-  // DEC-24 + regla 11: elementos propios que sobreviven en otro recuerdo frente a los que
-  // se quedarian sin ninguno si este recuerdo se borrara
+  /// Rule 11: own elements that survive in another memory, versus those left with none if this
+  /// one is deleted.
   var deleteImpact: (surviving: [Element], disappearing: [Element]) {
     guard !ownElements.isEmpty else { return ([], []) }
     let remaining = allAppearances.filter { $0.memoryID != memoryID }
@@ -62,8 +60,7 @@ final class MemoryDetailState {
     await refresh()
   }
 
-  // F5.5: ElementChip necesita el recuento total del elemento (no solo "propio de este recuerdo")
-  // para anunciar nombre, tipo y en cuantos recuerdos aparece, igual que ElementRow en S1
+  /// The element's total count, not just this memory's, so the chip can announce it.
   func memoryCount(for element: Element) -> Int {
     ElementMemories.count(for: element.id, in: allAppearances)
   }
@@ -76,7 +73,7 @@ final class MemoryDetailState {
       return true
     } catch {
       logger.error(
-        "No se pudo editar el relato: \(String(describing: type(of: error)), privacy: .public)")
+        "Could not edit the narrative: \(String(describing: type(of: error)), privacy: .public)")
       return false
     }
   }
@@ -88,7 +85,7 @@ final class MemoryDetailState {
       return true
     } catch {
       logger.error(
-        "No se pudo borrar el recuerdo: \(String(describing: type(of: error)), privacy: .public)")
+        "Could not delete the memory: \(String(describing: type(of: error)), privacy: .public)")
       return false
     }
   }
@@ -120,7 +117,7 @@ final class MemoryDetailState {
           appearances: allAppearances)?.rows ?? []
     } catch {
       logger.error(
-        "No se pudo cargar el detalle: \(String(describing: type(of: error)), privacy: .public)")
+        "Could not load the detail: \(String(describing: type(of: error)), privacy: .public)")
     }
   }
 }

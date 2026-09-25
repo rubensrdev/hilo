@@ -4,7 +4,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 5 + DEC-49: tras guardar, la misma hoja pasa al momento de la conexion solo si hay conexiones
 struct ReviewCoordinatorTests {
   @Test func `Saving a memory that shares Lucía with an earlier one shows the connection moment`()
     async throws
@@ -52,7 +51,6 @@ struct ReviewCoordinatorTests {
     #expect(try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).count == 1)
   }
 
-  // DEC-47: deslizar la hoja con el guardado en vuelo la cierra; el final del guardado no la reabre
   @Test func `A sheet swiped away while saving is not reopened when the save finishes`()
     async throws
   {
@@ -78,7 +76,6 @@ struct ReviewCoordinatorTests {
     #expect(capture.narrative == "")
   }
 
-  // DEC-47: solo la hoja de ese guardado pasa al momento; una hoja abierta despues no se toca
   @Test func `The connection moment never lands on a different sheet opened meanwhile`()
     async throws
   {
@@ -110,7 +107,7 @@ struct ReviewCoordinatorTests {
     #expect(narrative == "Otro relato.")
   }
 
-  // decision de Rubén (F4.6): tras «Sí, es …» se ve el nombre del elemento, la mencion queda como alias
+  /// After «Yes, it's …» the element's name shows, and the mention stays as an alias.
   @Test
   func
     `After confirming that abuelo José is José, the connection row says José and keeps the alias`()
@@ -163,7 +160,7 @@ struct ReviewCoordinatorTests {
     elements: [ExtractedElement(name: "Lucía", type: .person, role: "mi hija")],
     dateText: nil, deducedYear: nil)
 
-  // el mismo cableado que HiloApp.init
+  /// The same wiring as HiloApp.init.
   private static func wired(actor: PersistenceActor) -> (CaptureState, ReviewCoordinator) {
     let coordinator = ReviewCoordinator(persistenceActor: actor)
     let capture = CaptureState(
@@ -179,7 +176,7 @@ struct ReviewCoordinatorTests {
     return (capture, coordinator)
   }
 
-  // lo que hace el usuario: comprender y pulsar «Save memory» en la revision que abre el coordinador
+  /// What the user does: understand, then tap «Save memory» in the review the coordinator opens.
   private static func understandAndConfirm(
     _ capture: CaptureState, _ coordinator: ReviewCoordinator
   ) async throws {
@@ -199,7 +196,7 @@ struct ReviewCoordinatorTests {
   }
 }
 
-// espera acotada a una condicion observable, sin exponer las Task internas
+/// A bounded wait on an observable condition, without exposing the inner Tasks.
 private func waitUntil(
   attempts: Int = 200, sleepEach: Duration = .milliseconds(5), _ condition: () -> Bool
 ) async {

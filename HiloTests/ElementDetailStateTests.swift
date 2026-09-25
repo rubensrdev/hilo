@@ -4,8 +4,6 @@ import Testing
 
 @testable import Hilo
 
-// S5 Detalle de elemento (F5.4): nombre, alias, recuerdos propios en el orden de DEC-35, el
-// rango temporal (DEC-57 A1), renombrar y añadir alias con las validaciones de F1 (contrato 5)
 struct ElementDetailStateTests {
   // MARK: fixtures
 
@@ -66,7 +64,7 @@ struct ElementDetailStateTests {
     #expect(state.notFound)
   }
 
-  // MARK: ownMemories — DEC-35: año deducido descendente, savedAt descendente, sin año al final
+  // MARK: ownMemories — deduced year descending, then savedAt descending, undated last
 
   @Test func `ownMemories follows DEC-35 order, with Memory isOrderedBefore as the oracle`()
     async throws
@@ -94,7 +92,7 @@ struct ElementDetailStateTests {
 
     await state.load()
 
-    // oraculo independiente: Memory.isOrderedBefore, llamado directamente sobre lo leido del actor
+    // Independent oracle: Memory.isOrderedBefore, called directly on what the actor reads.
     let allMemories = try await actor.fetchMemories()
     let ownIDs: Set<MemoryID> = [old.id, middle.id, recent.id, noYear.id]
     let expectedOrder = allMemories.filter { ownIDs.contains($0.id) }.sorted(
@@ -120,7 +118,7 @@ struct ElementDetailStateTests {
     #expect(state.ownMemories.map(\.id) == [withCarmen.id])
   }
 
-  // MARK: dateRangeDisplay — DEC-57 (A1): palabras del usuario de los dos extremos, por orden DEC-35
+  // MARK: dateRangeDisplay — the user's words at both ends, in memory order
 
   @Test func `dateRangeDisplay is nil for an element with no memories of its own`() async throws {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -182,7 +180,7 @@ struct ElementDetailStateTests {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
     let carmen = try Self.element(name: "Carmen")
-    // sin fecha alguna: sin año, va al final (DEC-35), y sin texto que mostrar en ese extremo
+    // No date at all: no year, so it goes last, and there is no text for that end.
     let oldestWithoutDate = try Self.memory(narrative: "Carmen, no recuerdo cuándo.")
     let newest = try Self.memory(
       narrative: "Carmen, ayer mismo.", dateText: "ayer", deducedYear: 2020)
@@ -206,7 +204,7 @@ struct ElementDetailStateTests {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
     let carmen = try Self.element(name: "Carmen")
-    // ambos sin año: el desempate es savedAt descendente (DEC-35), no el texto de fecha
+    // Both undated: the tie breaks on savedAt descending, not on the date text.
     let recentWithoutDate = try Self.memory(
       narrative: "Carmen, ayer mismo.", savedAt: Date(timeIntervalSince1970: 200))
     let olderWithDate = try Self.memory(
@@ -245,7 +243,7 @@ struct ElementDetailStateTests {
     #expect(state.dateRangeDisplay == nil)
   }
 
-  // MARK: rename — contrato 5 (DEC-26): colisiona si el canónico ya pertenece a otro del mismo tipo
+  // MARK: rename — collides when the canonical name belongs to another element of the same type
 
   @Test func `Renaming without a collision changes the name and reports the change`() async throws {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -341,7 +339,7 @@ struct ElementDetailStateTests {
     #expect(changedCount == 0)
   }
 
-  // MARK: addAlias — mismas validaciones de colisión que renombrar (contrato 5)
+  // MARK: addAlias — the same collision checks as rename
 
   @Test func `Adding an alias without a collision stores it and reports the change`() async throws {
     let container = try PersistenceContainer.make(inMemory: true)

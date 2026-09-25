@@ -4,7 +4,7 @@ import Testing
 
 @testable import Hilo
 
-// ADR-000 §4: la miniatura de la captura se decodifica con ImageIO, nunca con UIKit
+/// The capture thumbnail decodes with ImageIO, never with UIKit (ADR-000 §4).
 struct PhotoThumbnailTests {
   static func jpeg(width: Int, height: Int, orientation: Int = 1) throws -> Data {
     let colorSpace = try #require(CGColorSpace(name: CGColorSpace.sRGB))
@@ -38,7 +38,7 @@ struct PhotoThumbnailTests {
     #expect(thumbnail.height == 200)
   }
 
-  // como hacia UIImage: una foto hecha en vertical se ve en vertical
+  /// As UIImage did: a photo taken upright shows upright.
   @Test func `The orientation stored in the photo is applied to the thumbnail`() throws {
     let data = try Self.jpeg(width: 600, height: 400, orientation: 6)
 

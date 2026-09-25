@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 
-// contrato 3: la lista de nombres esperados vive aqui, no en produccion
+/// The expected names live here, not in production code.
 struct ColorCatalogTests {
   private let expectedNames = [
     "fondo",
@@ -24,7 +24,7 @@ struct ColorCatalogTests {
     "borde-chip-nuevo",
   ]
 
-  // se lee el colorset del disco en vez de UIColor(named:): SwiftUI only, sin UIKit
+  /// Reads the colorset from disk instead of UIColor(named:): no UIKit.
   private func colorsetURL(for name: String) -> URL {
     URL(fileURLWithPath: #filePath)
       .deletingLastPathComponent()
@@ -35,7 +35,7 @@ struct ColorCatalogTests {
   @Test func everyTokenNameExistsInTheCatalog() {
     for name in expectedNames {
       let exists = FileManager.default.fileExists(atPath: colorsetURL(for: name).path)
-      #expect(exists, "falta el colorset \(name)")
+      #expect(exists, "missing colorset \(name)")
     }
   }
 }

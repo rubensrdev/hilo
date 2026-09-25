@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-// F8 contrato 1 (S7) + regla 25: el paso de la doble confirmacion vive aqui, la hoja solo emite intenciones
+/// Rule 25: the double confirmation's step lives here; the sheet only emits intent.
 @Observable
 final class SettingsState: Identifiable {
   enum WipeStep: Equatable {
@@ -17,7 +17,7 @@ final class SettingsState: Identifiable {
   private let persistenceActor: PersistenceActor
   private let onMemoryChanged: () async -> Void
   private let onWiped: () async -> Void
-  private let logger = Logger(subsystem: "com.hilo.app", category: "ajustes")
+  private let logger = Logger(subsystem: "com.hilo.app", category: "settings")
 
   init(
     persistenceActor: PersistenceActor, version: String,
@@ -29,7 +29,7 @@ final class SettingsState: Identifiable {
     self.onWiped = onWiped
   }
 
-  // cerrar la alerta por fuera cancela solo ese paso: el false al avanzar ya no encuentra .first
+  /// Dismissing the alert cancels only that step: the false sent while advancing no longer finds .first.
   var isFirstWipeConfirmationPresented: Bool {
     get { wipeStep == .first }
     set { if !newValue, wipeStep == .first { wipeStep = .none } }
@@ -45,7 +45,7 @@ final class SettingsState: Identifiable {
       hasExampleMemory = try await persistenceActor.hasExampleMemory()
     } catch {
       logger.error(
-        "No se pudo leer si hay memoria de ejemplo: \(String(describing: type(of: error)), privacy: .public)"
+        "Could not check for the example memory: \(String(describing: type(of: error)), privacy: .public)"
       )
     }
   }
@@ -55,7 +55,7 @@ final class SettingsState: Identifiable {
       try await persistenceActor.loadExampleMemory(language: language, loadedAt: Date())
     } catch {
       logger.error(
-        "No se pudo cargar la memoria de ejemplo: \(String(describing: type(of: error)), privacy: .public)"
+        "Could not load the example memory: \(String(describing: type(of: error)), privacy: .public)"
       )
     }
     await load()
@@ -67,7 +67,7 @@ final class SettingsState: Identifiable {
       try await persistenceActor.deleteExampleMemory()
     } catch {
       logger.error(
-        "No se pudo borrar la memoria de ejemplo: \(String(describing: type(of: error)), privacy: .public)"
+        "Could not delete the example memory: \(String(describing: type(of: error)), privacy: .public)"
       )
     }
     await load()
@@ -78,7 +78,7 @@ final class SettingsState: Identifiable {
     wipeStep = .first
   }
 
-  // sin guard del paso anterior: SwiftUI puede poner el binding a false antes o despues de la accion
+  /// No guard on the previous step: SwiftUI may set the binding to false before or after the action.
   func continueWipe() {
     wipeStep = .second
   }
@@ -87,14 +87,14 @@ final class SettingsState: Identifiable {
     wipeStep = .none
   }
 
-  // regla 25, "deleting is real": si la escritura falla, la hoja no se cierra como si hubiera borrado
+  /// Rule 25, deleting is real: if the write fails, the sheet doesn't close as if it had deleted.
   func confirmWipe() async -> Bool {
     wipeStep = .none
     do {
       try await persistenceActor.wipeAllData()
     } catch {
       logger.error(
-        "No se pudo borrar todo: \(String(describing: type(of: error)), privacy: .public)")
+        "Could not delete everything: \(String(describing: type(of: error)), privacy: .public)")
       return false
     }
     await load()
@@ -103,13 +103,13 @@ final class SettingsState: Identifiable {
   }
 
   #if DEBUG
-    // F5: panel Debug de Ajustes, para docs/validacion-manual — nunca en Release
+    /// The Debug panel's dataset for docs/validacion-manual; never in Release.
     func loadDebugValidationDataset() async {
       do {
         try await persistenceActor.loadDebugValidationDataset(loadedAt: Date())
       } catch {
         logger.error(
-          "No se pudo cargar el set de validacion: \(String(describing: type(of: error)), privacy: .public)"
+          "Could not load the validation dataset: \(String(describing: type(of: error)), privacy: .public)"
         )
       }
       await load()

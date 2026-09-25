@@ -1,7 +1,7 @@
 import FoundationModels
 
-// contrato 4: separa clasificar (puro, testable) de actuar (preconditionFailure, efecto unico,
-// sin test — ver MemoryComprehensionError.init(mapping:)).
+/// Classifying is pure and tested; acting on one of our defects is a preconditionFailure with
+/// no test (see MemoryComprehensionError.init(mapping:)).
 nonisolated enum MemoryComprehensionClassification: Sendable {
   case productState(MemoryComprehensionError)
   case ownDefect(String)
@@ -18,16 +18,15 @@ extension MemoryComprehensionClassification {
     case .decodingFailure: self = .productState(.decodingFailure)
     case .rateLimited: self = .productState(.noResponse)
     case .concurrentRequests:
-      self = .ownDefect("dos peticiones concurrentes en la misma sesión")
+      self = .ownDefect("two concurrent requests on the same session")
     case .unsupportedGuide:
-      self = .ownDefect("guía de generación no soportada")
+      self = .ownDefect("unsupported generation guide")
     @unknown default: self = .productState(.noResponse)
     }
   }
 
-  // decision de Ruben (F3, cierre): #available solo para clasificar el error de FoundationModels
-  // que ya lanza el SO en iOS 27 (GenerationError se reparte en estos tipos), nunca para alcanzar
-  // una capacidad nueva; CLAUDE.md y ADR-001 quedan pendientes de actualizar tras el merge de F3.
+  /// Only to classify the FoundationModels errors the OS already throws on iOS 27, never to reach
+  /// a new capability.
   @available(iOS 27, *)
   nonisolated init(classifying error: LanguageModelError) {
     switch error {
@@ -38,7 +37,7 @@ extension MemoryComprehensionClassification {
     case .rateLimited, .timeout, .unsupportedCapability, .unsupportedTranscriptContent:
       self = .productState(.noResponse)
     case .unsupportedGenerationGuide:
-      self = .ownDefect("guía de generación no soportada")
+      self = .ownDefect("unsupported generation guide")
     @unknown default: self = .productState(.noResponse)
     }
   }
@@ -60,7 +59,7 @@ extension MemoryComprehensionClassification {
   nonisolated init(classifying error: LanguageModelSession.Error) {
     switch error {
     case .concurrentRequests:
-      self = .ownDefect("dos peticiones concurrentes en la misma sesión")
+      self = .ownDefect("two concurrent requests on the same session")
     case .transcriptMutationWhileResponding: self = .productState(.noResponse)
     @unknown default: self = .productState(.noResponse)
     }

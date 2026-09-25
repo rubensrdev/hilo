@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 2: parecerse — mismo tipo y canonico contenido como secuencia de palabras completas
 nonisolated struct ResemblanceTests {
   @Test func `José and José García resemble each other, same type`() {
     #expect(Resemblance.between("José", type: .person, "José García", type: .person))
@@ -20,7 +19,7 @@ nonisolated struct ResemblanceTests {
   }
 
   @Test func `same canonical but different type never resembles, even letter for letter`() {
-    // contrato 2: mismo canonico y distinto tipo no es parecerse
+    // The same canonical name with a different type is not a resemblance.
     #expect(!Resemblance.between("Granada", type: .place, "Granada", type: .person))
   }
 

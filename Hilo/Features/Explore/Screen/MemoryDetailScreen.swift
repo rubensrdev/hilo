@@ -1,11 +1,9 @@
 import SwiftUI
 
-// contrato 4: S4 Detalle de recuerdo — foto si la hay, relato integro (nunca recorta), fecha
-// del usuario, elementos, conectados con motivo (o el aviso que corresponda), editar y borrar
 struct MemoryDetailScreen: View {
   @Bindable var state: MemoryDetailState
-  // ReviewCoordinator.presentation necesita un Binding propio: reviewCoordinator es un `let`
-  // en MemoryDetailState, asi que $state.reviewCoordinator.presentation no se puede formar
+  /// A Binding of its own: reviewCoordinator is a `let` in MemoryDetailState, so
+  /// $state.reviewCoordinator.presentation can't be formed.
   @Bindable var reviewCoordinator: ReviewCoordinator
   @Environment(\.dismiss) private var dismiss
   @Environment(\.locale) private var environmentLocale
@@ -15,8 +13,8 @@ struct MemoryDetailScreen: View {
 
   private var interfaceLocale: Locale { InterfaceLocale.resolve(environmentLocale) }
 
-  // proporcion original, sin recorte: se decodifica a un tamaño generoso, sin preguntar al
-  // sistema el ancho de pantalla (ADR-000 §4: nunca UIKit)
+  /// Original proportion, no crop: decoded at a generous size instead of asking for the screen
+  /// width, which would need UIKit (ADR-000 §4).
   private var detailPhotoPixelSize: Int { Int(800 * displayScale) }
 
   var body: some View {
@@ -33,7 +31,7 @@ struct MemoryDetailScreen: View {
     .navigationTitle("Memory")
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
-      // .topBarTrailing: posicional, nunca colapsa en el "..." del sistema (leccion de F5.2)
+      // .topBarTrailing is positional and never collapses into the system "...".
       ToolbarItem(placement: .topBarTrailing) {
         Menu {
           Button {
@@ -141,7 +139,7 @@ struct MemoryDetailScreen: View {
     }
   }
 
-  // MARK: elementos — sin recortar ni renombrar desde aqui (eso es Revision); navegan a S5 (F5.4)
+  // MARK: elements — no trimming or renaming here, that is the review's job
 
   @ViewBuilder
   private var elementsSection: some View {
@@ -155,7 +153,7 @@ struct MemoryDetailScreen: View {
         ForEach(state.ownElements) { element in
           NavigationLink(value: element.id) {
             ElementChip(element: element, memoryCount: state.memoryCount(for: element))
-              // el chip mide menos de 44 pt: el objetivo lo pone el enlace, no el chip compartido
+              // The chip is under 44 pt: the link provides the target, not the shared chip.
               .frame(minHeight: Spacing.objetivoToqueMinimo, alignment: .leading)
               .contentShape(Rectangle())
           }
@@ -165,7 +163,7 @@ struct MemoryDetailScreen: View {
     }
   }
 
-  // MARK: conectados con motivo, o el aviso de que no lo esta todavia (contrato 4, DEC-16)
+  // MARK: connected with a motive, or the notice that it isn't yet
 
   @ViewBuilder
   private var connectionsSection: some View {
@@ -253,7 +251,7 @@ struct MemoryDetailScreen: View {
         names: row.motiveNames, narrative: row.narrative, locale: interfaceLocale))
   }
 
-  // MARK: guardado sin analizar — DEC-16: comprender mas tarde solo desde aqui
+  // MARK: saved without analyzing — understanding later only happens from here
 
   private var notAnalyzedSection: some View {
     VStack(alignment: .leading, spacing: Spacing.espacio3) {
