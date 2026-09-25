@@ -43,7 +43,7 @@ Folders in a single target. The boundary is enforced by review and by a hook, no
 ### Folders inside a zone
 
 - `Domain`, `Persistence` and `Intelligence` group their files into subfolders **by concept** — what the type represents in the product — never by technical nature ("protocols here, structs there").
-- A `Features` screen folder stays flat until a role repeats inside it. Once two files share a role, split that role out: `Screen/`, `State/`, `Copy/`, `Coordinator/`. A role with a single file stays loose in the screen folder — **never** create a subfolder for one file.
+- Every `Features` screen folder uses the same subfolders by role — `Screen/`, `State/`, `Copy/`, `Coordinator/` — whether it holds one file or several. **Never** leave a file loose at the root of a screen folder: wrap even a single file in its role's subfolder.
 - The vocabulary is `Screen` / `State` / `Copy` / `Coordinator`. **Never** `ViewModel`, **never** a generic `Components/`: this project has no MVVM layer (`ADR-000` §5, no ceremonial layers).
 - A type shared by two or more screens moves to `Shared`; it does not live inside one screen's folder. DEBUG-only preview fixtures go to `Shared/Previews/`, wrapped in `#if DEBUG`, never mixed with shipped types.
 - Groups in Xcode are folder-backed and mirror the file system exactly. **Never** a virtual group, and **never** move a file with `mv` or by editing `project.pbxproj` — use the Xcode MCP.
