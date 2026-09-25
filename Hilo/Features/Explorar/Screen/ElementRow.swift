@@ -17,8 +17,7 @@ struct ElementRow: View {
 
   var body: some View {
     HStack(alignment: .top, spacing: Spacing.espacio3) {
-      // F5.5: sin ocultar, VoiceOver anunciaba el simbolo SF (p.ej. "Person") ademas del
-      // texto del tipo justo debajo: doble anuncio del mismo dato
+      // F5.5: sin ocultar, VoiceOver anunciaba el simbolo SF ademas del texto del tipo (doble anuncio)
       Image(systemName: element.type.symbolName)
         .foregroundStyle(element.type.color)
         .accessibilityHidden(true)
@@ -40,9 +39,7 @@ struct ElementRow: View {
       }
     }
     .frame(maxWidth: .infinity, minHeight: Spacing.altoFilaMinimo, alignment: .leading)
-    // sin fondo propio (a diferencia de MemoryCard/ElementChip), asi que el Spacer central
-    // queda transparente al toque sin esto: el NavigationLink que la envuelve fallaba en
-    // silencio si se tocaba ahi (hallado por verificador-ui)
+    // sin fondo propio, el Spacer central era transparente al toque y el NavigationLink fallaba ahi
     .contentShape(Rectangle())
     // F8.4: el anuncio sale de la funcion pura probada, no de los textos visibles
     .accessibilityElement(children: .ignore)

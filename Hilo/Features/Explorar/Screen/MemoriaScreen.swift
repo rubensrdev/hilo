@@ -5,8 +5,7 @@ import SwiftUI
 struct MemoriaScreen: View {
   @Bindable var state: ExploreState
   @Binding var isCapturePresented: Bool
-  // el estado de la hoja se crea al tocar el engranaje, nunca dentro del closure de la hoja:
-  // SwiftUI lo reevaluaria con cada cambio de ExploreState y perderia el paso del borrado
+  // creado al tocar el engranaje: en el closure de la hoja se reevaluaria con cada cambio de ExploreState
   @State private var ajustesState: AjustesState?
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 

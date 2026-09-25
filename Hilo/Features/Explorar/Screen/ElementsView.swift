@@ -34,9 +34,7 @@ struct ElementsView: View {
     .background(Color.fondo)
   }
 
-  // DEC-13: seleccion unica; tocar el chip activo vuelve a "todos"
-  // tokens.md §2.2 chip-elemento: a tamaños de accesibilidad los chips pasan a una columna,
-  // nunca a un scroll horizontal que crece sin limite con el texto (P2, F5.5)
+  // DEC-13: seleccion unica, tocar el chip activo vuelve a "todos"; en AX columna, nunca scroll (P2)
   @ViewBuilder
   private var filterChips: some View {
     let layout = dynamicTypeSize.rowLayout(spacing: Spacing.separacionChips)
