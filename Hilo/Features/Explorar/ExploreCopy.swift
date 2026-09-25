@@ -58,6 +58,12 @@ nonisolated enum ExploreCopy {
     return sentences.joined(separator: " ")
   }
 
+  // DEC-13: el chip que quita el filtro; como String ya localizado porque el resto de chips
+  // reciben el nombre plural del tipo por el mismo parametro (F8.2: «All» salia sin traducir)
+  static func allFilterLabel(locale: Locale) -> String {
+    String(localized: LocalizedStringResource("All", locale: locale))
+  }
+
   // contrato 4 (S5): cabecera del detalle de elemento, tipo mas recuento en una sola linea
   static func elementTypeAndCount(_ type: ElementType, count: Int, locale: Locale) -> String {
     "\(type.localizedName(locale: locale)) · \(elementMemoryCount(count, locale: locale))"

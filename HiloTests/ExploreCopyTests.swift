@@ -135,13 +135,18 @@ nonisolated struct ExploreCopyTests {
         == "From cuando yo era niño to el verano pasado")
   }
 
-  // la traduccion al español se añade despues via Xcode MCP; aqui solo se comprueba que compone
-  @Test func `The date range accessibility label composes something non-empty in Spanish too`() {
-    let label = ExploreCopy.dateRangeAccessibilityLabel(
-      oldest: "cuando yo era niño", newest: "el verano pasado", locale: spanish)
+  // F8.2: sin «a» delante de las palabras del usuario, que a menudo empiezan por «el» («a el»);
+  // el texto del usuario no se toca, asi que la plantilla evita la contraccion
+  @Test func `The date range accessibility label reads as a full sentence in Spanish`() {
+    #expect(
+      ExploreCopy.dateRangeAccessibilityLabel(
+        oldest: "1994", newest: "el verano de 2001", locale: spanish)
+        == "Desde 1994 hasta el verano de 2001")
+  }
 
-    #expect(!label.isEmpty)
-    #expect(label.contains("cuando yo era niño"))
-    #expect(label.contains("el verano pasado"))
+  // F8.2: el chip «All» pasaba como String ya montado y salia sin traducir
+  @Test func `The filter chip that clears the filter has its text in both languages`() {
+    #expect(ExploreCopy.allFilterLabel(locale: english) == "All")
+    #expect(ExploreCopy.allFilterLabel(locale: spanish) == "Todos")
   }
 }

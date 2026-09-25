@@ -41,7 +41,7 @@ struct ElementsView: View {
   private var filterChips: some View {
     if dynamicTypeSize.isAccessibilitySize {
       VStack(alignment: .leading, spacing: Spacing.separacionChips) {
-        filterChip(nil, label: "All")
+        filterChip(nil, label: ExploreCopy.allFilterLabel(locale: interfaceLocale))
         filterChip(.person, label: ElementType.person.localizedPluralName(locale: interfaceLocale))
         filterChip(.place, label: ElementType.place.localizedPluralName(locale: interfaceLocale))
         filterChip(.object, label: ElementType.object.localizedPluralName(locale: interfaceLocale))
@@ -49,7 +49,7 @@ struct ElementsView: View {
     } else {
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: Spacing.separacionChips) {
-          filterChip(nil, label: "All")
+          filterChip(nil, label: ExploreCopy.allFilterLabel(locale: interfaceLocale))
           filterChip(
             .person, label: ElementType.person.localizedPluralName(locale: interfaceLocale))
           filterChip(.place, label: ElementType.place.localizedPluralName(locale: interfaceLocale))
