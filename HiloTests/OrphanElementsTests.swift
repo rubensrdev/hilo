@@ -2,17 +2,15 @@ import Testing
 
 @testable import Hilo
 
-// contrato 6 + reglas 9, 11, 12: un elemento sin ninguna aparicion deja de existir
 nonisolated struct OrphanElementsTests {
   @Test func `an element that only appeared in a deleted memory is orphaned, others are not`()
     throws
   {
-    // caso del spec, linea 145
     let onlyInDeleted = try #require(Element(displayName: "un cuaderno", type: .object))
     let alsoElsewhere = try #require(Element(displayName: "José", type: .person))
     let remainingMemoryID = MemoryID()
 
-    // el recuerdo borrado ya no deja filas de Appearance en el array
+    // The deleted memory leaves no Appearance rows in the array.
     let appearances = [
       Appearance(
         memoryID: remainingMemoryID, elementID: alsoElsewhere.id, role: nil,
@@ -58,7 +56,7 @@ nonisolated struct OrphanElementsTests {
   }
 
   @Test func `the same input always produces the same result, same order included`() throws {
-    // contrato 8: determinismo — mismos datos, mismo resultado y mismo orden, siempre
+    // Determinism: same data, same result and same order, every time.
     let jose = try #require(Element(displayName: "José", type: .person))
     let clock = try #require(Element(displayName: "el reloj", type: .object))
     let carmen = try #require(Element(displayName: "Carmen", type: .person))

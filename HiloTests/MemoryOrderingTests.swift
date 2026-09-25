@@ -3,7 +3,6 @@ import Testing
 
 @testable import Hilo
 
-// regla 17 + contrato 7: el año solo ordena, nunca se muestra; el orden vive fuera de MemoryDate
 nonisolated struct MemoryOrderingTests {
   static func memory(
     year: Int? = nil, savedAt: Date, narrative: String = "Un recuerdo cualquiera."
@@ -35,7 +34,7 @@ nonisolated struct MemoryOrderingTests {
 
   @Test func `a dated memory always precedes an undated one, regardless of savedAt`() throws {
     let dated = try Self.memory(year: 1950, savedAt: Date(timeIntervalSince1970: 0))
-    // la sin año se guardó mucho después, y aun así no debe adelantar a la que tiene año
+    // The undated one was saved much later, and still must not overtake the dated one.
     let undatedButSavedLater = try Self.memory(savedAt: Date(timeIntervalSince1970: 100_000))
 
     #expect(Memory.isOrderedBefore(dated, undatedButSavedLater))
@@ -55,13 +54,13 @@ nonisolated struct MemoryOrderingTests {
     let first = try Self.memory(year: 2010, savedAt: sharedSavedAt)
     let second = try Self.memory(year: 2010, savedAt: sharedSavedAt)
 
-    // oraculo independiente: mismo criterio de desempate (comparacion lexicografica del id), calculado aparte
+    // Independent oracle: the same tie-break (lexicographic id comparison), computed separately.
     let expectedFirstBeforeSecond = first.id.value.uuidString < second.id.value.uuidString
 
     #expect(Memory.isOrderedBefore(first, second) == expectedFirstBeforeSecond)
     #expect(Memory.isOrderedBefore(second, first) == !expectedFirstBeforeSecond)
 
-    // reproducible: repetir la llamada no cambia el resultado
+    // Reproducible: calling it again doesn't change the result.
     #expect(Memory.isOrderedBefore(first, second) == expectedFirstBeforeSecond)
     #expect(Memory.isOrderedBefore(first, second) != Memory.isOrderedBefore(second, first))
   }

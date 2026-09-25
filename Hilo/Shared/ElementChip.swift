@@ -1,9 +1,8 @@
 import SwiftUI
 
-// contrato 2 (S1) + contrato 4 (S4): simbolo, color y nombre de un elemento, siempre juntos (P1)
 struct ElementChip: View {
   let element: Element
-  // F5.5: el chip visual solo enseña el nombre; VoiceOver necesita el tipo y el recuento por texto
+  /// The chip only shows the name; VoiceOver needs the type and the count as text.
   var memoryCount: Int? = nil
   @Environment(\.locale) private var environmentLocale
 
@@ -22,7 +21,7 @@ struct ElementChip: View {
     .padding(.vertical, Spacing.espacio1)
     .background(Color.chipRelleno)
     .clipShape(Spacing.radioChip)
-    // tokens §1.6: fuera de la revision el chip es "nuevo"; el colorset solo pinta en alto contraste
+    // Outside the review the chip is "new"; the colorset only paints in high contrast.
     .overlay {
       Spacing.radioChip.strokeBorder(Color.bordeChipNuevo, lineWidth: Spacing.trazoBordeTarjeta)
     }

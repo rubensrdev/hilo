@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 2 + §9.2: los cuatro bloques de la revision, cada uno solo si tiene contenido
 nonisolated struct ReviewStateBlocksTests {
   private func candidate(_ name: String, _ type: ElementType, role: String? = nil) throws
     -> ReviewCandidate
@@ -42,7 +41,7 @@ nonisolated struct ReviewStateBlocksTests {
     #expect(state.blocks.isBeginning)
   }
 
-  // el defecto de F4.5.1: la tarjeta seguia el orden de extraccion, no el de los bloques
+  /// Regression: the card followed extraction order, not block order.
   @Test func `beginningNames follow the block order: people, then places, then objects`() throws {
     let state = ReviewState(
       candidates: [
@@ -164,7 +163,6 @@ nonisolated struct ReviewStateBlocksTests {
     #expect(onlyCandidate.otherMemoriesCount == 2)
   }
 
-  // DEC-50 (cierra DEC-36): la misma mencion dos veces en un recuerdo es un solo elemento, una sola fila
   @Test func `Two mentions of a known element in one memory give one known row with the first role`()
     throws
   {
@@ -209,7 +207,7 @@ nonisolated struct ReviewStateBlocksTests {
         .init(elementID: singer.id, role: ElementRole(text: "la de la abuela"))
       ])
   }
-  // MARK: reglas que antes vivian en la vista — nada reconocido, quitados en el bloque 1, grupos
+  // MARK: rules that used to live in the view — nothing recognized, removed items in block 1, groups
 
   @Test func `Nothing recognized only when no block has content and nothing was removed`() throws {
     let empty = ReviewState(
@@ -225,7 +223,6 @@ nonisolated struct ReviewStateBlocksTests {
     #expect(!allRemoved.blocks.isNothingRecognized)
   }
 
-  // DEC-17: lo quitado sigue en el bloque 1 para poder deshacerlo
   @Test func `A removed element stays in the understood block, marked as removed`() throws {
     var state = ReviewState(
       candidates: [try candidate("José", .person), try candidate("Cádiz", .place)],

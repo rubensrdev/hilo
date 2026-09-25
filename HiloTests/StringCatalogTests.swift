@@ -1,8 +1,7 @@
 import Foundation
 import Testing
 
-// F8 contrato 2 (criterios 8 y 9): el catalogo entero tiene valor en ingles y español, y toda
-// cantidad se declara plural en los dos idiomas — el ingles y el español no coinciden en categorias
+/// English and Spanish don't share plural categories, so every quantity is declared plural in both.
 struct StringCatalogTests {
   private struct Catalog: Codable {
     struct Entry: Codable {
@@ -10,7 +9,7 @@ struct StringCatalogTests {
         struct StringUnit: Codable {
           let value: String
         }
-        // una clave plural no trae stringUnit al nivel superior, sino variations.plural.{one,other}
+        /// A plural key carries no top-level stringUnit, only variations.plural.{one,other}.
         struct Variations: Codable {
           struct Plural: Codable {
             struct Case: Codable {
@@ -39,8 +38,8 @@ struct StringCatalogTests {
     let strings: [String: Entry]
   }
 
-  // se lee el fichero fuente directamente: el oraculo no puede ser Bundle,
-  // porque aqui clave y valor en ingles coinciden y un fallback silencioso pasaria el test
+  /// Reads the source file directly: Bundle can't be the oracle, since key and English value match
+  /// here and a silent fallback would pass.
   private func loadCatalog() throws -> Catalog {
     let catalogURL = URL(fileURLWithPath: #filePath)
       .deletingLastPathComponent()
@@ -67,15 +66,15 @@ struct StringCatalogTests {
     let catalog = try loadCatalog()
     for (key, entry) in catalog.strings {
       let spanish = entry.localizations?["es"]
-      #expect(spanish != nil, "falta el español de \(key)")
+      #expect(spanish != nil, "missing Spanish for \(key)")
       #expect(
         spanish?.values.allSatisfy { !$0.isEmpty } == true && spanish?.values.isEmpty == false,
         "el español de \(key) esta vacio")
     }
   }
 
-  // por convencion de Xcode el valor en ingles es la propia clave cuando no hay "en" explicito;
-  // si lo hay (los plurales), no puede estar vacio
+  /// By Xcode convention the English value is the key itself when there is no explicit "en";
+  /// when there is one (the plurals), it can't be empty.
   @Test func `Every explicit English value in the catalog is non-empty`() throws {
     let catalog = try loadCatalog()
     for (key, entry) in catalog.strings {
@@ -95,7 +94,7 @@ struct StringCatalogTests {
     for (key, entry) in quantityKeys {
       for language in ["en", "es"] {
         let localization = entry.localizations?[language]
-        #expect(localization?.isPlural == true, "\(key) no es plural en \(language)")
+        #expect(localization?.isPlural == true, "\(key) is not plural in \(language)")
         #expect(
           localization?.variations?.plural?.one != nil, "\(key) sin categoria one en \(language)")
         #expect(
@@ -105,16 +104,16 @@ struct StringCatalogTests {
     }
   }
 
-  // un plural sin cantidad en la clave seria un plural que no puede variar
+  /// A plural without a quantity in its key could never vary.
   @Test func `Every plural key carries a quantity`() throws {
     let catalog = try loadCatalog()
     for (key, entry) in catalog.strings
     where entry.localizations?.values.contains(where: \.isPlural) == true {
-      #expect(Self.hasQuantity(key), "\(key) es plural pero no lleva cantidad")
+      #expect(Self.hasQuantity(key), "\(key) is plural but carries no quantity")
     }
   }
 
-  // las claves obsoletas siguen en el catalogo hasta que Xcode las retire; ninguna nueva de F8
+  /// Stale keys stay in the catalog until Xcode retires them.
   @Test func `Stale keys are only the provisional screens and the colour names`() throws {
     let catalog = try loadCatalog()
     let stale = catalog.strings.filter { $0.value.extractionState == "stale" }.map(\.key)
@@ -128,6 +127,6 @@ struct StringCatalogTests {
       "Provisional screen — replaced in F4/F5", "Settings are coming soon",
       "Language and accessibility options will live here.",
     ]
-    #expect(Set(stale).isSubset(of: colourNames.union(provisional)), "obsoletas nuevas: \(stale)")
+    #expect(Set(stale).isSubset(of: colourNames.union(provisional)), "new stale keys: \(stale)")
   }
 }

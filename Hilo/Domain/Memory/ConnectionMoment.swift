@@ -1,6 +1,6 @@
 import Foundation
 
-// contrato 5: el recuerdo recien guardado y sus conexiones, cada una con su motivo
+/// The memory just saved and its connections, each with its motive.
 nonisolated struct ConnectionMoment: Sendable, Equatable {
   nonisolated struct Row: Sendable, Equatable {
     let memoryID: MemoryID
@@ -12,14 +12,14 @@ nonisolated struct ConnectionMoment: Sendable, Equatable {
   let dateText: String?
   let rows: [Row]
 
-  // DEC-49: sin conexiones no hay momento
+  /// No connections, no moment.
   init?(savedMemoryID: MemoryID, memories: [Memory], elements: [Element], appearances: [Appearance]) {
     guard let saved = memories.first(where: { $0.id == savedMemoryID }) else { return nil }
     let narratives = Dictionary(
       memories.map { ($0.id, $0.narrative) }, uniquingKeysWith: { first, _ in first })
     let elementsByID = Dictionary(
       elements.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-    // una conexion sin motivo nombrable no se ensena (regla 4 del diseño)
+    // A connection without a nameable motive is never shown.
     let rows = MemoryConnections.connected(to: saved, appearances: appearances).compactMap {
       connection -> (row: Row, firstType: ElementType)? in
       let motives = connection.motives.compactMap { elementsByID[$0] }.stablySortedByType(\.type)
@@ -40,7 +40,7 @@ nonisolated struct ConnectionMoment: Sendable, Equatable {
 }
 
 extension Array {
-  // decision de Rubén (F4.6): el orden de «Lo que ha entendido», estable dentro de cada tipo
+  /// Same order as the review's understood block, stable within each type.
   nonisolated fileprivate func stablySortedByType(_ elementType: (Element) -> ElementType)
     -> [Element]
   {

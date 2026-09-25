@@ -1,13 +1,13 @@
 import Foundation
 import ImageIO
 
-// contrato 3 + DEC-27: se guardan los pixeles, nunca los metadatos ni la ubicacion
+/// Keeps the pixels, never the metadata or the location.
 enum PhotoStripper {
   enum StripError: Error, Equatable {
     case invalidImageData
   }
 
-  // puro, sin UI: se llama desde el actor de persistencia sin cruzar a MainActor
+  /// Pure and UI-free: the persistence actor calls it without hopping to the main actor.
   nonisolated static func stripMetadata(from data: Data) throws -> Data {
     guard let source = CGImageSourceCreateWithData(data as CFData, nil),
       let type = CGImageSourceGetType(source),
@@ -19,7 +19,7 @@ enum PhotoStripper {
     guard let destination = CGImageDestinationCreateWithData(output, type, 1, nil) else {
       throw StripError.invalidImageData
     }
-    // properties: nil => ninguna propiedad (EXIF/GPS/orientacion) pasa al destino
+    // nil properties: no EXIF, GPS or orientation reaches the destination.
     CGImageDestinationAddImage(destination, image, nil)
     guard CGImageDestinationFinalize(destination) else {
       throw StripError.invalidImageData

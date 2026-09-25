@@ -4,7 +4,7 @@ import Testing
 
 @testable import Hilo
 
-// mecanica de SwiftData: guardar, relacionar, recuperar, cascada — sin reglas de dominio
+/// SwiftData mechanics only (save, relate, fetch, cascade), with no domain rules.
 struct PersistenceSchemaTests {
   @Test func `In-memory container is created without throwing and has the four persisted entities`()
     throws

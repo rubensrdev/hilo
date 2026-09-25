@@ -3,7 +3,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 2, DEC-14 + DEC-21: agrupacion por decada del año deducido, "sin año" siempre al final
 nonisolated struct MemoryGroupingTests {
   static func memory(
     year: Int? = nil, savedAt: Date = Date(timeIntervalSince1970: 0),
@@ -18,7 +17,7 @@ nonisolated struct MemoryGroupingTests {
     return try #require(Memory(narrative: narrative, date: date, savedAt: savedAt))
   }
 
-  // oraculo independiente: inicio de decada por division entera, nunca repite MemoryGrouping
+  /// Independent oracle: decade start by integer division, never MemoryGrouping itself.
   static func decadeStart(_ year: Int) -> Int {
     (year / 10) * 10
   }
@@ -54,7 +53,7 @@ nonisolated struct MemoryGroupingTests {
 
     let groups = MemoryGrouping.grouped([older, newer])
 
-    // oraculo independiente: el mismo orden que ya define y prueba Memory.isOrderedBefore
+    // Independent oracle: the same order Memory.isOrderedBefore already defines and tests.
     let expectedOrder = [older, newer].sorted(by: Memory.isOrderedBefore)
     #expect(
       groups == [
@@ -114,7 +113,7 @@ nonisolated struct MemoryGroupingTests {
     let undatedA = try Self.memory(savedAt: Date(timeIntervalSince1970: 10))
     let undatedB = try Self.memory(savedAt: Date(timeIntervalSince1970: 20))
 
-    // orden de entrada deliberadamente revuelto
+    // Input deliberately shuffled.
     let input = [undatedA, m1990s, m2020s, undatedB, m1980s]
     let groups = MemoryGrouping.grouped(input)
 
@@ -136,7 +135,7 @@ nonisolated struct MemoryGroupingTests {
     let b = try Self.memory(savedAt: Date(timeIntervalSince1970: 50))
     let c = try Self.memory(savedAt: Date(timeIntervalSince1970: 25))
 
-    // orden de entrada revuelto
+    // Input shuffled.
     let groups = MemoryGrouping.grouped([b, a, c])
 
     let expectedOrder = [a, b, c].sorted(by: Memory.isOrderedBefore)

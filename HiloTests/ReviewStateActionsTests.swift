@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// reglas 6, 7, 9 y DEC-17: rechazar, confirmar, quitar y deshacer sobre el estado de revision
 nonisolated struct ReviewStateActionsTests {
   private func candidate(_ name: String, _ type: ElementType, role: String? = nil) throws
     -> ReviewCandidate
@@ -11,7 +10,7 @@ nonisolated struct ReviewStateActionsTests {
       ReviewCandidate(name: name, type: type, role: role.flatMap { ElementRole(text: $0) }))
   }
 
-  @Test func `rejecting a recognition moves the item from known to understood, regla 6`() throws {
+  @Test func `rejecting a recognition moves the item from known to understood, rule 6`() throws {
     let jose = try #require(Element(displayName: "José", type: .person))
     var state = ReviewState(
       candidates: [try candidate("José", .person)],
@@ -46,7 +45,7 @@ nonisolated struct ReviewStateActionsTests {
     #expect(state.blocks.doubtful.map(\.name) == ["José García"])
   }
 
-  @Test func `confirming a doubt with a chosen element moves the item into known, regla 7`() throws
+  @Test func `confirming a doubt with a chosen element moves the item into known, rule 7`() throws
   {
     let jose = try #require(Element(displayName: "José", type: .person))
     let joseGarciaPerez = try #require(Element(displayName: "José García Pérez", type: .person))
@@ -126,7 +125,7 @@ nonisolated struct ReviewStateActionsTests {
     #expect(state.blocks.understood.map(\.name) == ["José García"])
     let outcome = state.outcome(memoryID: MemoryID(), dateTextAtSave: "")
     #expect(outcome.confirmedAppearances.isEmpty)
-    #expect(outcome.aliasesToAdd.isEmpty)  // regla 7 deshecha: rechazar no deja alias de José
+    #expect(outcome.aliasesToAdd.isEmpty)  // rule 7 undone: rejecting leaves no alias for José
     #expect(outcome.elementsToCreate.map(\.element.displayName) == ["José García"])
   }
 
@@ -164,7 +163,7 @@ nonisolated struct ReviewStateActionsTests {
       extractedDateText: nil, extractedDeducedYear: nil,
       knownElements: [jose, joseGarciaPerez], appearances: [])
     let itemID = try #require(state.items.first?.id)
-    // deja el item con un estado no trivial antes de quitarlo, para probar que nada se pierde
+    // Leave the item in a non-trivial state before removing it, to prove nothing is lost.
     state.confirmDoubt(itemID, as: jose.id)
     let identityBeforeRemoving = try #require(state.items.first?.identity)
 

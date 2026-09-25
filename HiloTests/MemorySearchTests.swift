@@ -3,7 +3,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 3, DEC-15 + DEC-20 + DEC-57: relato y elementos vinculados, extracto centrado, sin tope
 nonisolated struct MemorySearchTests {
   static func memory(
     narrative: String, savedAt: Date = Date(timeIntervalSince1970: 0)
@@ -23,7 +22,7 @@ nonisolated struct MemorySearchTests {
     Appearance(memoryID: memoryID, elementID: elementID, role: nil, status: status)
   }
 
-  // oraculo independiente: localizacion con la API de Foundation, no la logica interna de MemorySearch
+  /// Independent oracle: Foundation's own search, not MemorySearch's internal logic.
   static func allRanges(of query: String, in text: String) -> [Range<String.Index>] {
     var ranges: [Range<String.Index>] = []
     var searchStart = text.startIndex
@@ -41,7 +40,7 @@ nonisolated struct MemorySearchTests {
     narrative.index(narrative.startIndex, offsetBy: min(length, narrative.count))
   }
 
-  // MARK: results — coincidencia por relato
+  // MARK: results — narrative match
 
   @Test
   func
@@ -66,7 +65,7 @@ nonisolated struct MemorySearchTests {
     #expect(result.extract == memory.narrative.startIndex..<expectedEnd)
   }
 
-  // MARK: results — coincidencia por elemento vinculado
+  // MARK: results — linked element match
 
   @Test
   func
@@ -119,7 +118,7 @@ nonisolated struct MemorySearchTests {
     #expect(result.matchedElementIDs == [element.id])
   }
 
-  // MARK: results — sin coincidencia
+  // MARK: results — no match
 
   @Test
   func
@@ -137,7 +136,7 @@ nonisolated struct MemorySearchTests {
     #expect(results.isEmpty)
   }
 
-  // MARK: results — filtrado de elementos vinculados
+  // MARK: results — filtering linked elements
 
   @Test
   func
@@ -174,9 +173,9 @@ nonisolated struct MemorySearchTests {
       for: "carmen", in: [memoryA, memoryB], elements: [carmen], appearances: appearances,
       defaultExtractLength: 100)
 
-    // memoryA no tiene a Carmen vinculada ni la menciona en el relato: fuera de results
+    // memoryA neither links Carmen nor mentions her: out of the results.
     #expect(!results.contains { $0.memoryID == memoryA.id })
-    // memoryB si la menciona en el relato
+    // memoryB does mention her in the narrative.
     #expect(results.contains { $0.memoryID == memoryB.id })
   }
 
@@ -204,7 +203,7 @@ nonisolated struct MemorySearchTests {
     `six or more matching elements in one memory are all returned, uncapped, in appearance order`()
     throws
   {
-    // DEC-57: sin tope de elementos coincidentes
+    // No cap on matching elements.
     let memory = try Self.memory(narrative: "Una comida familiar cualquiera.")
     let names = ["Ana Pérez", "Ana Gómez", "Ana Luisa", "Ana Belén", "Ana Sofía", "Ana María"]
     let people = try names.map { try Self.element(name: $0) }
@@ -234,7 +233,7 @@ nonisolated struct MemorySearchTests {
     #expect(!result.matchedElementIDs.isEmpty)
   }
 
-  // MARK: results — orden, consulta vacia, lista vacia, determinismo
+  // MARK: results — order, empty query, empty list, determinism
 
   @Test func `results follow Memory ordering, filtered to only the memories that match`() throws {
     let matchingOld = try Self.memory(
@@ -248,7 +247,7 @@ nonisolated struct MemorySearchTests {
     let results = MemorySearch.results(
       for: "reloj", in: all, elements: [], appearances: [], defaultExtractLength: 100)
 
-    // oraculo independiente: el mismo criterio que ya define y prueba Memory.isOrderedBefore
+    // Independent oracle: the same criterion Memory.isOrderedBefore already defines and tests.
     let expectedOrder = [matchingOld, matchingNew].sorted(by: Memory.isOrderedBefore).map(\.id)
     #expect(results.map(\.memoryID) == expectedOrder)
     #expect(!results.contains { $0.memoryID == nonMatching.id })
@@ -289,7 +288,7 @@ nonisolated struct MemorySearchTests {
     #expect(first == second)
   }
 
-  // MARK: narrativeMatches — llamado directo
+  // MARK: narrativeMatches — called directly
 
   @Test func `narrativeMatches finds two non-overlapping occurrences at the right positions`()
     throws
@@ -303,7 +302,7 @@ nonisolated struct MemorySearchTests {
     #expect(matches.count == 2)
   }
 
-  // MARK: extractRange — llamado directo, recorte por defecto vs centrado
+  // MARK: extractRange — called directly, default clip versus centred
 
   @Test func `extractRange returns the default clip when the first match starts within the budget`()
     throws
@@ -331,7 +330,7 @@ nonisolated struct MemorySearchTests {
     let matches = MemorySearch.narrativeMatches(of: "reloj", in: narrative)
     let firstMatch = try #require(matches.first)
 
-    // confirma la premisa: el inicio de la coincidencia cae fuera del recorte por defecto
+    // Confirms the premise: the match starts outside the default clip.
     let defaultEnd = Self.defaultClipEnd(of: narrative, length: defaultExtractLength)
     #expect(firstMatch.lowerBound >= defaultEnd)
 
@@ -350,7 +349,7 @@ nonisolated struct MemorySearchTests {
     throws
   {
     let defaultExtractLength = 30
-    // relleno sintetico para fijar el offset exacto de la coincidencia, no es un recuerdo real
+    // Synthetic filler to fix the match's exact offset; not a real memory.
     let insideFiller = String(repeating: "a", count: defaultExtractLength - 1)
     let outsideFiller = String(repeating: "a", count: defaultExtractLength)
     let tail = " y más cosas alrededor para que el relato sea suficientemente largo."
@@ -371,9 +370,9 @@ nonisolated struct MemorySearchTests {
     let defaultEndOutside = Self.defaultClipEnd(
       of: narrativeOutside, length: defaultExtractLength)
 
-    // offset defaultExtractLength-1: dentro del recorte por defecto -> extracto por defecto
+    // Offset defaultExtractLength - 1: inside the default clip, so the default extract.
     #expect(extractInside == narrativeInside.startIndex..<defaultEndInside)
-    // offset defaultExtractLength: un caracter mas alla -> ya no es el recorte por defecto
+    // Offset defaultExtractLength: one character further, no longer the default clip.
     #expect(extractOutside != narrativeOutside.startIndex..<defaultEndOutside)
   }
 
@@ -383,7 +382,7 @@ nonisolated struct MemorySearchTests {
     throws
   {
     let defaultExtractLength = 30
-    // relato apenas mas largo que el presupuesto, con la coincidencia cerca del final
+    // A narrative just longer than the budget, with the match near the end.
     let filler = String(repeating: "x", count: defaultExtractLength)
     let narrative = filler + "reloj"
 

@@ -3,9 +3,8 @@ import Testing
 
 @testable import Hilo
 
-// contrato 8 + regla 1: un recuerdo sin relato no existe, y el relato nunca se reescribe
 nonisolated struct MemoryTests {
-  // savedAt es un dato de sistema sin valor por defecto: siempre fijo, nunca Date()
+  /// savedAt is system data with no default: always fixed, never Date().
   static let fixedSavedAt = Date(timeIntervalSince1970: 0)
 
   @Test(arguments: ["", "   ", "\n\t"])
@@ -26,7 +25,7 @@ nonisolated struct MemoryTests {
     #expect(memory.savedAt == Self.fixedSavedAt)
   }
 
-  // F2.2: init de reconstruccion conserva el id ya validado; el failable siempre crea uno nuevo
+  /// The rebuild init keeps the validated id; the failable init always creates a new one.
   @Test
   func
     `The reconstruction init keeps the exact id it is given, unlike the failable init which always creates a new one`()

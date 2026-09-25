@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 4 + DEC-16/DEC-18: el desenlace completo de un intento de comprension, no solo el error
 nonisolated struct MemoryComprehensionOutcomeTests {
   private static let errorsAndReasons: [(MemoryComprehensionError, MemoryComprehensionReason)] = [
     (.guardrailViolation, .guardrail),
@@ -69,7 +68,7 @@ nonisolated struct MemoryComprehensionOutcomeTests {
   }
 
   @Test func `Comprehending later from the same scripted result yields the same outcome twice`() {
-    // DEC-16/DEC-18: reintentar reconstruye el desenlace desde el mismo guion, sin estado compartido
+    // Retrying rebuilds the outcome from the same script, with no shared state.
     let result = Result<ExtractedMemory, MemoryComprehensionError>.failure(.contextOverflow)
 
     let first = MemoryComprehensionOutcome(result, narrative: "un relato cualquiera")

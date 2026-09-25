@@ -1,7 +1,6 @@
 import Foundation
 
-// contrato 4 (S4) + contrato 5 (Revision): una conexion siempre enseña su motivo (regla 4 del
-// diseño); mismo texto tanto justo despues de guardar como al leerlo mas tarde desde el detalle
+/// A connection always shows its motive, with the same text right after saving and later in the detail.
 nonisolated enum ConnectionCopy {
   static func firstAppearanceBody(names: [String], locale: Locale) -> String {
     let joined = names.joinedAsList(locale: locale)
@@ -26,7 +25,7 @@ nonisolated enum ConnectionCopy {
       ))
   }
 
-  // el extracto se corta en pantalla, pero VoiceOver lee el recuerdo entero tras el motivo
+  /// The extract is cut on screen, but VoiceOver reads the whole memory after the motive.
   static func connectionRowLabel(names: [String], narrative: String, locale: Locale) -> String {
     "\(connectionMotive(names: names, locale: locale)). \(narrative)"
   }

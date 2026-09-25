@@ -4,9 +4,8 @@ import Testing
 
 @testable import Hilo
 
-// contrato 4: contextOverflow, guardrailViolation, refusal, unsupportedLanguage, assetsUnavailable,
-// decodingFailure y noResponse son estados de producto; concurrentRequests, unsupportedGuide y
-// unsupportedGenerationGuide son defectos nuestros (preconditionFailure), no se prueban aqui
+/// Our own defects (concurrentRequests, unsupportedGuide, unsupportedGenerationGuide) are
+/// preconditionFailures, so they are not tested here.
 nonisolated struct MemoryComprehensionErrorMappingTests {
   private struct UnrecognizedTestError: Error, Sendable {}
 
@@ -60,7 +59,7 @@ nonisolated struct MemoryComprehensionErrorMappingTests {
     #expect(MemoryComprehensionError(mapping: error) == .noResponse)
   }
 
-  // MARK: - LanguageModelError (iOS 27+, excepcion acotada de CLAUDE.md: el simulador activo es 27.0)
+  // MARK: - LanguageModelError (iOS 27+, the one availability exception; the active simulator runs 27.0)
 
   @available(iOS, introduced: 27, message: "requires iOS 27: this error type does not exist on 26.x")
   @Test func `Model guardrail violation maps to guardrailViolation`() {
@@ -139,7 +138,7 @@ nonisolated struct MemoryComprehensionErrorMappingTests {
     #expect(MemoryComprehensionError(mapping: error) == .decodingFailure)
   }
 
-  // MARK: - MemoryComprehensionClassification, defectos propios (no estados de producto)
+  // MARK: - MemoryComprehensionClassification, our own defects (not product states)
 
   @Test func `Generation concurrent requests classifies as an own defect`() {
     let error = LanguageModelSession.GenerationError.concurrentRequests(
@@ -182,7 +181,7 @@ nonisolated struct MemoryComprehensionErrorMappingTests {
     }
   }
 
-  // MARK: - Cualquier otro error
+  // MARK: - Any other error
 
   @Test func `An unrecognized error maps to noResponse`() {
     let error = UnrecognizedTestError()

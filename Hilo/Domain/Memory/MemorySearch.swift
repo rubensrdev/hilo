@@ -7,7 +7,7 @@ nonisolated struct MemorySearchResult: Sendable, Equatable {
   let matchedElementIDs: [ElementID]
 }
 
-// contrato 3, DEC-15 + DEC-20 + DEC-57: relato y elementos vinculados, extracto centrado, sin tope
+/// Searches the narrative and the linked elements, centres the extract, and never caps results.
 nonisolated enum MemorySearch {
   static func results(
     for query: String, in memories: [Memory], elements: [Element],
@@ -51,7 +51,7 @@ nonisolated enum MemorySearch {
     return ranges
   }
 
-  // DEC-20: dentro si el inicio de la coincidencia cabe en el recorte por defecto; si no, se centra
+  /// Keeps the default extract when the match starts inside it; otherwise centres on the match.
   static func extractRange(
     in narrative: String, matches: [Range<String.Index>], defaultExtractLength: Int
   ) -> Range<String.Index> {
@@ -67,7 +67,7 @@ nonisolated enum MemorySearch {
       narrative.distance(from: narrative.startIndex, to: firstMatch.lowerBound)
       + narrative.distance(from: firstMatch.lowerBound, to: firstMatch.upperBound) / 2
     let desiredStartOffset = max(0, matchMidOffset - defaultExtractLength / 2)
-    // nunca encoge la ventana por debajo del presupuesto si el relato da para mas: desliza hacia atras
+    // Never shrink the window below the budget when the narrative allows it: slide back instead.
     let maxStartOffset = max(0, narrative.count - defaultExtractLength)
     let startOffset = min(desiredStartOffset, maxStartOffset)
 
@@ -98,7 +98,7 @@ nonisolated enum MemorySearch {
     return order
   }
 
-  // busqueda por substring, sin el recorte de articulo inicial de CanonicalName: no es identidad
+  /// Plain substring match, without CanonicalName's leading-article trim: this is search, not identity.
   private static func matches(query: String, in name: String) -> Bool {
     folded(name).contains(folded(query))
   }

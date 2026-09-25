@@ -3,8 +3,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 1 + contrato 6 + anexo DEC-46: cada error de F3 produce su texto y su estado,
-// y solo el generico ofrece reintentar (DEC-42) — compartido entre Captura (F3/F4) y Explorar (F5.3)
 nonisolated struct ComprehensionCopyTests {
   private static let english = Locale(identifier: "en")
   private static let spanish = Locale(identifier: "es")
@@ -29,8 +27,8 @@ nonisolated struct ComprehensionCopyTests {
     let actions: ComprehensionNoticeCopy.Actions
   }
 
-  // guardarrail y rechazo comparten el texto generico a proposito: nunca se insinua que
-  // el recuerdo sea inapropiado (anexo DEC-46)
+  /// Guardrail and refusal share the generic text on purpose: it never hints that the memory
+  /// is inappropriate.
   static let expectations: [Expected] = [
     Expected(
       error: .guardrailViolation, bodyEN: genericEN, bodyES: genericES, actions: .retryOrLeave),
@@ -63,7 +61,7 @@ nonisolated struct ComprehensionCopyTests {
     #expect(copy.actions == expected.actions)
   }
 
-  // los botones y CaptureState.canRetry leen la misma regla: no pueden divergir
+  /// The buttons and CaptureState.canRetry read the same rule, so they can't diverge.
   @Test(arguments: expectations)
   func `The offered actions follow the retry rule`(expected: Expected) {
     let reason = MemoryComprehensionReason(mapping: expected.error)
@@ -76,7 +74,6 @@ nonisolated struct ComprehensionCopyTests {
       copy.announcement == "Tu recuerdo está guardado tal como lo contaste. \(Self.overflowES)")
   }
 
-  // F8.4: VoiceOver oye que Hilo empieza a leer, en captura y en comprender mas tarde
   @Test func `The reading announcement has its text in both languages`() {
     #expect(ComprehensionCopy.readingAnnouncement(locale: Self.english) == "Reading your memory…")
     #expect(ComprehensionCopy.readingAnnouncement(locale: Self.spanish) == "Leyendo tu recuerdo…")

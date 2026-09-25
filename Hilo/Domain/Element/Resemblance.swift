@@ -1,6 +1,6 @@
 import Foundation
 
-// contrato 2: mismo tipo y el canonico de un nombre contiene al del otro como secuencia de palabras completas
+/// Same type, and one canonical name contains the other as a sequence of whole words.
 nonisolated enum Resemblance {
   static func between(
     _ nameA: String, type typeA: ElementType,

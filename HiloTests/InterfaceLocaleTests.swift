@@ -3,7 +3,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 6: listas y anuncios van en el idioma de la interfaz, no en el del sistema
 nonisolated struct InterfaceLocaleTests {
   private let localizations = ["en", "es", "Base"]
 
@@ -26,8 +25,7 @@ nonisolated struct InterfaceLocaleTests {
   }
 }
 
-// F5.5: nombre, tipo y recuento — el mismo dato que el chip visual transmite por color+simbolo,
-// para quien usa VoiceOver
+/// Name, type and count: what the visual chip conveys through colour and symbol, for VoiceOver users.
 nonisolated struct ElementAccessibilityLabelTests {
   private let english = Locale(identifier: "en")
   private let spanish = Locale(identifier: "es")
@@ -51,7 +49,6 @@ nonisolated struct ElementAccessibilityLabelTests {
         == "el pueblo, Lugar, en 1 recuerdo")
   }
 
-  // F8 contrato 2: el cero, montado, es plural en los dos idiomas
   @Test func `An element with zero memories uses the plural, in both languages`() throws {
     let element = try #require(Element(displayName: "Carmen", type: .person))
     #expect(
@@ -62,7 +59,7 @@ nonisolated struct ElementAccessibilityLabelTests {
         == "Carmen, Persona, en 0 recuerdos")
   }
 
-  // sin recuento (nil): la fila de S1/S4 lo omite si aun no se conoce, sin decir "0 recuerdos"
+  /// No count (nil): the row leaves it out while unknown, instead of saying "0 memories".
   @Test func `An element with no known count announces only name and type, in both languages`() throws {
     let clock = try #require(Element(displayName: "el reloj", type: .object))
     #expect(clock.accessibilityLabel(memoryCount: nil, locale: english) == "el reloj, Object")

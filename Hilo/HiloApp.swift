@@ -3,23 +3,23 @@ import SwiftUI
 
 @main
 struct HiloApp: App {
-  // sin carga inicial (contrato 2 de F2): el contenedor se crea una vez y se inyecta, nada más
+  /// No initial load: the container is created once and injected, nothing more.
   static let container: ModelContainer = {
     do {
       return try PersistenceContainer.make(inMemory: false)
     } catch {
-      fatalError("No se pudo crear el ModelContainer: \(error)")
+      fatalError("Could not create the ModelContainer: \(error)")
     }
   }()
 
   @State private var captureState: CaptureState
   @State private var reviewCoordinator: ReviewCoordinator
   @State private var exploreState: ExploreState
-  // contrato 1, DEC-12: contar un recuerdo se abre desde el toolbar de Memoria, ya no es la raiz
+  /// Capture opens from the Memory toolbar; it is not the root.
   @State private var isCapturePresented = false
 
-  // el closure de onUnderstood se construye aqui, antes de que self exista, asi que no
-  // puede tocar un @State de la app: captura reviewCoordinator (una referencia), no self
+  /// onUnderstood is built here, before self exists, so it can't touch an app @State: it captures
+  /// reviewCoordinator, a reference, instead of self.
   init() {
     let persistenceActor = PersistenceActor(modelContainer: Self.container)
     let comprehender = FoundationModelsMemoryComprehender()

@@ -4,9 +4,8 @@ import Testing
 
 @testable import Hilo
 
-// contrato 3 + DEC-27: se guardan los pixeles, nunca los metadatos ni la ubicacion
 struct PhotoStripperTests {
-  // fixture propio, sin depender de assets del proyecto: un JPEG de 2x2 con GPS real incrustado
+  /// A fixture of its own, independent of project assets: a 2×2 JPEG with real embedded GPS.
   static func jpegWithGPS(width: Int = 2, height: Int = 2) throws -> Data {
     let colorSpace = try #require(CGColorSpace(name: CGColorSpace.sRGB))
     let context = try #require(

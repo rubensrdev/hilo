@@ -1,6 +1,5 @@
 import SwiftUI
 
-// contrato 1: dos destinos, Memoria y Preguntar; la hoja de contar envuelve Captura + Revision tal cual
 struct RootScreen: View {
   let exploreState: ExploreState
   let captureState: CaptureState
@@ -10,10 +9,10 @@ struct RootScreen: View {
   var body: some View {
     TabView {
       Tab("Memory", systemImage: "square.stack") {
-        MemoriaScreen(state: exploreState, isCapturePresented: $isCapturePresented)
+        MemoryScreen(state: exploreState, isCapturePresented: $isCapturePresented)
       }
       Tab("Ask", systemImage: "text.magnifyingglass") {
-        PreguntarScreen()
+        AskScreen()
       }
     }
     .sheet(
@@ -21,7 +20,7 @@ struct RootScreen: View {
       onDismiss: { Task { await exploreState.load() } }
     ) {
       CaptureScreen(state: captureState)
-        // DEC-47: deslizar y Cancel pasan los dos por aqui; guardar ya ha salido de .reviewing y esto queda inocuo
+        // Swiping and Cancel both land here; saving has already left .reviewing, so this stays harmless.
         .sheet(item: $reviewCoordinator.presentation, onDismiss: captureState.reviewDismissed) {
           presentation in
           switch presentation.stage {

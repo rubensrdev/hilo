@@ -3,8 +3,6 @@ import Testing
 
 @testable import Hilo
 
-// S4 (F5.3) + MemoryConnections.ownOrder: los elementos propios de un recuerdo, sin duplicar
-// por fila de aparicion — mismo deduplicado que ElementMemories, en sentido inverso
 nonisolated struct MemoryElementsTests {
   static func element(name: String, type: ElementType = .person) throws -> Element {
     try #require(Element(displayName: name, type: type))
@@ -80,7 +78,7 @@ nonisolated struct MemoryElementsTests {
     let other = try Self.memory(narrative: "José y Carmen en la boda.")
     let jose = try Self.element(name: "José")
     let carmen = try Self.element(name: "Carmen")
-    // orden deliberadamente intercalado entre los dos recuerdos
+    // Deliberately interleaved between the two memories.
     let appearances = [
       Self.appearance(memoryID: other.id, elementID: jose.id),
       Self.appearance(memoryID: target.id, elementID: jose.id),

@@ -1,4 +1,4 @@
-// contrato 4: los 7 estados de producto — todos acaban en "guardado sin analizar, y se dice por qué"
+/// The seven product states; every one ends in "saved without analyzing, and told why".
 nonisolated enum MemoryComprehensionError: Error, Sendable, Equatable {
   case guardrailViolation
   case contextOverflow

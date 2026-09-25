@@ -10,9 +10,8 @@ extension MemoryComprehensionReason {
 }
 
 extension MemoryComprehensionOutcome {
-  // "comprender mas tarde" (DEC-16/DEC-18) es volver a llamar a comprehend con el
-  // mismo relato, sin estado (contrato 3): no hace falta una operacion distinta.
-  // Marcar isAnalyzed y actualizar el recuerdo existente es de F4.
+  /// Understanding later is calling comprehend again with the same narrative and no state, so no
+  /// separate operation is needed.
   nonisolated init(_ result: Result<ExtractedMemory, MemoryComprehensionError>?, narrative: String)
   {
     switch result {

@@ -1,10 +1,8 @@
 @testable import Hilo
 
-// doble reutilizable por F3.3 (streaming/cancelacion) y F3.4 (caminos de error)
 nonisolated struct FakeMemoryComprehender: MemoryComprehending {
   enum Script: Sendable {
-    // delayBetweenPartials en .zero preserva la entrega sincrona de siempre (F3.1);
-    // un valor mayor abre un hueco real donde cancelar (F3.3)
+    /// A zero delay keeps delivery synchronous; a larger one opens a real gap to cancel in.
     case succeeds(
       partials: [ExtractedMemory], final: ExtractedMemory, delayBetweenPartials: Duration = .zero)
     case fails(MemoryComprehensionError)

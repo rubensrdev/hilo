@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 1 + contrato 3: el doble entrega el guion tal cual, en orden de lectura
 nonisolated struct MemoryComprehendingTests {
   @Test func `Delivers partials in reading order and the final result matches the script`()
     async throws

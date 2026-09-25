@@ -1,4 +1,4 @@
-// puente Intelligence -> Domain: el unico fichero que conoce ExtractedMemory y ReviewState a la vez
+/// The Intelligence-to-Domain bridge: the only file that knows both ExtractedMemory and ReviewState.
 nonisolated extension ElementType {
   init(_ extracted: ExtractedElementType) {
     switch extracted {

@@ -4,7 +4,7 @@ nonisolated enum ExampleMemoryLanguage: Equatable {
   case spanish
   case english
 
-  // F2 contrato 5: el idioma de la interfaz al cargarlo; el locale ya viene resuelto por InterfaceLocale
+  /// The interface language at load time, already resolved by InterfaceLocale.
   init(interfaceLocale: Locale) {
     self = interfaceLocale.language.languageCode?.identifier == "es" ? .spanish : .english
   }
@@ -23,8 +23,8 @@ struct ExampleMemorySeed {
   let appearances: [ExampleAppearanceSeed]
 }
 
-// docs/content/memoria-de-ejemplo.md, aprobado por Ruben: tal cual, sin reescribir ni anadir nada
-// contenido fijo sin estado de actor: nonisolated para poder leerlo desde el actor de persistencia
+/// docs/content/memoria-de-ejemplo.md as approved, word for word. nonisolated so the persistence
+/// actor can read it.
 nonisolated enum ExampleMemoryContent {
   static func seeds(for language: ExampleMemoryLanguage) -> [ExampleMemorySeed] {
     switch language {

@@ -1,4 +1,4 @@
-// contrato 4: conexion deducida — no se almacena, se calcula a partir de las apariciones (§12)
+/// Derived from appearances, never stored.
 nonisolated struct MemoryConnection: Sendable, Equatable {
   let memoryID: MemoryID
   let motives: [ElementID]
@@ -6,11 +6,11 @@ nonisolated struct MemoryConnection: Sendable, Equatable {
 
 nonisolated enum MemoryConnections {
   static func connected(to memory: Memory, appearances: [Appearance]) -> [MemoryConnection] {
-    // orden de motivos: el de las apariciones propias del recuerdo de origen, nunca el del ajeno
+    // Motives follow the origin memory's own appearance order, never the other memory's.
     let ownOrder = MemoryElements.elementIDs(for: memory.id, in: appearances)
     let ownElements = Set(ownOrder)
 
-    // orden de conexiones: por la primera aparicion cualificada de cada memoryID ajeno
+    // Connections follow the first qualifying appearance of each other memory.
     var connectionOrder: [MemoryID] = []
     var seenMemories: Set<MemoryID> = []
     var sharedElementsByMemory: [MemoryID: Set<ElementID>] = [:]

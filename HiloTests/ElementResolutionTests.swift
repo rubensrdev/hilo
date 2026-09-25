@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 3: resolucion de un nombre — exactamente uno de tres resultados, sin efectos
 nonisolated struct ElementResolutionTests {
   @Test func `mi reloj resolves as an exact match against the existing el reloj, same type`()
     throws
@@ -13,7 +12,7 @@ nonisolated struct ElementResolutionTests {
   }
 
   @Test func `an alias counts as an exact match just like the display name`() throws {
-    // regla 8: cualquier alias vale como coincidencia exacta
+    // Rule 8: any alias counts as an exact match.
     let jose = try #require(Element(displayName: "José", type: .person, aliases: ["Pepe"]))
     let result = ElementResolution.resolving(name: "Pepe", type: .person, against: [jose])
     #expect(result == .exactMatch([jose.id]))
@@ -60,7 +59,7 @@ nonisolated struct ElementResolutionTests {
   }
 
   @Test func `exact match takes priority over identity doubt from a different element`() throws {
-    // contrato 3: exactamente uno de los tres resultados, la duda no contamina una coincidencia exacta ya encontrada
+    // Doubt never contaminates an exact match already found.
     let exactJoseGarcia = try #require(Element(displayName: "José García", type: .person))
     let doubtfulJose = try #require(Element(displayName: "José", type: .person))
     let result = ElementResolution.resolving(

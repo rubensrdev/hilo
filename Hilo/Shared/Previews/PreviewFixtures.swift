@@ -2,7 +2,7 @@
   import ImageIO
   import SwiftUI
 
-  // solo previews: cada estado se alcanza por el camino real de CaptureState, sin abrir setters
+  /// Previews only: each state is reached through CaptureState's real path, with no open setters.
   enum PreviewFixtures {
     static let narrative =
       "El verano del 87 la abuela Carmen nos llevó a Cádiz con la Singer en el coche."
@@ -11,11 +11,11 @@
       do {
         return PersistenceActor(modelContainer: try PersistenceContainer.make(inMemory: true))
       } catch {
-        fatalError("No se pudo crear el contenedor de la preview: \(error)")
+        fatalError("Could not create the preview container: \(error)")
       }
     }
 
-    // ADR-000 §4: nunca UIKit, tampoco en DEBUG; un PNG dibujado con Core Graphics
+    /// No UIKit, not even in DEBUG: a PNG drawn with Core Graphics.
     static let photoData: Data = {
       guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
         let context = CGContext(
@@ -42,15 +42,15 @@
       ],
       dateText: "El verano del 87", deducedYear: 1987)
 
-    // segundo recuerdo real para los escenarios "conectado"/"con rango" (F5.4/F5.5): la memoria
-    // de ejemplo ya aprobada (docs/content/memoria-de-ejemplo.md), nunca un relato inventado
+    /// A second real memory for the connected and date-range scenarios, taken from the approved
+    /// example memory, never invented text.
     static let secondExample = ExampleMemoryContent.seeds(for: .spanish)[1]
     static let secondDate = secondExample.dateText.flatMap {
       MemoryDate(text: $0, deducedYear: secondExample.deducedYear)
     }
   }
 
-  // MARK: captura
+  // MARK: capture
 
   enum CaptureScenario: Hashable, CaseIterable {
     case empty
@@ -64,7 +64,7 @@
     case saveFailed
   }
 
-  // makeSharedContext es async y el canvas lo espera: cada estado ya esta alcanzado al pintar
+  /// makeSharedContext is async and the canvas waits for it, so each state is reached before drawing.
   struct CaptureScenarios: PreviewModifier {
     private struct Key: Hashable {
       let scenario: CaptureScenario
@@ -110,7 +110,7 @@
         persistenceActor: PreviewFixtures.persistenceActor(),
         interfaceLanguage: language
       ) { _, _, _, _ in
-        // sin hoja de revision en la preview: el unico camino que la usa es el fallo al prepararla
+        // No review sheet in the preview: the only path that uses it is the preparation failure.
         holder.state?.reviewPreparationFailed()
       }
       holder.state = state
@@ -133,14 +133,14 @@
       case .savedWithoutAnalyzing:
         await state.saveWithoutAnalyzing()
       case .saveFailed:
-        // PhotoStripper lanza con datos que no son una imagen: el camino real del fallo
+        // PhotoStripper throws on data that isn't an image: the real failure path.
         state.photoData = Data("not a photo".utf8)
         await state.saveWithoutAnalyzing()
       }
       return state
     }
 
-    // tope de un segundo: si el estado no llega, la preview lo enseña tal cual en vez de colgarse
+    /// Capped at one second: if the state never arrives, the preview shows it as is instead of hanging.
     private static func waitUntil(_ isReached: () -> Bool) async {
       for _ in 0..<100 where !isReached() {
         try? await Task.sleep(for: .milliseconds(10))
@@ -148,7 +148,7 @@
     }
   }
 
-  // la preview lee el estado que deja el modificador, como la app lo recibe de HiloApp
+  /// Reads the state the modifier leaves, as the app receives it from HiloApp.
   struct CapturePreviewScreen: View {
     @Environment(CaptureState.self) private var state
 
@@ -170,7 +170,7 @@
 
     private let script: Script
 
-    // se crea en la vista de la preview; solo comprehend corre fuera del main actor
+    /// Built in the preview's view; only comprehend runs off the main actor.
     @MainActor init(scenario: CaptureScenario) {
       switch scenario {
       case .notAnalyzedRetryable:
@@ -195,7 +195,7 @@
         switch script {
         case .keepsReading(let partials):
           partials.forEach { continuation.yield($0) }
-          // se queda leyendo: la preview enseña «comprendiendo» con los elementos ya aparecidos
+          // Keeps reading: the preview shows comprehending with elements already in.
           let task = Task {
             try? await Task.sleep(for: .seconds(3600))
             continuation.finish()
@@ -211,7 +211,7 @@
     }
   }
 
-  // MARK: revision
+  // MARK: review
 
   enum ReviewScenario {
     case connected
@@ -229,7 +229,7 @@
         var state = ReviewState(
           extracted: withCar, knownElements: [carmen, cadiz],
           appearances: appearances(of: carmen, in: 3) + appearances(of: cadiz, in: 1))
-        // el chip quitado con «Deshacer» sale por el mismo metodo que el boton
+        // The chip removed with "Undo" goes through the same method as the button.
         if let car = state.items.first(where: { $0.originalName == "el coche" }) {
           state.remove(car.id)
         }
@@ -266,7 +266,7 @@
     }
   }
 
-  // MARK: explorar
+  // MARK: explore
 
   enum ExploreScenario: Hashable, CaseIterable {
     case empty
@@ -340,7 +340,7 @@
         state.selectedView = .elements
       case .elementsFilterNoResults:
         state.selectedView = .elements
-        // en la muestra no hay ningun objeto: filtrar por objeto siempre da "sin resultados"
+        // The sample has no objects: filtering by object always gives no results.
         state.selectedElementTypeFilter = .object
       case .empty, .single, .normal:
         break
@@ -353,13 +353,13 @@
     @Environment(ExploreState.self) private var state
 
     var body: some View {
-      MemoriaScreen(state: state, isCapturePresented: .constant(false))
+      MemoryScreen(state: state, isCapturePresented: .constant(false))
     }
   }
 
   extension PreviewFixtures {
     static var exploreMemory: Memory {
-      // reutiliza el mismo contenido de PreviewFixtures.narrative, nunca texto de muestra nuevo
+      // Reuses PreviewFixtures.narrative, never new sample text.
       Memory(
         id: MemoryID(), narrative: narrative,
         date: MemoryDate(text: "El verano del 87", deducedYear: 1987), savedAt: .now)
@@ -373,7 +373,7 @@
       Element(id: ElementID(), displayName: "Cádiz", type: .place)
     }
 
-    // dos recuerdos y dos elementos, para los estados normal/buscando/lista de elementos
+    /// Two memories and two elements, for the normal, searching and element-list states.
     static func seedExploreSample(into actor: PersistenceActor) async {
       let carmen = exploreElement
       let cadiz = explorePlace
@@ -396,7 +396,7 @@
     }
   }
 
-  // MARK: detalle de recuerdo (S4)
+  // MARK: memory detail
 
   enum MemoryDetailScenario: Hashable, CaseIterable {
     case withPhoto
@@ -461,7 +461,7 @@
         )
       }
 
-      // el segundo recuerdo comparte la abuela Carmen: es lo que conecta a target
+      /// The second memory shares grandma Carmen: that is what connects it to the target.
       func saveConnectedMemory() async {
         let other = Memory(
           id: MemoryID(), narrative: PreviewFixtures.secondExample.narrative,
@@ -512,7 +512,7 @@
     }
   }
 
-  // MARK: detalle de elemento (S5)
+  // MARK: element detail
 
   enum ElementDetailScenario: Hashable, CaseIterable {
     case several
@@ -554,9 +554,8 @@
       }
     }
 
-    // .several reutiliza la abuela Carmen (exploreElement), ya conectada a un segundo recuerdo
-    // (mismo patron que MemoryDetailScenarios.saveConnectedMemory); .single usa "la Singer", ya
-    // mencionada en PreviewFixtures.narrative/exploreMemory, sin apariciones en ningun otro sitio
+    /// .several reuses grandma Carmen, already connected to a second memory; .single uses
+    /// "la Singer", which already appears in the fixture narrative and nowhere else.
     private static func reached(_ scenario: ElementDetailScenario) async -> ElementDetailState {
       let actor = PreviewFixtures.persistenceActor()
       let target = PreviewFixtures.exploreMemory
@@ -604,31 +603,31 @@
     }
   }
 
-  // MARK: ajustes (S7)
+  // MARK: settings
 
-  enum AjustesScenario: Hashable, CaseIterable {
+  enum SettingsScenario: Hashable, CaseIterable {
     case withoutExample
     case withExample
   }
 
-  struct AjustesScenarios: PreviewModifier {
+  struct SettingsScenarios: PreviewModifier {
     private struct Key: Hashable {
-      let scenario: AjustesScenario
+      let scenario: SettingsScenario
       let language: String
     }
 
-    let scenario: AjustesScenario
+    let scenario: SettingsScenario
     let locale: Locale
 
-    init(_ scenario: AjustesScenario, locale: Locale = Locale(identifier: "en")) {
+    init(_ scenario: SettingsScenario, locale: Locale = Locale(identifier: "en")) {
       self.scenario = scenario
       self.locale = locale
     }
 
-    static func makeSharedContext() async -> [AnyHashable: AjustesState] {
-      var states: [AnyHashable: AjustesState] = [:]
+    static func makeSharedContext() async -> [AnyHashable: SettingsState] {
+      var states: [AnyHashable: SettingsState] = [:]
       for language in ["en", "es"] {
-        for scenario in AjustesScenario.allCases {
+        for scenario in SettingsScenario.allCases {
           states[Key(scenario: scenario, language: language)] = await reached(
             scenario, language: language)
         }
@@ -636,7 +635,7 @@
       return states
     }
 
-    func body(content: Content, context: [AnyHashable: AjustesState]) -> some View {
+    func body(content: Content, context: [AnyHashable: SettingsState]) -> some View {
       let language = locale.language.languageCode?.identifier ?? "en"
       Group {
         if let state = context[Key(scenario: scenario, language: language)] {
@@ -647,10 +646,10 @@
       }
     }
 
-    private static func reached(_ scenario: AjustesScenario, language: String) async
-      -> AjustesState
+    private static func reached(_ scenario: SettingsScenario, language: String) async
+      -> SettingsState
     {
-      let state = AjustesState(
+      let state = SettingsState(
         persistenceActor: PreviewFixtures.persistenceActor(), version: "1.0",
         onMemoryChanged: {}, onWiped: {})
       if scenario == .withExample {
@@ -662,15 +661,15 @@
     }
   }
 
-  struct AjustesPreviewScreen: View {
-    @Environment(AjustesState.self) private var state
+  struct SettingsPreviewScreen: View {
+    @Environment(SettingsState.self) private var state
 
     var body: some View {
-      AjustesScreen(state: state)
+      SettingsScreen(state: state)
     }
   }
 
-  // MARK: momento de la conexion
+  // MARK: connection moment
 
   extension PreviewFixtures {
     static func connectionMoment(connectedCount: Int) -> ConnectionMoment? {

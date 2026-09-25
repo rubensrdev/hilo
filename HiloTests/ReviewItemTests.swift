@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 2: el candidato de revision es la puerta de entrada, y la identidad nace de la resolucion pura
 nonisolated struct ReviewItemTests {
   @Test(arguments: ["", "   ", "\n\t"])
   func `rejects a blank candidate name`(name: String) {

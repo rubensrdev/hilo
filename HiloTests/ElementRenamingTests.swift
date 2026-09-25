@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 5: renombrar y alias — colision de canonico y elementos afectados, sin tocar apariciones
 nonisolated struct ElementRenamingTests {
   @Test func `renaming to a canonical name that is free is never a collision`() throws {
     let carmen = try #require(Element(displayName: "Carmen", type: .person))
@@ -21,7 +20,6 @@ nonisolated struct ElementRenamingTests {
   @Test func `renaming la tía Carmen to Carmen is rejected, naming the element it collides with`()
     throws
   {
-    // caso del spec, linea 144
     let carmen = try #require(Element(displayName: "Carmen", type: .person))
     let auntCarmen = try #require(Element(displayName: "la tía Carmen", type: .person))
     let result = NameCollision.checking(
@@ -53,7 +51,7 @@ nonisolated struct ElementRenamingTests {
   @Test func `adding a new alias that collides with another element's display name is rejected`()
     throws
   {
-    // DEC-26: añadir un alias se valida con la misma funcion que renombrar
+    // Adding an alias is validated by the same function as renaming.
     let carmen = try #require(Element(displayName: "Carmen", type: .person))
     let manolo = try #require(Element(displayName: "Manolo", type: .person))
     let result = NameCollision.checking(
@@ -62,14 +60,13 @@ nonisolated struct ElementRenamingTests {
   }
 
   @Test func `an element appearing in four different memories affects four memories`() throws {
-    // caso del spec, linea 143
     let jose = try #require(Element(displayName: "José", type: .person))
     let carmen = try #require(Element(displayName: "Carmen", type: .person))
     let memoryIDs = (0..<4).map { _ in MemoryID() }
     var appearances = memoryIDs.map {
       Appearance(memoryID: $0, elementID: jose.id, role: nil, status: .confirmedByUser)
     }
-    // ruido: una aparicion de otro elemento no debe sumar al conteo
+    // Noise: another element's appearance must not add to the count.
     appearances.append(
       Appearance(
         memoryID: MemoryID(), elementID: carmen.id, role: nil, status: .confirmedByUser))

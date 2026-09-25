@@ -8,7 +8,7 @@ nonisolated struct ReviewItemID: Sendable, Hashable {
   }
 }
 
-// contrato 3: entrada de dominio para un candidato extraido, sin saber nada de FoundationModels
+/// A candidate as the domain sees it, knowing nothing about FoundationModels.
 nonisolated struct ReviewCandidate: Sendable {
   let name: String
   let type: ElementType
@@ -22,17 +22,16 @@ nonisolated struct ReviewCandidate: Sendable {
   }
 }
 
-// contrato 3: como responde el usuario a una duda de identidad, dos respuestas del mismo peso
+/// Two answers of equal weight to an identity doubt.
 nonisolated enum DoubtAnswer: Sendable, Equatable {
   case same(ElementID)
   case notTheSame
 }
 
-// contrato 3: clasificacion de un candidato, con la respuesta del usuario cuando aplica
 nonisolated enum ReviewIdentity: Sendable, Equatable {
   case new
-  case recognized(Set<ElementID>, rejected: Bool)  // regla 6: rechazar crea un elemento nuevo
-  case doubt(candidates: Set<ElementID>, answer: DoubtAnswer?)  // regla 7, o separados si no se responde
+  case recognized(Set<ElementID>, rejected: Bool)  // Rule 6: rejecting creates a new element
+  case doubt(candidates: Set<ElementID>, answer: DoubtAnswer?)  // Rule 7; left separate if unanswered
 
   init(_ resolution: ElementResolution) {
     switch resolution {
@@ -46,15 +45,15 @@ nonisolated enum ReviewIdentity: Sendable, Equatable {
   }
 }
 
-// una fila de la revision: el candidato mas las acciones del usuario aplicadas hasta ahora
+/// A review row: the candidate plus the user's actions so far.
 nonisolated struct ReviewItem: Sendable, Identifiable {
   let id: ReviewItemID
   let originalName: String
   let type: ElementType
   let role: ElementRole?
   var identity: ReviewIdentity
-  var isRemoved: Bool  // DEC-17: quitar/deshacer, independiente de la identidad
-  var pendingName: String?  // DEC-40: renombrado pendiente, nil = sin cambios
+  var isRemoved: Bool  // remove/undo, independent of identity
+  var pendingName: String?  // applied on save; nil means unchanged
 
   var currentName: String { pendingName ?? originalName }
 }

@@ -1,4 +1,5 @@
-// contrato 5 (DEC-26): renombrar o añadir alias colisiona si el canonico ya pertenece a otro elemento del mismo tipo
+/// Renaming or adding an alias collides when the canonical name already belongs to another
+/// element of the same type.
 nonisolated enum NameCollision: Sendable, Equatable {
   case none
   case collidesWith(ElementID)

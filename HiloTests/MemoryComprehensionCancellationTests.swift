@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// F3.3: streaming con puntos de suspension reales y garantias al cancelar a mitad
 nonisolated struct MemoryComprehensionCancellationTests {
   struct CollectedResult: Sendable {
     var received: [ExtractedMemory]
@@ -27,7 +26,7 @@ nonisolated struct MemoryComprehensionCancellationTests {
         ExtractedElement(name: "Marta", type: .person, role: "mi tía"),
         ExtractedElement(name: "la cocina", type: .place, role: "donde hablamos"),
       ], dateText: "una tarde de invierno", deducedYear: nil)
-    // margen generoso: primer parcial llega en t=0, segundo en t=50ms; cancelamos en t=10ms
+    // Generous margin: the first partial at t=0, the second at t=50 ms; cancel at t=10 ms.
     let fake = FakeMemoryComprehender(
       script: .succeeds(
         partials: [firstPartial, secondPartial], final: final,
@@ -50,7 +49,7 @@ nonisolated struct MemoryComprehensionCancellationTests {
     task.cancel()
     let result = await task.value
 
-    // como mucho el primer parcial llego antes de la cancelacion, nunca el segundo ni el final
+    // At most the first partial arrived before cancelling, never the second or the final.
     #expect(result.received.count <= 1)
     if let onlyReceived = result.received.first {
       #expect(onlyReceived.elements.count == firstPartial.elements.count)
@@ -58,7 +57,7 @@ nonisolated struct MemoryComprehensionCancellationTests {
     }
     #expect(!result.received.contains { $0.dateText != nil })
 
-    // la cancelacion no es un camino del contrato 4 (eso es F3.4)
+    // Cancelling is not one of the product error paths.
     if let error = result.thrownError {
       #expect((error as? MemoryComprehensionError) == nil)
     }

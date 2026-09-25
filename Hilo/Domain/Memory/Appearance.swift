@@ -1,10 +1,10 @@
-// rawValue String + Codable: F2 lo persiste como columna, no como blob serializado
+/// Raw String value, so persistence stores it as a column, not a serialized blob.
 nonisolated enum RecognitionStatus: String, Sendable, Equatable, Codable {
   case confirmedByUser
   case proposed
 }
 
-// contrato 3 + regla 3: comprension sin confirmar no entra
+/// Rule 3: comprehension the user has not confirmed does not count.
 nonisolated struct Appearance: Sendable {
   let memoryID: MemoryID
   let elementID: ElementID

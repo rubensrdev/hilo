@@ -4,8 +4,6 @@ import Testing
 
 @testable import Hilo
 
-// S4 Detalle de recuerdo (F5.3): foto, relato, elementos propios, conexiones con motivo,
-// editar (DEC-19: no reanaliza) y borrar (DEC-24: el impacto se calcula)
 struct MemoryDetailStateTests {
   // MARK: fixtures
 
@@ -36,7 +34,7 @@ struct MemoryDetailStateTests {
       interfaceLanguage: "es", onMaterialChanged: onMaterialChanged)
   }
 
-  // MARK: load — memoria, foto, elementos propios, conexiones, analizado
+  // MARK: load — memory, photo, own elements, connections, analysed
 
   @Test func `Loading a saved memory with a photo fills memory, photo and the analyzed flag`()
     async throws
@@ -88,14 +86,14 @@ struct MemoryDetailStateTests {
 
     await state.load()
 
-    // oraculo independiente: MemoryElements, llamado directamente sobre lo leido del actor
+    // Independent oracle: MemoryElements, called directly on what the actor reads.
     let appearances = try await actor.fetchAppearances()
     let expectedOrder = MemoryElements.elementIDs(for: saved.id, in: appearances)
     #expect(state.ownElements.map(\.id) == expectedOrder)
     #expect(state.ownElements.map(\.id) == [jose.id, carmen.id, clock.id])
   }
 
-  // dos apariciones del mismo elemento en el mismo recuerdo cuentan una sola vez
+  /// Two appearances of one element in the same memory count once.
   @Test func `A memory with no recognized elements leaves ownElements and connectedRows empty`()
     async throws
   {
@@ -129,7 +127,6 @@ struct MemoryDetailStateTests {
     #expect(state.connectedRows.isEmpty)
   }
 
-  // caso del spec, contrato 4: un recuerdo que comparte José y Granada aparece una vez, con ambos motivos
   @Test func `Two memories sharing an element connect, and the shared row lists the motive`()
     async throws
   {
@@ -165,7 +162,7 @@ struct MemoryDetailStateTests {
     #expect(state.notFound)
   }
 
-  // MARK: deleteImpact — DEC-24, regla 11: un elemento que se quede sin recuerdos desaparece
+  // MARK: deleteImpact — rule 11, an element left with no memories disappears
 
   @Test func `deleteImpact separates an element that survives elsewhere from one that disappears`()
     async throws
@@ -243,7 +240,7 @@ struct MemoryDetailStateTests {
     #expect(state.deleteImpact.disappearing.isEmpty)
   }
 
-  // MARK: editNarrative — DEC-19: editar no reanaliza
+  // MARK: editNarrative — editing never re-analyses
 
   @Test func `Editing the narrative updates what a later load returns`() async throws {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -313,7 +310,7 @@ struct MemoryDetailStateTests {
     #expect(changedCount == 0)
   }
 
-  // MARK: delete — contrato 4, regla 12: borrar un recuerdo no borra sus elementos, salvo huerfanos
+  // MARK: delete — rule 12, deleting a memory keeps its elements, except orphans
 
   @Test func `Deleting removes the memory from the store and reports the change`() async throws {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -338,17 +335,17 @@ struct MemoryDetailStateTests {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
     let saved = try Self.memory(narrative: "Un paseo con el abuelo, sin nadie más.")
-    let abuelo = try Self.element(name: "Abuelo")
+    let grandfather = try Self.element(name: "Abuelo")
     _ = try await actor.save(saved, isAnalyzed: true, isExample: false)
-    _ = try await actor.save(abuelo)
-    try await actor.save(Self.appearance(memoryID: saved.id, elementID: abuelo.id))
+    _ = try await actor.save(grandfather)
+    try await actor.save(Self.appearance(memoryID: saved.id, elementID: grandfather.id))
     let state = Self.makeState(memoryID: saved.id, actor: actor)
     await state.load()
 
     _ = await state.delete()
 
     let remainingElements = try await actor.fetchElements()
-    #expect(!remainingElements.contains { $0.id == abuelo.id })
+    #expect(!remainingElements.contains { $0.id == grandfather.id })
   }
 
   @Test func `Deleting a memory keeps an element that still appears in another memory`()
@@ -388,7 +385,7 @@ struct MemoryDetailStateTests {
     #expect(changedCount == 0)
   }
 
-  // MARK: understandLater / reviewCoordinator — DEC-16, propios de cada detalle, no compartidos
+  // MARK: understandLater / reviewCoordinator — each detail owns its own
 
   @Test func `Each detail state owns its own understandLater and reviewCoordinator instances`()
     async throws

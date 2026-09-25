@@ -2,7 +2,6 @@ import Testing
 
 @testable import Hilo
 
-// puente entre lo que la comprension extrae y el estado de revision del dominio
 nonisolated struct ReviewCandidateExtractionTests {
   @Test func `maps the extracted person type to the domain person type`() {
     #expect(ElementType(ExtractedElementType.person) == .person)

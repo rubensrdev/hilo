@@ -8,14 +8,14 @@ nonisolated struct ElementID: Sendable, Hashable {
   }
 }
 
-// rawValue String + Codable: F2 lo persiste como columna, no como blob serializado
+/// Raw String value, so persistence stores it as a column, not a serialized blob.
 nonisolated enum ElementType: String, Sendable, Equatable, Codable {
   case person
   case place
   case object
 }
 
-// contrato 8: un elemento sin nombre no existe, y el nombre mostrado nunca se reescribe
+/// An element without a name does not exist, and its display name is never rewritten.
 nonisolated struct Element: Sendable, Identifiable, Equatable {
   let id: ElementID
   let displayName: String
@@ -30,7 +30,7 @@ nonisolated struct Element: Sendable, Identifiable, Equatable {
     self.aliases = aliases
   }
 
-  // reconstruccion desde persistencia (F2.2): conserva el id ya validado al guardar, no crea uno nuevo
+  /// Rebuilds from persistence, keeping the id validated at save time.
   init(id: ElementID, displayName: String, type: ElementType, aliases: [String] = []) {
     self.id = id
     self.displayName = displayName
@@ -38,7 +38,7 @@ nonisolated struct Element: Sendable, Identifiable, Equatable {
     self.aliases = aliases
   }
 
-  // compartido entre contrato 3 (resolucion) y contrato 5 (colision): mismo canonico en nombre o alias
+  /// Shared by resolution and collision checks: the same canonical name in the name or an alias.
   func matches(canonical: String) -> Bool {
     CanonicalName.of(displayName) == canonical
       || aliases.contains { CanonicalName.of($0) == canonical }

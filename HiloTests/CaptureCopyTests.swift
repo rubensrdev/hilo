@@ -3,12 +3,11 @@ import Testing
 
 @testable import Hilo
 
-// contrato 6: textos anunciables progresivos de la captura, en los dos idiomas
 nonisolated struct CaptureCopyTests {
   private static let english = Locale(identifier: "en")
   private static let spanish = Locale(identifier: "es")
 
-  // MARK: avisos de la revision y del guardado — un fallo nunca es silencioso (DEC-43)
+  // MARK: review and save notices — a failure is never silent
 
   @Test func `Each review notice has its text in both languages`() {
     #expect(
@@ -29,7 +28,7 @@ nonisolated struct CaptureCopyTests {
     #expect(CaptureCopy.notice(.savedWithoutAnalyzing, locale: Self.spanish) == "Recuerdo guardado")
   }
 
-  // MARK: aparicion progresiva — nombre y tipo, igual con Reducir movimiento (contrato 6)
+  // MARK: progressive appearance — name and type, the same with Reduce Motion
 
   @Test func `A progressively appearing element announces its name and type in both languages`() {
     #expect(
@@ -40,7 +39,7 @@ nonisolated struct CaptureCopyTests {
         == "la casa del pueblo, Lugar")
   }
 
-  // MARK: anuncio progresivo — cada elemento nuevo se anuncia una vez, aunque lleguen juntos
+  // MARK: progressive announcement — each new element once, even when they arrive together
 
   @Test func `Two elements arriving in the same snapshot are both announced, in English`() {
     let current = [

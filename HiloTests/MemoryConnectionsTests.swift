@@ -3,7 +3,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 4: conexion deducida — nunca se almacena, se calcula a partir de las apariciones
 nonisolated struct MemoryConnectionsTests {
   @Test func `two memories that share José connect, with José as the only motive`() throws {
     let memoryA = try #require(Memory(narrative: "Una tarde de domino con José.", savedAt: Date()))
@@ -25,7 +24,7 @@ nonisolated struct MemoryConnectionsTests {
     `a memory sharing José and Granada with another appears once, with both as motives`()
     throws
   {
-    // caso del spec, linea 142: dos motivos compartidos, una sola conexion
+    // Two shared motives, one connection.
     let memoryA = try #require(
       Memory(narrative: "Un viaje a Granada con José.", savedAt: Date()))
     let memoryB = try #require(
@@ -111,7 +110,8 @@ nonisolated struct MemoryConnectionsTests {
     `connections are ordered by the position of each connected memory's first qualifying appearance`()
     throws
   {
-    // orden estable (ver "Riesgos y preguntas abiertas"): por la primera aparicion de cada memoryID distinto, entre las que comparten elemento con el origen
+    // Stable order: by the first appearance of each distinct memory among those sharing an element
+    // with the origin.
     let memoryOrigin = try #require(
       Memory(narrative: "Una tarde en el mercado, con el reloj en el bolsillo.", savedAt: Date()))
     let memoryB = try #require(Memory(narrative: "Recuperé el reloj perdido.", savedAt: Date()))
@@ -124,9 +124,9 @@ nonisolated struct MemoryConnectionsTests {
         memoryID: memoryOrigin.id, elementID: clock.id, role: nil, status: .confirmedByUser),
       Appearance(
         memoryID: memoryOrigin.id, elementID: market.id, role: nil, status: .confirmedByUser),
-      // memoryC comparte "mercado" y aparece primero en el array...
+      // memoryC shares "mercado" and comes first in the array...
       Appearance(memoryID: memoryC.id, elementID: market.id, role: nil, status: .confirmedByUser),
-      // ...memoryB comparte "reloj" pero aparece despues, aunque memoryB se creó antes que memoryC
+      // ...memoryB shares "reloj" but comes later, even though memoryB was created before memoryC.
       Appearance(memoryID: memoryB.id, elementID: clock.id, role: nil, status: .confirmedByUser),
     ]
 
@@ -143,7 +143,7 @@ nonisolated struct MemoryConnectionsTests {
     `motives follow the order of the origin memory's own appearances, not the connected memory's order`()
     throws
   {
-    // orden de motivos: viene del recuerdo de origen, nunca del recuerdo conectado (decision de esta tarea)
+    // Motive order comes from the origin memory, never from the connected one.
     let memoryOrigin = try #require(
       Memory(narrative: "Un verano en el pueblo, con Marta cerca.", savedAt: Date()))
     let memoryOther = try #require(
@@ -152,10 +152,10 @@ nonisolated struct MemoryConnectionsTests {
     let village = try #require(Element(displayName: "el pueblo", type: .place))
 
     let appearances = [
-      // en el array global y en memoryOther, "el pueblo" aparece antes que "Marta"
+      // In the global array and in memoryOther, "el pueblo" comes before "Marta"...
       Appearance(
         memoryID: memoryOther.id, elementID: village.id, role: nil, status: .confirmedByUser),
-      // pero en las propias apariciones del origen, "Marta" aparece antes que "el pueblo"
+      // ...but in the origin's own appearances, "Marta" comes before "el pueblo".
       Appearance(
         memoryID: memoryOrigin.id, elementID: marta.id, role: nil, status: .confirmedByUser),
       Appearance(
@@ -172,7 +172,7 @@ nonisolated struct MemoryConnectionsTests {
   @Test func `status and role never affect whether an appearance counts toward a connection`()
     throws
   {
-    // contrato 4: no menciona status ni role como criterio, asi que ninguno filtra la conexion
+    // Neither status nor role filters the connection.
     let memoryA = try #require(Memory(narrative: "Un paseo con José.", savedAt: Date()))
     let memoryB = try #require(Memory(narrative: "José, siempre puntual.", savedAt: Date()))
     let jose = try #require(Element(displayName: "José", type: .person))
@@ -208,7 +208,7 @@ nonisolated struct MemoryConnectionsTests {
   }
 
   @Test func `the same input always produces the same result, same order included`() throws {
-    // contrato 8: determinismo — mismos datos, mismo resultado y mismo orden, siempre
+    // Determinism: same data, same result and same order, every time.
     let memoryOrigin = try #require(
       Memory(narrative: "Una tarde en el mercado, con el reloj en el bolsillo.", savedAt: Date()))
     let memoryB = try #require(Memory(narrative: "Recuperé el reloj perdido.", savedAt: Date()))

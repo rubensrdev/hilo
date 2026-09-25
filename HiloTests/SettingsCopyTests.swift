@@ -1,0 +1,39 @@
+import Foundation
+import Testing
+
+@testable import Hilo
+
+nonisolated struct SettingsCopyTests {
+  private static let english = Locale(identifier: "en")
+  private static let spanish = Locale(identifier: "es")
+
+  @Test func `The version line names the product version, in both languages`() {
+    #expect(SettingsCopy.versionLine("1.0", locale: Self.english) == "Version 1.0")
+    #expect(SettingsCopy.versionLine("1.0", locale: Self.spanish) == "Versión 1.0")
+  }
+
+  @Test func `The first wipe step says exactly what disappears, in both languages`() {
+    #expect(
+      SettingsCopy.wipeFirstStepBody(locale: Self.english)
+        == "Every memory, every person, place and object, and every photo will be deleted from this iPhone. Hilo will start again as on the first day."
+    )
+    #expect(
+      SettingsCopy.wipeFirstStepBody(locale: Self.spanish)
+        == "Se borrarán todos los recuerdos, todas las personas, lugares y objetos, y todas las fotos de este iPhone. Hilo volverá a empezar como el primer día."
+    )
+  }
+
+  @Test func `The second wipe step states that it cannot be undone, in both languages`() {
+    #expect(
+      SettingsCopy.wipeSecondStepBody(locale: Self.english)
+        == "This cannot be undone. There is no copy anywhere else.")
+    #expect(
+      SettingsCopy.wipeSecondStepBody(locale: Self.spanish)
+        == "No se puede deshacer. No hay copia en ningún otro sitio.")
+  }
+
+  @Test func `The product version is read from the bundle info, empty when absent`() {
+    #expect(ProductVersion.read(from: ["CFBundleShortVersionString": "1.0"]) == "1.0")
+    #expect(ProductVersion.read(from: [:]) == "")
+  }
+}

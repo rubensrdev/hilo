@@ -1,10 +1,8 @@
 #if DEBUG
   import Foundation
 
-  // F5: dos recuerdos deterministas que completan la memoria de ejemplo para la bateria de
-  // docs/validacion-manual — colision de nombre al renombrar (Martina -> Marta), una coincidencia
-  // de busqueda que solo viene del elemento (Marta nunca se nombra en su relato) y un extracto que
-  // tiene que centrarse (DEC-20). Nunca compilado en Release, nunca mostrado como contenido real.
+  /// Two memories that complete the example for docs/validacion-manual: a rename collision, a match
+  /// only through an element, and an extract that must centre. Never compiled into Release.
   nonisolated enum DebugValidationContent {
     static let seeds: [ExampleMemorySeed] = [
       ExampleMemorySeed(

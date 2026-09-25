@@ -1,6 +1,6 @@
 import Foundation
 
-// punto 3 de F4.6: aviso al primer fallo, sin contar intentos; lo comparten captura y comprender mas tarde
+/// A notice on the first failure, without counting attempts; shared by capture and understanding later.
 nonisolated enum ReviewNotice: Sendable, Equatable {
   case reviewUnavailable
   case reviewNotSaved

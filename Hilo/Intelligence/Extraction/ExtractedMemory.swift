@@ -1,6 +1,7 @@
 import FoundationModels
 
-// forma validada por el spike F0.2 en doce relatos ES/EN, ver ADR-001 §2 — no se cambia el contrato
+/// Shape validated by the F0.2 spike on twelve Spanish and English narratives (ADR-001 §2);
+/// the contract does not change.
 @Generable(
   description:
     "Lo que se entiende de un recuerdo: sus elementos y la fecha tal como la contó quien lo recuerda"
@@ -43,7 +44,7 @@ nonisolated enum ExtractedElementType {
 }
 
 extension ExtractedMemory {
-  // un elemento solo aparece cuando sus tres campos ya llegaron completos (contrato 3, §8.2.1)
+  /// An element only appears once all three of its fields are complete.
   init(partial: ExtractedMemory.PartiallyGenerated) {
     self.init(
       elements: (partial.elements ?? []).compactMap { element in

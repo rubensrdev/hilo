@@ -4,7 +4,6 @@ import Testing
 
 @testable import Hilo
 
-// contratos 1-4 (S1 Memoria): ExploreState gobierna las dos vistas y los cuatro estados de recuerdos
 struct ExploreStateTests {
   private static let defaultExtractLength = 160
 
@@ -62,7 +61,7 @@ struct ExploreStateTests {
     #expect(state.appearances.first?.elementID == jose.id)
   }
 
-  // MARK: memoriesDisplay — vacio, un recuerdo, normal
+  // MARK: memoriesDisplay — empty, one memory, normal
 
   @Test func `Zero memories with a blank query produce the empty display`() async throws {
     let (state, _) = try Self.makeState()
@@ -102,11 +101,11 @@ struct ExploreStateTests {
       Issue.record("expected .normal, got \(state.memoriesDisplay)")
       return
     }
-    // oraculo independiente: la misma agrupacion, llamada directamente sobre lo cargado
+    // Independent oracle: the same grouping, called directly on what was loaded.
     #expect(groups == MemoryGrouping.grouped(state.memories))
   }
 
-  // MARK: memoriesDisplay — buscando manda siempre sobre el recuento
+  // MARK: memoriesDisplay — searching always wins over the count
 
   @Test(arguments: [0, 1, 3])
   func `A non-blank search query always yields searching, never empty, single or normal`(
@@ -186,7 +185,7 @@ struct ExploreStateTests {
 
     state.selectedElementTypeFilter = nil
 
-    // oraculo independiente: el mismo criterio aplicado desde cero a la entrada revuelta
+    // Independent oracle: the same criterion applied from scratch to the shuffled input.
     let expectedOrder = names.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
     #expect(state.filteredElements.map(\.displayName) == expectedOrder)
   }
@@ -236,7 +235,7 @@ struct ExploreStateTests {
     let second = try Self.memory(narrative: "Segundo, con José.")
     _ = try await actor.save(first, isAnalyzed: true, isExample: false)
     _ = try await actor.save(second, isAnalyzed: true, isExample: false)
-    // dos apariciones de José en el mismo recuerdo (dos roles) cuentan una sola vez
+    // Two appearances of José in one memory (two roles) count once.
     try await actor.save(
       Self.appearance(memoryID: first.id, elementID: jose.id, status: .confirmedByUser))
     try await actor.save(
@@ -265,14 +264,14 @@ struct ExploreStateTests {
 
     #expect(!state.memories.isEmpty)
     #expect(!state.elements.isEmpty)
-    // oraculo independiente: lo que el propio actor dice que hay guardado tras la escritura
+    // Independent oracle: what the actor itself reports after the write.
     let directMemories = try await actor.fetchMemories()
     let directElements = try await actor.fetchElements()
     #expect(Set(state.memories.map(\.id)) == Set(directMemories.map(\.id)))
     #expect(Set(state.elements.map(\.id)) == Set(directElements.map(\.id)))
   }
 
-  // MARK: resetToFirstTime — F8 contrato 1: tras el borrado total, el vacio de primera vez
+  // MARK: resetToFirstTime — after a full wipe, the first-time empty state
 
   @Test func `Resetting after a wipe clears search, filter and view, and shows the empty state`()
     async throws
@@ -296,9 +295,9 @@ struct ExploreStateTests {
     async throws
   {
     let (state, _) = try Self.makeState()
-    let ajustes = state.makeAjustesState()
+    let settings = state.makeSettingsState()
 
-    await ajustes.loadExampleMemory(language: .spanish)
+    await settings.loadExampleMemory(language: .spanish)
 
     #expect(state.memories.count == 5)
   }

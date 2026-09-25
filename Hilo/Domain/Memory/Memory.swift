@@ -8,12 +8,12 @@ nonisolated struct MemoryID: Sendable, Hashable {
   }
 }
 
-// contrato 8 + regla 1: un recuerdo sin relato no existe, y el relato nunca se reescribe
+/// Rule 1: a memory without a narrative does not exist, and the narrative is never rewritten.
 nonisolated struct Memory: Sendable, Identifiable, Equatable {
   let id: MemoryID
   let narrative: String
   let date: MemoryDate?
-  // fecha de sistema, nunca la del usuario; la pone quien guarda (F2), Domain no lee el reloj
+  /// System time, never the user's date. Whoever saves sets it; Domain never reads the clock.
   let savedAt: Date
 
   init?(narrative: String, date: MemoryDate? = nil, savedAt: Date) {
@@ -24,7 +24,7 @@ nonisolated struct Memory: Sendable, Identifiable, Equatable {
     self.savedAt = savedAt
   }
 
-  // reconstruccion desde persistencia (F2.2): conserva el id ya validado al guardar, no crea uno nuevo
+  /// Rebuilds from persistence, keeping the id validated at save time.
   init(id: MemoryID, narrative: String, date: MemoryDate? = nil, savedAt: Date) {
     self.id = id
     self.narrative = narrative
@@ -32,7 +32,7 @@ nonisolated struct Memory: Sendable, Identifiable, Equatable {
     self.savedAt = savedAt
   }
 
-  // regla 17: el año deducido solo ordena; desempate por guardado y, al final, por id para que el orden sea total
+  /// Rule 17: the deduced year only sorts. Ties break by save time, then by id, so the order is total.
   static func isOrderedBefore(_ a: Memory, _ b: Memory) -> Bool {
     let yearA = a.date?.deducedYear
     let yearB = b.date?.deducedYear

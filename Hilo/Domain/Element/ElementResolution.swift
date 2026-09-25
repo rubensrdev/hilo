@@ -1,4 +1,4 @@
-// contrato 3: dado un nombre, un tipo y los elementos existentes, exactamente uno de estos tres resultados, sin efectos
+/// Exactly one of three outcomes, with no side effects.
 nonisolated enum ElementResolution: Sendable, Equatable {
   case exactMatch(Set<ElementID>)
   case identityDoubt(Set<ElementID>)
@@ -15,7 +15,7 @@ nonisolated enum ElementResolution: Sendable, Equatable {
       return .exactMatch(Set(exact.map(\.id)))
     }
 
-    // regla 5+8: la duda solo aplica cuando no hubo ya una coincidencia exacta
+    // Rules 5 and 8: doubt only applies when there was no exact match.
     let doubtful = sameType.filter { element in
       Resemblance.between(name, type: type, element.displayName, type: element.type)
         || element.aliases.contains {

@@ -3,8 +3,6 @@ import Testing
 
 @testable import Hilo
 
-// contrato 4 (lista de elementos): cuantos recuerdos distintos tiene un elemento, sin duplicar
-// por fila de aparicion — misma forma de deduplicado que MemorySearch.matchingElementIDs
 nonisolated struct ElementMemoriesTests {
   static func element(name: String, type: ElementType = .person) throws -> Element {
     try #require(Element(displayName: name, type: type))
@@ -89,7 +87,7 @@ nonisolated struct ElementMemoriesTests {
     let carmen = try Self.element(name: "Carmen")
     let first = try Self.memory(narrative: "José y Carmen en la comida.")
     let second = try Self.memory(narrative: "José y Carmen en la boda.")
-    // orden deliberadamente intercalado entre los dos elementos
+    // Deliberately interleaved between the two elements.
     let appearances = [
       Self.appearance(memoryID: first.id, elementID: carmen.id),
       Self.appearance(memoryID: first.id, elementID: jose.id),

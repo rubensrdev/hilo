@@ -1,6 +1,6 @@
 import SwiftUI
 
-// tokens.md §4: simbolo y color de cada tipo; el nombre, en el idioma de la interfaz (InterfaceLocale)
+/// The type's name follows the interface language, not the system's.
 extension ElementType {
   var symbolName: String {
     switch self {

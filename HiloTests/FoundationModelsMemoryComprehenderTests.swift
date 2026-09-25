@@ -2,9 +2,8 @@ import Testing
 
 @testable import Hilo
 
-// contrato 5: las instrucciones fijan el idioma de respuesta y que los nombres del usuario no se traducen
 nonisolated struct FoundationModelsMemoryComprehenderTests {
-  // la redaccion exacta no la fija la spec: se acepta el nombre del idioma en espanol o en ingles
+  /// The spec doesn't fix the wording: the language's name is accepted in Spanish or English.
   private let spanishMarkers = ["español", "espanol", "spanish"]
   private let englishMarkers = ["inglés", "ingles", "english"]
 
