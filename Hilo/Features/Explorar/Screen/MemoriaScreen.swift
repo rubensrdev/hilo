@@ -10,7 +10,12 @@ struct MemoriaScreen: View {
 
   var body: some View {
     NavigationStack {
-      Group {
+      VStack(spacing: 0) {
+        // F8.5 (D4): en la barra, junto a los dos botones, «People, places & objects» truncaba a
+        // tamaño por defecto (tokens §2.2); en el contenido a ancho completo, como la referencia 02a
+        viewPicker
+          .padding(.horizontal, Spacing.margenPantalla)
+          .padding(.vertical, Spacing.espacio2)
         switch state.selectedView {
         case .memories:
           MemoriesView(state: state, openCapture: { isCapturePresented = true })
@@ -19,29 +24,10 @@ struct MemoriaScreen: View {
           ElementsView(state: state)
         }
       }
+      .background(Color.fondo)
       .navigationTitle("Memory")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
-        ToolbarItem(placement: .principal) {
-          // "People, places & objects" no cabe en un segmento a tamaños de accesibilidad y
-          // trunca; .menu muestra el texto entero del seleccionado, sin tocar el texto (F5.5).
-          // .pickerStyle no admite un ternario entre dos estilos (tipos distintos), de ahi la rama
-          if dynamicTypeSize.isAccessibilitySize {
-            Picker("View", selection: $state.selectedView) {
-              Text("Memories").tag(ExploreState.SelectedView.memories)
-              Text("People, places & objects").tag(ExploreState.SelectedView.elements)
-            }
-            .pickerStyle(.menu)
-            .tint(Color.acentoHilo)
-          } else {
-            Picker("View", selection: $state.selectedView) {
-              Text("Memories").tag(ExploreState.SelectedView.memories)
-              Text("People, places & objects").tag(ExploreState.SelectedView.elements)
-            }
-            .pickerStyle(.segmented)
-            .tint(Color.acentoHilo)
-          }
-        }
         // .primaryAction/.secondaryAction pueden colapsar en el menu de desbordamiento del
         // sistema segun el espacio disponible; DEC-12 y DEC-59 piden los dos siempre alcanzables,
         // nunca detras de un "...", asi que van en topBarTrailing (posicional, nunca colapsa)
@@ -77,6 +63,28 @@ struct MemoriaScreen: View {
     }
     .task { await state.load() }
     .sheet(isPresented: $isAjustesPresented) { AjustesScreen(state: state.makeAjustesState()) }
+  }
+
+  // «People, places & objects» no cabe en un segmento a tamaños de accesibilidad y trunca; .menu
+  // muestra el texto entero del seleccionado, sin tocar el texto (F5.5). .pickerStyle no admite
+  // un ternario entre dos estilos (tipos distintos), de ahi la rama
+  @ViewBuilder
+  private var viewPicker: some View {
+    if dynamicTypeSize.isAccessibilitySize {
+      Picker("View", selection: $state.selectedView) {
+        Text("Memories").tag(ExploreState.SelectedView.memories)
+        Text("People, places & objects").tag(ExploreState.SelectedView.elements)
+      }
+      .pickerStyle(.menu)
+      .tint(Color.acentoHilo)
+    } else {
+      Picker("View", selection: $state.selectedView) {
+        Text("Memories").tag(ExploreState.SelectedView.memories)
+        Text("People, places & objects").tag(ExploreState.SelectedView.elements)
+      }
+      .pickerStyle(.segmented)
+      .tint(Color.acentoHilo)
+    }
   }
 }
 

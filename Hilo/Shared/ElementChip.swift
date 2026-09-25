@@ -24,6 +24,11 @@ struct ElementChip: View {
     .padding(.vertical, Spacing.espacio1)
     .background(Color.chipRelleno)
     .clipShape(Spacing.radioChip)
+    // tokens.md §1.6: el chip fuera de la revision es siempre "nuevo" — sin borde salvo en alto
+    // contraste, donde borde-chip-nuevo vale separador; en claro y oscuro el colorset es transparente
+    .overlay {
+      Spacing.radioChip.strokeBorder(Color.bordeChipNuevo, lineWidth: Spacing.trazoBordeTarjeta)
+    }
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(
       element.accessibilityLabel(memoryCount: memoryCount, locale: interfaceLocale))

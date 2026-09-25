@@ -39,6 +39,7 @@ struct MemoryCard: View {
     .padding(Spacing.rellenoTarjeta)
     .background(Color.superficieTarjeta)
     .clipShape(RoundedRectangle(cornerRadius: Spacing.radioTarjeta, style: .continuous))
+    .contornoTarjeta()
     .accessibilityElement(children: .combine)
   }
 

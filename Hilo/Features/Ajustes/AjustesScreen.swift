@@ -11,16 +11,21 @@ struct AjustesScreen: View {
 
   var body: some View {
     NavigationStack {
-      List {
-        privacySection
-        exampleMemorySection
-        wipeSection
-        aboutSection
-        #if DEBUG
-          debugSection
-        #endif
+      // F8.5 (D3): tarjetas propias en vez de List — el recorte del sistema no admite
+      // contorno-tarjeta, y en claro con mas contraste solo el contorno separa fila y fondo
+      ScrollView {
+        VStack(alignment: .leading, spacing: Spacing.separacionSecciones) {
+          privacySection
+          exampleMemorySection
+          wipeSection
+          aboutSection
+          #if DEBUG
+            debugSection
+          #endif
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Spacing.margenPantalla)
       }
-      .scrollContentBackground(.hidden)
       .background(Color.fondo)
       .navigationTitle("Settings")
       .navigationBarTitleDisplayMode(.inline)
@@ -62,23 +67,24 @@ struct AjustesScreen: View {
   // MARK: privacidad — amplia la afirmacion del vacio, no la repite (§9.2)
 
   private var privacySection: some View {
-    Section {
+    section(header: "Privacy") {
       Text(
         "Your memories, the people, places and objects in them, and your photos live only on this iPhone. Hilo has no account, sends nothing anywhere and reads your memories on the device itself. It works the same without a connection."
       )
       .metadato()
       .foregroundStyle(Color.textoSecundario)
       .accessibilityIdentifier("settings.privacy")
-    } header: {
-      Text("Privacy")
     }
-    .listRowBackground(Color.superficieTarjeta)
   }
 
   // MARK: memoria de ejemplo — cargar o borrar segun este (F2 contrato 5 y 6)
 
   private var exampleMemorySection: some View {
-    Section {
+    section(
+      header: "Example memory",
+      footer:
+        "A few made-up memories to see how Hilo connects them. You can delete them at any time."
+    ) {
       if state.hasExampleMemory {
         Button(role: .destructive) {
           isDeleteExamplePresented = true
@@ -86,6 +92,7 @@ struct AjustesScreen: View {
           Text("Delete the example memory")
             .botonSecundario()
             .frame(maxWidth: .infinity, minHeight: Spacing.altoFilaMinimo, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .accessibilityIdentifier("settings.deleteExample")
       } else {
@@ -99,40 +106,36 @@ struct AjustesScreen: View {
             .botonSecundario()
             .foregroundStyle(Color.acentoHilo)
             .frame(maxWidth: .infinity, minHeight: Spacing.altoFilaMinimo, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .accessibilityIdentifier("settings.loadExample")
       }
-    } header: {
-      Text("Example memory")
-    } footer: {
-      Text("A few made-up memories to see how Hilo connects them. You can delete them at any time.")
     }
-    .listRowBackground(Color.superficieTarjeta)
   }
 
   // MARK: borrado total (regla 25)
 
   private var wipeSection: some View {
-    Section {
+    section(
+      footer:
+        "Deletes every memory, every person, place and object, and every photo from this iPhone."
+    ) {
       Button(role: .destructive) {
         state.requestWipe()
       } label: {
         Text("Delete everything")
           .botonSecundario()
           .frame(maxWidth: .infinity, minHeight: Spacing.altoFilaMinimo, alignment: .leading)
+          .contentShape(Rectangle())
       }
       .accessibilityIdentifier("settings.wipeAll")
-    } footer: {
-      Text(
-        "Deletes every memory, every person, place and object, and every photo from this iPhone.")
     }
-    .listRowBackground(Color.superficieTarjeta)
   }
 
   // MARK: informacion del producto — nombre y version, sin enlaces
 
   private var aboutSection: some View {
-    Section {
+    section(header: "About") {
       LabeledContent {
         Text(AjustesCopy.versionLine(state.version, locale: interfaceLocale))
           .metadato()
@@ -142,26 +145,51 @@ struct AjustesScreen: View {
           .botonSecundario()
           .foregroundStyle(Color.textoPrimario)
       }
+      .frame(minHeight: Spacing.altoFilaMinimo)
       .accessibilityElement(children: .combine)
       .accessibilityIdentifier("settings.about")
-    } header: {
-      Text("About")
     }
-    .listRowBackground(Color.superficieTarjeta)
   }
 
   #if DEBUG
     // F5: bateria de docs/validacion-manual — nunca compilado en Release
     private var debugSection: some View {
-      Section("Debug") {
+      section(header: "Debug") {
         Button("Load validation dataset") {
           Task { await state.loadDebugValidationDataset() }
         }
+        .frame(maxWidth: .infinity, minHeight: Spacing.altoFilaMinimo, alignment: .leading)
         .accessibilityIdentifier("settings.debug.loadValidationDataset")
       }
-      .listRowBackground(Color.superficieTarjeta)
     }
   #endif
+
+  // MARK: seccion como tarjeta — encabezado para el rotor, contenido sobre superficie-tarjeta
+
+  private func section<Content: View>(
+    header: LocalizedStringKey? = nil, footer: LocalizedStringKey? = nil,
+    @ViewBuilder content: () -> Content
+  ) -> some View {
+    VStack(alignment: .leading, spacing: Spacing.espacio2) {
+      if let header {
+        Text(header)
+          .tituloSeccion()
+          .foregroundStyle(Color.textoPrimario)
+          .accessibilityAddTraits(.isHeader)
+      }
+      content()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Spacing.rellenoTarjeta)
+        .background(Color.superficieTarjeta)
+        .clipShape(RoundedRectangle(cornerRadius: Spacing.radioTarjeta, style: .continuous))
+        .contornoTarjeta()
+      if let footer {
+        Text(footer)
+          .metadato()
+          .foregroundStyle(Color.textoSecundario)
+      }
+    }
+  }
 }
 
 #if DEBUG
