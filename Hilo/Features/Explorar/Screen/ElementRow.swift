@@ -22,20 +22,20 @@ struct ElementRow: View {
       Image(systemName: element.type.symbolName)
         .foregroundStyle(element.type.color)
         .accessibilityHidden(true)
-      VStack(alignment: .leading, spacing: Spacing.espacio1) {
-        Text(element.displayName)
-          .nombreElemento()
-          .foregroundStyle(Color.textoPrimario)
-        Text(element.type.localizedName(locale: interfaceLocale))
-          .metadato()
-          .foregroundStyle(Color.textoSecundario)
-        // P2 (F8.4): en tamaños AX el recuento baja bajo el tipo en vez de compartir la linea
-        if dynamicTypeSize.isAccessibilitySize {
-          countText
+      // P2 (F8.4): en tamaños AX el recuento baja bajo el tipo en vez de compartir la linea
+      let layout = dynamicTypeSize.rowLayout(alignment: .top, spacing: Spacing.espacio1)
+      layout {
+        VStack(alignment: .leading, spacing: Spacing.espacio1) {
+          Text(element.displayName)
+            .nombreElemento()
+            .foregroundStyle(Color.textoPrimario)
+          Text(element.type.localizedName(locale: interfaceLocale))
+            .metadato()
+            .foregroundStyle(Color.textoSecundario)
         }
-      }
-      if !dynamicTypeSize.isAccessibilitySize {
-        Spacer()
+        if !dynamicTypeSize.isAccessibilitySize {
+          Spacer()
+        }
         countText
       }
     }
@@ -58,7 +58,7 @@ struct ElementRow: View {
       .background(Color.fondo)
   }
   #Preview("Place, one memory") {
-    ElementRow(element: Element(displayName: "Cádiz", type: .place)!, memoryCount: 1)
+    ElementRow(element: PreviewFixtures.explorePlace, memoryCount: 1)
       .padding()
       .background(Color.fondo)
   }

@@ -52,9 +52,8 @@ extension View {
     modifier(TrazoSeparador())
   }
 
-  // tokens.md §1.5: borde-tarjeta solo existe en alto contraste; el colorset es transparente
-  // en claro y oscuro, asi que el trazo se dibuja siempre y es el catalogo quien decide.
-  // No se llama bordeTarjeta(): Color es View y el metodo taparia a Color.bordeTarjeta
+  // tokens §1.5: el trazo se dibuja siempre y el colorset (transparente salvo en alto contraste) decide;
+  // no se llama bordeTarjeta() porque Color es View y taparia a Color.bordeTarjeta
   func contornoTarjeta() -> some View {
     overlay {
       RoundedRectangle(cornerRadius: Spacing.radioTarjeta, style: .continuous)

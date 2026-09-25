@@ -5,14 +5,15 @@ import SwiftUI
 struct MemoriaScreen: View {
   @Bindable var state: ExploreState
   @Binding var isCapturePresented: Bool
-  @State private var isAjustesPresented = false
+  // el estado de la hoja se crea al tocar el engranaje, nunca dentro del closure de la hoja:
+  // SwiftUI lo reevaluaria con cada cambio de ExploreState y perderia el paso del borrado
+  @State private var ajustesState: AjustesState?
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   var body: some View {
     NavigationStack {
       VStack(spacing: 0) {
-        // F8.5 (D4): en la barra, junto a los dos botones, «People, places & objects» truncaba a
-        // tamaño por defecto (tokens §2.2); en el contenido a ancho completo, como la referencia 02a
+        // F8.5 D4: en la barra truncaba a tamaño por defecto (tokens §2.2); a ancho completo como en 02a
         viewPicker
           .padding(.horizontal, Spacing.margenPantalla)
           .padding(.vertical, Spacing.espacio2)
@@ -33,7 +34,7 @@ struct MemoriaScreen: View {
         // nunca detras de un "...", asi que van en topBarTrailing (posicional, nunca colapsa)
         ToolbarItem(placement: .topBarTrailing) {
           Button {
-            isAjustesPresented = true
+            ajustesState = state.makeAjustesState()
           } label: {
             Image(systemName: "gearshape")
           }
@@ -62,28 +63,22 @@ struct MemoriaScreen: View {
       }
     }
     .task { await state.load() }
-    .sheet(isPresented: $isAjustesPresented) { AjustesScreen(state: state.makeAjustesState()) }
+    .sheet(item: $ajustesState) { AjustesScreen(state: $0) }
   }
 
-  // «People, places & objects» no cabe en un segmento a tamaños de accesibilidad y trunca; .menu
-  // muestra el texto entero del seleccionado, sin tocar el texto (F5.5). .pickerStyle no admite
-  // un ternario entre dos estilos (tipos distintos), de ahi la rama
+  // «People, places & objects» no cabe en un segmento a tamaños AX: .menu enseña el texto entero (F5.5)
   @ViewBuilder
   private var viewPicker: some View {
+    let picker = Picker("View", selection: $state.selectedView) {
+      Text("Memories").tag(ExploreState.SelectedView.memories)
+      Text("People, places & objects").tag(ExploreState.SelectedView.elements)
+    }
+    .tint(Color.acentoHilo)
+    .frame(minHeight: Spacing.objetivoToqueMinimo)
     if dynamicTypeSize.isAccessibilitySize {
-      Picker("View", selection: $state.selectedView) {
-        Text("Memories").tag(ExploreState.SelectedView.memories)
-        Text("People, places & objects").tag(ExploreState.SelectedView.elements)
-      }
-      .pickerStyle(.menu)
-      .tint(Color.acentoHilo)
+      picker.pickerStyle(.menu)
     } else {
-      Picker("View", selection: $state.selectedView) {
-        Text("Memories").tag(ExploreState.SelectedView.memories)
-        Text("People, places & objects").tag(ExploreState.SelectedView.elements)
-      }
-      .pickerStyle(.segmented)
-      .tint(Color.acentoHilo)
+      picker.pickerStyle(.segmented)
     }
   }
 }

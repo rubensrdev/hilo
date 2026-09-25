@@ -76,20 +76,8 @@ struct CaptureScreen: View {
         CaptureCopy.notice(newNotice, locale: interfaceLocale)
       ).post()
     }
-    .onChange(of: state.phase) { _, newPhase in
-      switch newPhase {
-      case .comprehending:
-        AccessibilityNotification.Announcement(
-          ComprehensionCopy.readingAnnouncement(locale: interfaceLocale)
-        ).post()
-      case .notAnalyzed(let reason):
-        AccessibilityNotification.Announcement(
-          ComprehensionCopy.notice(reason, locale: interfaceLocale).announcement
-        ).post()
-      default:
-        break
-      }
-    }
+    .announcesComprehension(
+      isReading: state.phase == .comprehending, failure: state.phase.notAnalyzedReason)
   }
 
   // MARK: capturando (vacio, escribiendo, con foto, comprendiendo)

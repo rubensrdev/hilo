@@ -13,15 +13,6 @@ struct ReviewScreen: View {
 
   private var interfaceLocale: Locale { InterfaceLocale.resolve(environmentLocale) }
 
-  // P2: en tamaños de accesibilidad lo que va en fila se apila
-  private func rowLayout(
-    alignment: VerticalAlignment = .center, spacing: CGFloat
-  ) -> AnyLayout {
-    dynamicTypeSize.isAccessibilitySize
-      ? AnyLayout(VStackLayout(alignment: .leading, spacing: spacing))
-      : AnyLayout(HStackLayout(alignment: alignment, spacing: spacing))
-  }
-
   // MARK: renombrar — contrato 4, DEC-40/DEC-26/DEC-41/DEC-48: un unico alert del sistema con
   // campo de texto, para cualquier elemento; el aviso de alcance solo si ya existia (DEC-22)
   private struct RenamePrompt {
@@ -41,8 +32,7 @@ struct ReviewScreen: View {
   @State private var pendingRenamePrompt: RenamePrompt?
   @FocusState private var isDateFocused: Bool
 
-  // F8.4: quitar, deshacer, rechazar y responder sustituyen la vista enfocada; VoiceOver
-  // volveria al principio de la hoja sin un destino explicito
+  // F8.4: cada accion sustituye la vista enfocada; sin destino explicito VoiceOver vuelve al principio
   private enum ReviewFocus: Hashable {
     case item(ReviewItemID)
     case removal(ReviewItemID)
@@ -261,7 +251,7 @@ struct ReviewScreen: View {
   }
 
   private func understoodChip(_ row: ReviewBlocks.UnderstoodRow) -> some View {
-    let layout = rowLayout(spacing: Spacing.espacio2)
+    let layout = dynamicTypeSize.rowLayout(spacing: Spacing.espacio2)
     return layout {
       if row.isRemoved {
         // quitado: no se ofrece renombrar hasta deshacer (regla del proyecto, F4.1 rename())
@@ -361,7 +351,7 @@ struct ReviewScreen: View {
 
   private func knownRow(_ known: ReviewBlocks.Known) -> some View {
     // por la linea base: el nombre crece a 44pt de toque y el simbolo debe seguir a su altura
-    let layout = rowLayout(alignment: .firstTextBaseline, spacing: Spacing.espacio3)
+    let layout = dynamicTypeSize.rowLayout(alignment: .firstTextBaseline, spacing: Spacing.espacio3)
     return layout {
       Image(systemName: known.type.symbolName)
         .foregroundStyle(known.type.color)
@@ -456,7 +446,7 @@ struct ReviewScreen: View {
         .metadato()
         .foregroundStyle(Color.textoSecundario)
       // tokens §2.2: en AX las dos respuestas se apilan, con el mismo peso
-      let answersLayout = rowLayout(spacing: Spacing.espacio2)
+      let answersLayout = dynamicTypeSize.rowLayout(spacing: Spacing.espacio2)
       answersLayout {
         Button {
           reviewState.confirmDoubt(card.itemID, as: card.candidate.id)

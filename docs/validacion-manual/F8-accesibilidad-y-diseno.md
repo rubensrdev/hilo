@@ -47,7 +47,7 @@ Contradicen `tokens.md` → corregidas en F8.5:
 | D3 | `AjustesScreen` en claro AC | `superficie-tarjeta` y `fondo` son ambos `#FFFFFF`: las filas desaparecen | Mismo trazo `borde-tarjeta` sobre el fondo de fila |
 | D4 | `MemoriaScreen` selector | «People, places & objects» trunca a tamaño por defecto; tokens §2.2 solo permite truncar a `titulo-pantalla`. La referencia 02a/07c pone el selector en el contenido, bajo la barra, a ancho completo | Mover el picker del toolbar al contenido |
 
-Matices de la referencia que no se implementan (van a `docs/design/README-design.md`):
+Matices de la referencia que no se implementan (van a `docs/design/reference/README-design.md`):
 
 - Ref. 02a usa título grande «Memory»; la app usa título inline (DEC-12, F5.2). Reconsiderar cuando el
   selector baje al contenido es decisión de Rubén.

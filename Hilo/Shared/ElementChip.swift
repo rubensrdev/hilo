@@ -24,8 +24,7 @@ struct ElementChip: View {
     .padding(.vertical, Spacing.espacio1)
     .background(Color.chipRelleno)
     .clipShape(Spacing.radioChip)
-    // tokens.md §1.6: el chip fuera de la revision es siempre "nuevo" — sin borde salvo en alto
-    // contraste, donde borde-chip-nuevo vale separador; en claro y oscuro el colorset es transparente
+    // tokens §1.6: fuera de la revision el chip es "nuevo"; el colorset solo pinta en alto contraste
     .overlay {
       Spacing.radioChip.strokeBorder(Color.bordeChipNuevo, lineWidth: Spacing.trazoBordeTarjeta)
     }

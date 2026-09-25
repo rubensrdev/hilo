@@ -88,7 +88,7 @@ struct MemoryCard: View {
     MemoryCard(
       memory: PreviewFixtures.exploreMemory,
       matchedElements: [
-        (PreviewFixtures.exploreElement, 4), (Element(displayName: "Cádiz", type: .place)!, 1),
+        (PreviewFixtures.exploreElement, 4), (PreviewFixtures.explorePlace, 1),
       ]
     )
     .padding()

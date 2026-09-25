@@ -148,15 +148,10 @@ struct ElementDetailScreen: View {
     }
   }
 
-  // P2 (F8.4): a tamaños AX el simbolo largeTitle y el nombre no caben en fila
-  private var headerLayout: AnyLayout {
-    dynamicTypeSize.isAccessibilitySize
-      ? AnyLayout(VStackLayout(alignment: .leading, spacing: Spacing.espacio2))
-      : AnyLayout(HStackLayout(alignment: .top, spacing: Spacing.espacio3))
-  }
-
   private func header(_ element: Element) -> some View {
-    headerLayout {
+    // P2 (F8.4): a tamaños AX el simbolo largeTitle y el nombre no caben en fila
+    let layout = dynamicTypeSize.rowLayout(alignment: .top, spacing: Spacing.espacio3)
+    return layout {
       Image(systemName: element.type.symbolName)
         .font(.largeTitle)
         .foregroundStyle(element.type.color)
@@ -192,6 +187,7 @@ struct ElementDetailScreen: View {
         .botonSecundario()
         .foregroundStyle(Color.acentoHilo)
         .frame(minHeight: Spacing.altoFilaMinimo, alignment: .leading)
+        .contentShape(Rectangle())
     }
     .accessibilityIdentifier("elementDetail.addAlias")
   }

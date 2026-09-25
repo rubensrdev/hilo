@@ -11,8 +11,7 @@ struct AjustesScreen: View {
 
   var body: some View {
     NavigationStack {
-      // F8.5 (D3): tarjetas propias en vez de List — el recorte del sistema no admite
-      // contorno-tarjeta, y en claro con mas contraste solo el contorno separa fila y fondo
+      // F8.5 D3: tarjetas propias, no List — su recorte no admite contorno-tarjeta (alto contraste)
       ScrollView {
         VStack(alignment: .leading, spacing: Spacing.separacionSecciones) {
           privacySection
@@ -155,10 +154,13 @@ struct AjustesScreen: View {
     // F5: bateria de docs/validacion-manual — nunca compilado en Release
     private var debugSection: some View {
       section(header: "Debug") {
-        Button("Load validation dataset") {
+        Button {
           Task { await state.loadDebugValidationDataset() }
+        } label: {
+          Text("Load validation dataset")
+            .frame(maxWidth: .infinity, minHeight: Spacing.altoFilaMinimo, alignment: .leading)
+            .contentShape(Rectangle())
         }
-        .frame(maxWidth: .infinity, minHeight: Spacing.altoFilaMinimo, alignment: .leading)
         .accessibilityIdentifier("settings.debug.loadValidationDataset")
       }
     }

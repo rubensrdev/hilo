@@ -56,21 +56,10 @@ struct MemoryDetailScreen: View {
       }
     }
     .task { await state.load() }
-    // F8.4: comprender mas tarde se anuncia igual que en la captura — empieza a leer, o falla y por que
-    .onChange(of: state.understandLater.phase) { _, newPhase in
-      switch newPhase {
-      case .comprehending:
-        AccessibilityNotification.Announcement(
-          ComprehensionCopy.readingAnnouncement(locale: interfaceLocale)
-        ).post()
-      case .notAnalyzed(let reason):
-        AccessibilityNotification.Announcement(
-          ComprehensionCopy.notice(reason, locale: interfaceLocale).announcement
-        ).post()
-      default:
-        break
-      }
-    }
+    .announcesComprehension(
+      isReading: state.understandLater.phase == .comprehending,
+      failure: state.understandLater.phase.notAnalyzedReason
+    )
     .sheet(isPresented: $isEditPresented) {
       EditNarrativeScreen(narrative: state.memory?.narrative ?? "") { newText in
         _ = await state.editNarrative(newText)

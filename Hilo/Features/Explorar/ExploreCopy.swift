@@ -58,8 +58,7 @@ nonisolated enum ExploreCopy {
     return sentences.joined(separator: " ")
   }
 
-  // DEC-13: el chip que quita el filtro; como String ya localizado porque el resto de chips
-  // reciben el nombre plural del tipo por el mismo parametro (F8.2: «All» salia sin traducir)
+  // DEC-13: String ya localizado, como el nombre plural del tipo del resto de chips (F8.2: salia en ingles)
   static func allFilterLabel(locale: Locale) -> String {
     String(localized: LocalizedStringResource("All", locale: locale))
   }

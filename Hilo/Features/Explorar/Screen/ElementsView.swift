@@ -39,24 +39,17 @@ struct ElementsView: View {
   // nunca a un scroll horizontal que crece sin limite con el texto (P2, F5.5)
   @ViewBuilder
   private var filterChips: some View {
+    let layout = dynamicTypeSize.rowLayout(spacing: Spacing.separacionChips)
+    let chips = layout {
+      filterChip(nil, label: ExploreCopy.allFilterLabel(locale: interfaceLocale))
+      filterChip(.person, label: ElementType.person.localizedPluralName(locale: interfaceLocale))
+      filterChip(.place, label: ElementType.place.localizedPluralName(locale: interfaceLocale))
+      filterChip(.object, label: ElementType.object.localizedPluralName(locale: interfaceLocale))
+    }
     if dynamicTypeSize.isAccessibilitySize {
-      VStack(alignment: .leading, spacing: Spacing.separacionChips) {
-        filterChip(nil, label: ExploreCopy.allFilterLabel(locale: interfaceLocale))
-        filterChip(.person, label: ElementType.person.localizedPluralName(locale: interfaceLocale))
-        filterChip(.place, label: ElementType.place.localizedPluralName(locale: interfaceLocale))
-        filterChip(.object, label: ElementType.object.localizedPluralName(locale: interfaceLocale))
-      }
+      chips
     } else {
-      ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: Spacing.separacionChips) {
-          filterChip(nil, label: ExploreCopy.allFilterLabel(locale: interfaceLocale))
-          filterChip(
-            .person, label: ElementType.person.localizedPluralName(locale: interfaceLocale))
-          filterChip(.place, label: ElementType.place.localizedPluralName(locale: interfaceLocale))
-          filterChip(
-            .object, label: ElementType.object.localizedPluralName(locale: interfaceLocale))
-        }
-      }
+      ScrollView(.horizontal, showsIndicators: false) { chips }
     }
   }
 

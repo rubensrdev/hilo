@@ -369,10 +369,14 @@
       Element(id: ElementID(), displayName: "la abuela Carmen", type: .person)
     }
 
+    static var explorePlace: Element {
+      Element(id: ElementID(), displayName: "Cádiz", type: .place)
+    }
+
     // dos recuerdos y dos elementos, para los estados normal/buscando/lista de elementos
     static func seedExploreSample(into actor: PersistenceActor) async {
       let carmen = exploreElement
-      let cadiz = Element(id: ElementID(), displayName: "Cádiz", type: .place)
+      let cadiz = explorePlace
       _ = try? await actor.save(carmen)
       _ = try? await actor.save(cadiz)
       let first = exploreMemory
