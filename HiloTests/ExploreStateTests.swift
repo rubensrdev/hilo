@@ -299,6 +299,6 @@ struct ExploreStateTests {
 
     await settings.loadExampleMemory(language: .spanish)
 
-    #expect(state.memories.count == 5)
+    #expect(state.memories.count == 11)
   }
 }

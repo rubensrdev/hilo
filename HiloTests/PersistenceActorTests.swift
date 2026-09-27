@@ -286,17 +286,17 @@ struct PersistenceActorTests {
   }
 
   /// Example memory: load, delete and idempotency.
-  @Test func `Loading the example memory in Spanish produces five memories`() async throws {
+  @Test func `Loading the example memory in Spanish produces eleven memories`() async throws {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
 
     try await actor.loadExampleMemory(language: .spanish, loadedAt: Self.fixedSavedAt)
 
-    #expect(try await actor.fetchMemories().count == 5)
+    #expect(try await actor.fetchMemories().count == 11)
   }
 
   @Test
-  func `Loading the example memory in Spanish gives José four appearances and el reloj three`()
+  func `Loading the example memory in Spanish gives Nines five appearances and la Vespa three`()
     async throws
   {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -306,14 +306,14 @@ struct PersistenceActorTests {
 
     let elements = try await actor.fetchElements()
     let appearances = try await actor.fetchAppearances()
-    let jose = try #require(elements.first { $0.displayName == "José" })
-    let watch = try #require(elements.first { $0.displayName == "el reloj" })
-    #expect(appearances.filter { $0.elementID == jose.id }.count == 4)
-    #expect(appearances.filter { $0.elementID == watch.id }.count == 3)
+    let nines = try #require(elements.first { $0.displayName == "Nines" })
+    let vespa = try #require(elements.first { $0.displayName == "la Vespa" })
+    #expect(appearances.filter { $0.elementID == nines.id }.count == 5)
+    #expect(appearances.filter { $0.elementID == vespa.id }.count == 3)
   }
 
   @Test
-  func `Loading the example memory in English gives José four appearances and the watch three`()
+  func `Loading the example memory in English gives Nines five appearances and the Vespa three`()
     async throws
   {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -323,10 +323,10 @@ struct PersistenceActorTests {
 
     let elements = try await actor.fetchElements()
     let appearances = try await actor.fetchAppearances()
-    let jose = try #require(elements.first { $0.displayName == "José" })
-    let watch = try #require(elements.first { $0.displayName == "the watch" })
-    #expect(appearances.filter { $0.elementID == jose.id }.count == 4)
-    #expect(appearances.filter { $0.elementID == watch.id }.count == 3)
+    let nines = try #require(elements.first { $0.displayName == "Nines" })
+    let vespa = try #require(elements.first { $0.displayName == "the Vespa" })
+    #expect(appearances.filter { $0.elementID == nines.id }.count == 5)
+    #expect(appearances.filter { $0.elementID == vespa.id }.count == 3)
   }
 
   @Test
@@ -341,7 +341,7 @@ struct PersistenceActorTests {
 
     let context = ModelContext(container)
     let memoryRecords = try context.fetch(FetchDescriptor<MemoryRecord>())
-    #expect(memoryRecords.count == 5)
+    #expect(memoryRecords.count == 11)
     #expect(memoryRecords.allSatisfy { $0.isAnalyzed })
 
     let appearances = try await actor.fetchAppearances()
@@ -378,10 +378,10 @@ struct PersistenceActorTests {
 
     try await actor.loadExampleMemory(language: .english, loadedAt: Self.fixedSavedAt)
 
-    #expect(try await actor.fetchMemories().count == 5)
+    #expect(try await actor.fetchMemories().count == 11)
     let elements = try await actor.fetchElements()
-    #expect(elements.contains { $0.displayName == "el reloj" })
-    #expect(!elements.contains { $0.displayName == "the watch" })
+    #expect(elements.contains { $0.displayName == "la Vespa" })
+    #expect(!elements.contains { $0.displayName == "the Vespa" })
   }
 
   /// Settings offers to load or delete the example depending on whether it is there.
@@ -417,7 +417,7 @@ struct PersistenceActorTests {
 
   /// The docs/manual-validation dataset, Debug only.
   @Test
-  func `Loading the debug validation dataset adds the two extra memories to the example five`()
+  func `Loading the debug validation dataset adds the two extra memories to the example eleven`()
     async throws
   {
     let container = try PersistenceContainer.make(inMemory: true)
@@ -425,7 +425,7 @@ struct PersistenceActorTests {
 
     try await actor.loadDebugValidationDataset(loadedAt: Self.fixedSavedAt)
 
-    #expect(try await actor.fetchMemories().count == 7)
+    #expect(try await actor.fetchMemories().count == 13)
     let elements = try await actor.fetchElements()
     #expect(elements.contains { $0.displayName == "Marta" })
     #expect(elements.contains { $0.displayName == "Martina" })
@@ -470,23 +470,23 @@ struct PersistenceActorTests {
     let container = try PersistenceContainer.make(inMemory: true)
     let actor = PersistenceActor(modelContainer: container)
     try await actor.loadExampleMemory(language: .spanish, loadedAt: Self.fixedSavedAt)
-    let joseFromExample = try #require(
-      try await actor.fetchElements().first { $0.displayName == "José" })
+    let ninesFromExample = try #require(
+      try await actor.fetchElements().first { $0.displayName == "Nines" })
     let realMemory = try #require(
-      Memory(narrative: "Comimos con José el domingo pasado.", savedAt: Self.fixedSavedAt))
+      Memory(narrative: "Comimos con Nines el domingo pasado.", savedAt: Self.fixedSavedAt))
     _ = try await actor.save(realMemory, isAnalyzed: false, isExample: false)
     try await actor.save(
       Appearance(
-        memoryID: realMemory.id, elementID: joseFromExample.id, role: nil,
+        memoryID: realMemory.id, elementID: ninesFromExample.id, role: nil,
         status: .confirmedByUser))
 
     try await actor.deleteExampleMemory()
 
     let remainingElements = try await actor.fetchElements()
     #expect(remainingElements.count == 1)
-    let jose = try #require(remainingElements.first { $0.displayName == "José" })
+    let nines = try #require(remainingElements.first { $0.displayName == "Nines" })
     let remainingAppearances = try await actor.fetchAppearances()
-    #expect(remainingAppearances.filter { $0.elementID == jose.id }.count == 1)
+    #expect(remainingAppearances.filter { $0.elementID == nines.id }.count == 1)
   }
 
   /// Rule 25: a full wipe leaves no memories, elements or appearances.

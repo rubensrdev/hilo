@@ -46,7 +46,7 @@ struct SettingsStateTests {
     #expect(state.hasExampleMemory == true)
     #expect(calls.memoryChanged == 1)
     let elements = try await actor.fetchElements()
-    #expect(elements.contains { $0.displayName == "the watch" })
+    #expect(elements.contains { $0.displayName == "the Vespa" })
   }
 
   @Test func `Deleting the example memory removes it and keeps a real memory untouched`()
@@ -184,6 +184,6 @@ struct SettingsStateTests {
     #expect(!wiped)
     #expect(state.wipeStep == .none)
     #expect(calls.wiped == 0)
-    #expect(try await PersistenceActor(modelContainer: writable).fetchMemories().count == 5)
+    #expect(try await PersistenceActor(modelContainer: writable).fetchMemories().count == 11)
   }
 }
