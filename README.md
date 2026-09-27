@@ -1,12 +1,9 @@
-<p align="center">
+<div align="center">
   <img src="docs/content/hilo-icon.png" width="128" alt="Hilo app icon">
-</p>
-
-<p align="center">
 
 [🇬🇧 English](#english) · [🇪🇸 Español](#español)
 
-</p>
+</div>
 
 ## English <a name="english"></a>
 
