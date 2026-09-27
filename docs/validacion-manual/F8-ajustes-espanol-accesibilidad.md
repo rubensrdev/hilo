@@ -27,7 +27,8 @@ reiniciar la batería desde cero.
 
 ## 1. S7 Ajustes (contrato 1, regla 25)
 
-- [ ] **Es una hoja**: se abre desde el engranaje, se cierra con «Cerrar» y deslizando;
+- [ ] **Es una hoja**: se abre desde el engranaje, se cierra con la X de la barra (VoiceOver
+      dice «Cerrar», nunca «Atrás») y deslizando;
       reabrirla dos veces seguidas funciona siempre.
 - [ ] **Privacidad**: la tarjeta amplía la frase del estado vacío («Tus recuerdos, las
       personas, lugares y objetos que hay en ellos, y tus fotos viven solo en este
@@ -121,7 +122,7 @@ Repite S1 (normal), S2, S3, momento de la conexión, S4, S5 y S7 en cada aparien
 (Accesibilidad → Pantalla y tamaño del texto → Aumentar contraste).
 
 - [ ] **Acciones secundarias en color de texto primario**, nunca azul del sistema:
-      «Cerrar», «Cancelar», «Añadir una foto», «Guardar sin analizar», «Deshacer»,
+      las X de Cerrar y Cancelar, «Añadir una foto», «Guardar sin analizar», «Deshacer»,
       «No es José», «Hecho» del momento, «Cambiar nombre», botones no destructivos de
       las alertas. El acento terracota queda solo para la acción principal, el
       selector, contar, lo que conecta y «Cargar la memoria de ejemplo» / «Añadir un

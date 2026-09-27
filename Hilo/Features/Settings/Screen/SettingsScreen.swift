@@ -29,8 +29,13 @@ struct SettingsScreen: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("Close") { dismiss() }
-            .accessibilityIdentifier("settings.close")
+          Button {
+            dismiss()
+          } label: {
+            Image(systemName: "xmark")
+          }
+          .accessibilityLabel("Close")
+          .accessibilityIdentifier("settings.close")
         }
       }
       .task { await state.load() }

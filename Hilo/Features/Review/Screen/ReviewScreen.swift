@@ -100,7 +100,13 @@ struct ReviewScreen: View {
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button("Cancel") { dismiss() }
+          Button {
+            dismiss()
+          } label: {
+            Image(systemName: "xmark")
+          }
+          .accessibilityLabel("Cancel")
+          .accessibilityIdentifier("review.cancel")
         }
       }
       .alert(

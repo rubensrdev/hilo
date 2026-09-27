@@ -7,14 +7,19 @@ struct RootScreen: View {
   @Binding var isCapturePresented: Bool
 
   var body: some View {
+    // The tab bar only tints the selected tab; each tab puts the global accent back so no
+    // control inside picks up acento-hilo by inheritance.
     TabView {
       Tab("Memory", systemImage: "square.stack") {
         MemoryScreen(state: exploreState, isCapturePresented: $isCapturePresented)
+          .tint(Color.accentColor)
       }
       Tab("Ask", systemImage: "text.magnifyingglass") {
         AskScreen()
+          .tint(Color.accentColor)
       }
     }
+    .tint(Color.acentoHilo)
     .sheet(
       isPresented: $isCapturePresented,
       onDismiss: { Task { await exploreState.load() } }
