@@ -155,7 +155,7 @@ struct SettingsScreen: View {
   }
 
   #if DEBUG
-    /// The docs/validacion-manual battery; never compiled into Release.
+    /// The docs/manual-validation battery; never compiled into Release.
     private var debugSection: some View {
       section(header: "Debug") {
         Button {

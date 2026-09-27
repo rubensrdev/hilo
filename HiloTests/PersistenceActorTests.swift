@@ -415,7 +415,7 @@ struct PersistenceActorTests {
     #expect(try await actor.fetchElements().isEmpty)
   }
 
-  /// The docs/validacion-manual dataset, Debug only.
+  /// The docs/manual-validation dataset, Debug only.
   @Test
   func `Loading the debug validation dataset adds the two extra memories to the example five`()
     async throws

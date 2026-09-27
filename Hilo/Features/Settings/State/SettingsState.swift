@@ -103,7 +103,7 @@ final class SettingsState: Identifiable {
   }
 
   #if DEBUG
-    /// The Debug panel's dataset for docs/validacion-manual; never in Release.
+    /// The Debug panel's dataset for docs/manual-validation; never in Release.
     func loadDebugValidationDataset() async {
       do {
         try await persistenceActor.loadDebugValidationDataset(loadedAt: Date())
