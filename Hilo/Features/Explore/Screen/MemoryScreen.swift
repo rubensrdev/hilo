@@ -34,6 +34,7 @@ struct MemoryScreen: View {
           } label: {
             Image(systemName: "gearshape")
           }
+          .tint(Color.acentoHilo)
           .accessibilityLabel("Settings")
           .accessibilityIdentifier("explore.openSettings")
         }

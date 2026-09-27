@@ -38,7 +38,7 @@ final class CaptureState {
   private let onUnderstood: (ExtractedMemory, String, Data?, MemoryID?) -> Void
   private var comprehensionTask: Task<Void, Never>?
   private var photoLoadTask: Task<Void, Never>?
-  @ObservationIgnored private var isSavingFailedNarrative = false
+  private var isSavingFailedNarrative = false
   private let logger = Logger(subsystem: "com.hilo.app", category: "capture")
 
   private enum SaveError: Error {
@@ -116,6 +116,21 @@ final class CaptureState {
   func removePhoto() {
     photoLoadTask?.cancel()
     photoData = nil
+  }
+
+  /// Not in the error: that memory is already saved and the error has its own way out. Not
+  /// while the error is saving the text either: clearing would let it land on an empty capture.
+  var canDiscard: Bool {
+    (phase == .capturing || phase == .comprehending) && !isSavingFailedNarrative
+  }
+
+  /// Returns false when nothing was discarded, so the sheet stays open.
+  @discardableResult
+  func discard() -> Bool {
+    guard canDiscard else { return false }
+    comprehensionTask?.cancel()
+    resetForNewMemory()
+    return true
   }
 
   func acknowledgeSaveFailure() {

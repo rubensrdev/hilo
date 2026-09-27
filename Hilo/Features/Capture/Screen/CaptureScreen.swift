@@ -7,6 +7,7 @@ struct CaptureScreen: View {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @Environment(\.locale) private var environmentLocale
   @Environment(\.displayScale) private var displayScale
+  @Environment(\.dismiss) private var dismiss
 
   private var interfaceLocale: Locale { InterfaceLocale.resolve(environmentLocale) }
 
@@ -32,11 +33,16 @@ struct CaptureScreen: View {
       .navigationBarTitleDisplayMode(.inline)
       // In the bar, so it stays in view with a long narrative and the chips never push it away.
       .toolbar {
-        if state.phase == .comprehending {
+        if state.canDiscard {
           ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel") { state.cancel() }
-              .accessibilityHint("Stops reading. Your text and photo stay here.")
-              .accessibilityIdentifier("capture.cancel")
+            Button {
+              if state.discard() { dismiss() }
+            } label: {
+              Image(systemName: "xmark")
+            }
+            // A sheet dismissal, not a navigation pop: never "Back".
+            .accessibilityLabel("Cancel")
+            .accessibilityIdentifier("capture.cancel")
           }
         }
       }

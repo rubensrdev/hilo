@@ -218,8 +218,8 @@ Solo SF Symbols. Escala `medium`. El peso acompaña al texto contiguo.
 | Persona | `person.fill` | Con `tipo-persona` |
 | Lugar | `mappin.and.ellipse` | Con `tipo-lugar` |
 | Objeto | `cube.fill` | Con `tipo-objeto` |
-| Pestaña Memoria | `square.stack` | |
-| Pestaña Preguntar | `text.magnifyingglass` | No es burbuja: no es un chat (§5) |
+| Pestaña Memoria | `square.stack` | Teñida con `acento-hilo` solo cuando está seleccionada; la no seleccionada queda con el color del sistema |
+| Pestaña Preguntar | `text.magnifyingglass` | No es burbuja: no es un chat (§5). Mismo tinte que la pestaña Memoria |
 | Contar un recuerdo | `square.and.pencil` | Botón de la barra de herramientas de Memoria en todos los tamaños de texto, con el estilo prominente de vidrio del sistema teñido con `acento-hilo`; nunca flotante, a ancho completo ni con un círculo dibujado a mano. Solo los estados vacío y de un recuerdo añaden además un `boton-principal` dentro del contenido |
 | Foto | `photo` | |
 | Fuentes | `text.quote` | |
@@ -230,7 +230,8 @@ Solo SF Symbols. Escala `medium`. El peso acompaña al texto contiguo.
 | Estado error | `exclamationmark.octagon.fill` | Con `estado-error`. Sin uso en el MVP desde la 1.4: el error de comprensión usa el símbolo de aviso |
 | Filtro de tipo activo | Símbolo del tipo | Chip de filtro con `seleccionado` y marca de estado del control |
 | Descartar | `xmark` | |
-| Ajustes | `gearshape` | |
+| Ajustes | `gearshape` | Teñido siempre con `acento-hilo`, como contar un recuerdo |
+| Cerrar una hoja | `xmark` | Sin texto, en la posición leading de la barra, con `texto-primario`. Etiqueta de accesibilidad explícita: «Cerrar» en Ajustes, «Cancelar» en Revisión y Captura; nunca «Atrás», porque cierra una hoja, no vuelve en una pila. El mismo símbolo que Descartar; la etiqueta los distingue |
 
 Todos los nombres de símbolo se verifican en SF Symbols contra la versión mínima de `ADR-000` antes de F4.
 

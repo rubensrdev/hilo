@@ -52,7 +52,13 @@ Abre la captura desde el botón de contar de Memoria.
       deja el texto intacto.
 - [ ] **Comprendiendo**: con texto, pulsa Entender y guardar. Se ve «Leyendo tu
       recuerdo…», los elementos van apareciendo de uno en uno con color, símbolo y tipo,
-      y arriba hay **Cancelar**, que para la lectura y deja el texto y la foto.
+      y arriba sigue la X de **Cancelar** (siguiente punto), que para la lectura.
+- [ ] **Cancelar la captura**: con texto escrito y una foto, pulsa la X de la
+      esquina leading. La hoja se cierra **sin preguntar** y vuelves a Memoria; no aparece
+      ningún recuerdo nuevo. Al reabrir la captura está vacía, sin texto ni foto. Repite
+      mientras lee (Comprendiendo): mismo resultado, y no se abre la revisión después.
+      En el estado de error (guardado sin analizar) **no** hay X. Deslizar la hoja
+      hacia abajo, en cambio, conserva el texto y la foto.
 - [ ] **Error de comprensión**: pega un texto muy largo (un párrafo copiado muchas veces,
       unas 3.000 palabras) y pulsa Entender y guardar. Sale «Tu recuerdo está guardado
       tal como lo contaste» con «Este recuerdo es demasiado largo para que Hilo lo lea de

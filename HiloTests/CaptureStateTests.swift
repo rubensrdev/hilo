@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import SwiftData
 import Testing
 
@@ -1005,6 +1006,148 @@ struct CaptureStateTests {
     #expect(state.phase == .capturing)
   }
 
+  // MARK: discarding the capture — closing the sheet without saving
+
+  @Test func `Discarding while capturing clears the text and the photo and saves nothing`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(script: .fails(.noResponse)),
+      persistenceActor: PersistenceActor(modelContainer: container), interfaceLanguage: "es"
+    ) { _, _, _, _ in }
+    state.narrative = "Lucía en la playa de Laredo."
+    state.photoData = Data([0xAB, 0xCD])
+
+    #expect(state.canDiscard)
+    #expect(state.discard())
+
+    #expect(state.narrative.isEmpty)
+    #expect(state.photoData == nil)
+    #expect(state.phase == .capturing)
+    #expect(try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).isEmpty)
+  }
+
+  @Test func `Discarding mid-comprehension stops it, never opens the review and saves nothing`()
+    async throws
+  {
+    var understoodCallCount = 0
+    let container = try PersistenceContainer.make(inMemory: true)
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(
+          partials: [Self.luciaExtraction], final: Self.luciaExtraction,
+          delayBetweenPartials: .milliseconds(50))),
+      persistenceActor: PersistenceActor(modelContainer: container), interfaceLanguage: "es"
+    ) { _, _, _, _ in understoodCallCount += 1 }
+    state.narrative = "Lucía en la playa de Laredo."
+    state.understandAndSave()
+    await waitUntil { state.extractedSoFar != nil }
+
+    #expect(state.canDiscard)
+    #expect(state.discard())
+    try await Task.sleep(for: .milliseconds(200))
+
+    #expect(understoodCallCount == 0)
+    #expect(state.phase == .capturing)
+    #expect(state.narrative.isEmpty)
+    #expect(state.extractedSoFar == nil)
+    #expect(try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).isEmpty)
+  }
+
+  @Test func `Discarding during a retry clears the capture and keeps the memory already saved`()
+    async throws
+  {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let state = CaptureState(
+      comprehender: SequencedComprehender(
+        scripts: [
+          .fails(.noResponse),
+          .succeeds(
+            partials: [Self.luciaExtraction], final: Self.luciaExtraction,
+            delayBetweenPartials: .seconds(30)),
+        ]),
+      persistenceActor: PersistenceActor(modelContainer: container), interfaceLanguage: "es"
+    ) { _, _, _, _ in }
+    state.narrative = "Lucía en la playa de Laredo."
+    state.understandAndSave()
+    await waitUntil { state.phase != .comprehending }
+    state.retry()
+    await waitUntil { state.extractedSoFar != nil }
+
+    #expect(state.discard())
+
+    #expect(state.phase == .capturing)
+    #expect(state.narrative.isEmpty)
+    #expect(state.savedMemoryID == nil)
+    let records = try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>())
+    #expect(records.count == 1)
+    #expect(records.first?.narrative == "Lucía en la playa de Laredo.")
+  }
+
+  @Test func `The not-analyzed error can't be discarded: the memory is already saved`()
+    async throws
+  {
+    let state = try Self.makeState(script: .fails(.noResponse))
+    state.narrative = "Lucía en la playa de Laredo."
+    state.understandAndSave()
+    await waitUntil { state.phase != .comprehending }
+    let savedID = try #require(state.savedMemoryID)
+
+    #expect(state.canDiscard == false)
+    #expect(state.discard() == false)
+
+    #expect(state.phase == .notAnalyzed(.generic))
+    #expect(state.savedMemoryID == savedID)
+    #expect(state.narrative == "Lucía en la playa de Laredo.")
+  }
+
+  @Test func `The capture can't be discarded while its review is open`() async throws {
+    var understoodCallCount = 0
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(
+        script: .succeeds(partials: [], final: Self.emptyExtraction)),
+      persistenceActor: PersistenceActor(
+        modelContainer: try PersistenceContainer.make(inMemory: true)),
+      interfaceLanguage: "es"
+    ) { _, _, _, _ in understoodCallCount += 1 }
+    state.narrative = "Una tarde en el río con mi hermano."
+    state.understandAndSave()
+    await waitUntil { understoodCallCount == 1 }
+
+    #expect(state.canDiscard == false)
+    #expect(state.discard() == false)
+
+    #expect(state.phase == .reviewing)
+    #expect(state.narrative == "Una tarde en el río con mi hermano.")
+  }
+
+  @Test func `The capture can't be discarded while the error is saving the text`() async throws {
+    let container = try PersistenceContainer.make(inMemory: true)
+    let state = CaptureState(
+      comprehender: FakeMemoryComprehender(script: .fails(.noResponse)),
+      persistenceActor: PersistenceActor(modelContainer: container), interfaceLanguage: "es"
+    ) { _, _, _, _ in }
+    state.narrative = "Lucía en la playa de Laredo."
+    state.understandAndSave()
+    let firstChange = DiscardAttempt()
+    withObservationTracking {
+      _ = state.canDiscard
+    } onChange: {
+      // Enqueued on the main actor before the save can resume, so it runs mid-save.
+      Task { @MainActor in firstChange.record(state) }
+    }
+    await waitUntil { firstChange.phase != nil }
+    await waitUntil { state.phase != .comprehending }
+
+    #expect(firstChange.phase == .comprehending)
+    #expect(firstChange.canDiscard == false)
+    #expect(firstChange.discarded == false)
+    #expect(state.phase == .notAnalyzed(.generic))
+    #expect(state.narrative == "Lucía en la playa de Laredo.")
+    #expect(try ModelContext(container).fetch(FetchDescriptor<MemoryRecord>()).count == 1)
+  }
+
   // MARK: direct save failure — no memory behind it, so a real error
 
   @Test
@@ -1213,5 +1356,19 @@ private final class PhotoLoadGate {
     } else {
       pending = .some(data)
     }
+  }
+}
+
+/// What the capture looked like, and what discarding did, the first time canDiscard changed.
+@MainActor
+private final class DiscardAttempt {
+  private(set) var phase: CaptureState.Phase?
+  private(set) var canDiscard: Bool?
+  private(set) var discarded: Bool?
+
+  func record(_ state: CaptureState) {
+    phase = state.phase
+    canDiscard = state.canDiscard
+    discarded = state.discard()
   }
 }
