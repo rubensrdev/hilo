@@ -1,6 +1,6 @@
 # F8.3 — Pasada de accesibilidad y matriz de diseño
 
-Resultado de la tarea F8.3 (spec `docs/specs/F8_Ajustes_Espanol_Accesibilidad.md`, contratos 3 y 4),
+Resultado de la tarea F8.3 (spec `docs/specs/F8_Settings_Spanish_Accessibility.md`, contratos 3 y 4),
 2026-09-25. Dos fuentes: la auditoría estática de `auditor-accesibilidad` sobre las 18 vistas y la
 matriz de renders (tamaño mínimo, AX5 en español, oscuro, contraste aumentado claro y oscuro) hecha
 con `RenderPreview`. Lo que no se puede juzgar sin iPhone queda al final, para Rubén.

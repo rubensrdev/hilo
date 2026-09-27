@@ -19,7 +19,7 @@ Rama `mantenimiento/color-y-cierre-de-hojas`. Tres cambios de UI; la única lóg
 2. `CaptureScreen`: `xmark` en `.cancellationAction`, label «Cancel», visible si `canDiscard`.
 3. `ReviewScreen` («Cancel») y `SettingsScreen` («Close»): texto → `xmark` con label explícito (Rubén, 2026-09-27: `xmark` en vez de `chevron.left`).
 4. `MemoryScreen`: `gearshape` con `.tint(acentoHilo)`. `RootScreen`: `TabView` con `.tint(acentoHilo)`.
-5. Documentación: `tokens.md` §4, D1 en `F8-accesibilidad-y-diseno.md`, línea de «Cerrar» en `F8-ajustes-espanol-accesibilidad.md`, punto nuevo en `F4-captura-y-revision.md`.
+5. Documentación: `tokens.md` §4, D1 en `F8-accessibility-and-design.md`, línea de «Cerrar» en `F8-settings-spanish-accessibility.md`, punto nuevo en `F4-capture-and-review.md`.
 6. Build limpio 0/0, todos los tests, previews en claro/oscuro/AC, `verificador-ui` con VoiceOver, `revisor-constitucion`.
 
 ## Fuera de esta rama — defecto detectado en el paso 6 (2026-09-27)

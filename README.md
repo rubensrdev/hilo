@@ -60,14 +60,14 @@ sin conexión a internet.
    nada, o **Cuenta tu primer recuerdo** para empezar la tuya.
 
 El recorrido completo de la demo está en
-[`docs/validacion-manual/entrega-hackathon/recorrido-de-principio-a-fin.md`](docs/validacion-manual/entrega-hackathon/recorrido-de-principio-a-fin.md).
+[`docs/manual-validation/hackathon-delivery/end-to-end-walkthrough.md`](docs/manual-validation/hackathon-delivery/end-to-end-walkthrough.md).
 
 ## Documentación
 
 | Ruta | Qué hay |
 |---|---|
-| [`docs/specs/`](docs/specs/) | Una spec funcional por fase; `F0_INDICE_Y_CONSTITUCION.md` es la constitución |
+| [`docs/specs/`](docs/specs/) | Una spec funcional por fase; `F0_INDEX_AND_CONSTITUTION.md` es la constitución |
 | [`docs/decisions/`](docs/decisions/) | ADRs: stack, contratos del modelo y esquema de persistencia |
 | [`docs/design/`](docs/design/) | Tokens de diseño y referencias visuales |
-| [`docs/validacion-manual/`](docs/validacion-manual/) | Baterías de validación en dispositivo, una por fase |
+| [`docs/manual-validation/`](docs/manual-validation/) | Baterías de validación en dispositivo, una por fase |
 | [`CLAUDE.md`](CLAUDE.md) | Reglas de trabajo en el repo |

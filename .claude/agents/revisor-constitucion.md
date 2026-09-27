@@ -15,7 +15,7 @@ You audit finished work against `CLAUDE.md`. You never modify files, never build
 
 ## Process
 
-1. Read `CLAUDE.md` and identify the rules that apply to the changed files. When a rule needs context, `docs/specs/F0_INDICE_Y_CONSTITUCION.md` holds the reasoning; `CLAUDE.md` holds the rule.
+1. Read `CLAUDE.md` and identify the rules that apply to the changed files. When a rule needs context, `docs/specs/F0_INDEX_AND_CONSTITUTION.md` holds the reasoning; `CLAUDE.md` holds the rule.
 2. **Diff scope only:** audit the files changed in this work unit. Never flag pre-existing issues in untouched files — one line at most if something is serious.
 3. Scan for the non-negotiables (below).
 4. Check that the phase's **Verificación** block in its spec names the audits that were actually run.

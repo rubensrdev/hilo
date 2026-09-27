@@ -6,8 +6,8 @@ en el estado que necesita el siguiente. Si un paso falla, anota el número y sig
 depende de que el anterior haya salido perfecto, y donde sí depende se dice.
 
 No repite la matriz de accesibilidad ni la de apariencias: están en
-`docs/validacion-manual/F5-explorar.md` (§6 AX5 y VoiceOver, §7 claro/oscuro) y en
-`docs/validacion-manual/F8-ajustes-espanol-accesibilidad.md` (§3 accesibilidad, §4 las cuatro
+`docs/manual-validation/F5-explore.md` (§6 AX5 y VoiceOver, §7 claro/oscuro) y en
+`docs/manual-validation/F8-settings-spanish-accessibility.md` (§3 accesibilidad, §4 las cuatro
 apariencias). Pásalas aparte, o por encima del estado en que queda la memoria tras el paso 9.
 
 Duración aproximada: 30–40 minutos.
@@ -18,7 +18,7 @@ Duración aproximada: 30–40 minutos.
   abajo. Son inventados y **no comparten ningún nombre con la memoria de ejemplo**, así los
   recuentos de José, Carmen y compañía salen exactos.
 - **El set de validación**, que se carga desde Ajustes → **Debug** → **Load validation
-  dataset**. Es la memoria de ejemplo aprobada (`docs/content/memoria-de-ejemplo.md`, cinco
+  dataset**. Es la memoria de ejemplo aprobada (`docs/content/example-memory.md`, cinco
   recuerdos) más los dos recuerdos sintéticos de F5 (`DebugValidationContent.swift`):
   - **A**: Marta y el parque, «por 1990». Marta nunca se nombra en el relato.
   - **B**: un relato largo con Martina y la bicicleta vieja, sin fecha.
@@ -296,7 +296,7 @@ En Memoria → Recuerdos, en «Busca en tus recuerdos»:
 
 ## 13. Accesibilidad y apariencia
 
-No se repite aquí. Pasa `F5-explorar.md` §6–§7 y `F8-ajustes-espanol-accesibilidad.md` §3–§4
+No se repite aquí. Pasa `F5-explore.md` §6–§7 y `F8-settings-spanish-accessibility.md` §3–§4
 (AX5, VoiceOver, Reducir movimiento y las cuatro apariencias) sobre la memoria del paso 9, o
 vuelve a cargar el set de validación después del paso 12. Si quieres una comprobación rápida
 dentro de este recorrido, en el paso 5 con VoiceOver: quitar un chip anuncia «…, fuera de este
@@ -313,7 +313,7 @@ recuerdo» y el foco nunca salta al principio de la hoja.
   vale es la regla (mismo tipo, nombre contenido en el otro → duda), no la cifra exacta.
 - La sección Debug de Ajustes («Debug», «Load validation dataset») está en inglés: nunca se
   compila en Release.
-- `F5-explorar.md` sigue nombrando el botón Debug «Wipe all data». Desde F8, el borrado es el
+- `F5-explore.md` sigue nombrando el botón Debug «Wipe all data». Desde F8, el borrado es el
   producto («Borrarlo todo»).
 - Ya anotado en F8, fuera de alcance: al reabrir Captura tras guardar sin analizar, el banner
   «Recuerdo guardado» sigue ahí hasta que escribes. En S4 de un recuerdo sin analizar conviven

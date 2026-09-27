@@ -2,11 +2,11 @@
 
 Batería para dispositivo físico real, no simulador: comprueba la comprensión con el
 modelo de verdad, que en los tests siempre está sustituido por dobles. Contrastada contra
-`docs/specs/F3_Comprension.md` (bloque "En dispositivo").
+`docs/specs/F3_Comprehension.md` (bloque "En dispositivo").
 
 F3 no tenía interfaz propia: la batería usa la captura y la revisión de F4 para ver lo que
 entiende el modelo. Lo que se valida aquí es la comprensión; las pantallas tienen su
-batería en `F4-captura-y-revision.md`.
+batería en `F4-capture-and-review.md`.
 
 ## Preparación
 
@@ -83,7 +83,7 @@ batería en `F4-captura-y-revision.md`.
   redactado distinto, o no dar la fecha «un otoño». Lo que vale es la regla (lo nombrable
   sí, lo genérico no; la fecha literal; el año nunca a la vista), no la palabra exacta.
 - El desbordamiento de contexto se provoca a mano con un relato muy largo, y está en
-  `F4-captura-y-revision.md` §2. El resto de errores (guardarraíl, rechazo, idioma no
+  `F4-capture-and-review.md` §2. El resto de errores (guardarraíl, rechazo, idioma no
   soportado, decodificación) no se pueden provocar a voluntad: los cubren los tests.
 - No hay precalentamiento de la sesión, aunque la spec lo pedía: el spike midió que no
   acorta la espera hasta el primer elemento y hace menos estable el tiempo total.

@@ -2,7 +2,7 @@
 
 Contract for Claude Code in this repository. Rules here override defaults and habits.
 
-`docs/specs/F0_INDICE_Y_CONSTITUCION.md` is the constitution — it prevails over any other technical practice in this repo, and is read, never implemented. Product-level conflicts fall back to the Idea Especificada v2.3 instead. This file is the short operational summary of that constitution, not a replacement for it.
+`docs/specs/F0_INDEX_AND_CONSTITUTION.md` is the constitution — it prevails over any other technical practice in this repo, and is read, never implemented. Product-level conflicts fall back to the Idea Especificada v2.3 instead. This file is the short operational summary of that constitution, not a replacement for it.
 
 Hilo is a private personal memory: the user tells a memory in their own words, the app recognises the people, places and objects in it, lets the user review what it understood, and connects that memory to earlier ones. Everything happens on the device.
 

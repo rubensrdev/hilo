@@ -10,21 +10,21 @@ Fuente de las imágenes: `Hilo - Patrones.dc.html` (lienzo navegable, un grupo p
 
 | PNG | Grupo | Estados |
 |---|---|---|
-| `01-tarjeta-de-recuerdo.png` | Tarjeta de recuerdo | sin foto con fecha · sin foto sin fecha · con foto · relato largo · guardado sin analizar |
-| `02-lista-de-recuerdos.png` | Lista agrupada por década | con contenido (1990s · 1980s · No date) · un solo recuerdo · buscando con resultados · buscando sin resultados |
-| `03-lista-de-elementos.png` | Personas, lugares y objetos | con contenido · filtro sin resultados |
-| `04-chip-de-elemento.png` | Chip de elemento | nuevo · ya conocido · quitado · nombre largo en AX5 |
-| `05-fila-conectada.png` | Fila de recuerdo conectado | dos motivos · motivo largo en AX5 |
-| `06-pregunta-de-identidad.png` | Pregunta de identidad | inglés · español en AX5 |
-| `07-navegacion.png` | Navegación | TabView · selector superior · barra de herramientas con el acceso a contar |
-| `08-memoria-vacia.png` | Memoria vacía | vacío de primera vez |
-| `09-captura.png` | Captura | vacío · escribiendo · con foto · comprendiendo · error de comprensión |
-| `10-revision.png` | Revisión | con conexiones · sin conexiones · con dudas de identidad · sin nada reconocido · aviso previo a renombrar |
-| `11-momento-de-la-conexion.png` | Momento de la conexión | justo después de guardar |
-| `12-detalle-de-recuerdo.png` | Detalle de recuerdo | completo · sin foto sin conexiones · guardado sin analizar · confirmación de borrado |
-| `13-detalle-de-elemento.png` | Detalle de persona, lugar u objeto | persona con varios recuerdos · objeto con un solo recuerdo |
-| `14-ax5-y-espanol.png` | AX5 y español | lista en AX5 · revisión en AX5 · revisión en español |
-| `15-cuatro-apariencias.png` | Las cuatro apariencias | claro · oscuro · claro AC · oscuro AC |
+| `01-memory-card.png` | Tarjeta de recuerdo | sin foto con fecha · sin foto sin fecha · con foto · relato largo · guardado sin analizar |
+| `02-memory-list.png` | Lista agrupada por década | con contenido (1990s · 1980s · No date) · un solo recuerdo · buscando con resultados · buscando sin resultados |
+| `03-element-list.png` | Personas, lugares y objetos | con contenido · filtro sin resultados |
+| `04-element-chip.png` | Chip de elemento | nuevo · ya conocido · quitado · nombre largo en AX5 |
+| `05-connected-row.png` | Fila de recuerdo conectado | dos motivos · motivo largo en AX5 |
+| `06-identity-question.png` | Pregunta de identidad | inglés · español en AX5 |
+| `07-navigation.png` | Navegación | TabView · selector superior · barra de herramientas con el acceso a contar |
+| `08-empty-memory.png` | Memoria vacía | vacío de primera vez |
+| `09-capture.png` | Captura | vacío · escribiendo · con foto · comprendiendo · error de comprensión |
+| `10-review.png` | Revisión | con conexiones · sin conexiones · con dudas de identidad · sin nada reconocido · aviso previo a renombrar |
+| `11-connection-moment.png` | Momento de la conexión | justo después de guardar |
+| `12-memory-detail.png` | Detalle de recuerdo | completo · sin foto sin conexiones · guardado sin analizar · confirmación de borrado |
+| `13-element-detail.png` | Detalle de persona, lugar u objeto | persona con varios recuerdos · objeto con un solo recuerdo |
+| `14-ax5-and-spanish.png` | AX5 y español | lista en AX5 · revisión en AX5 · revisión en español |
+| `15-four-appearances.png` | Las cuatro apariencias | claro · oscuro · claro AC · oscuro AC |
 
 ## Decisiones aplicadas en este lote
 

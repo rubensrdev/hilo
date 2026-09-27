@@ -1,6 +1,6 @@
 # Memoria de ejemplo — Hilo
 
-> `docs/content/memoria-de-ejemplo.md` · Contenido de producto de la F2.5, aprobado por Rubén.
+> `docs/content/example-memory.md` · Contenido de producto de la F2.5, aprobado por Rubén.
 > Todo es inventado. Ningún recuerdo es de una persona real.
 
 ## Qué tiene que demostrar

@@ -2,7 +2,7 @@
 
 Batería para dispositivo físico real, no simulador: verifica VoiceOver, Tipografía
 Dinámica y comportamiento nativo que solo se puede juzgar de verdad en un iPhone.
-Contrastada contra `docs/specs/F5_Explorar.md` (bloque "En dispositivo") y contra lo
+Contrastada contra `docs/specs/F5_Explore.md` (bloque "En dispositivo") y contra lo
 que `verificador-ui` ya comprobó en simulador durante F5.4/F5.5.
 
 ## Preparación

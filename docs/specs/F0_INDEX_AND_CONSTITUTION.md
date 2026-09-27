@@ -1,6 +1,6 @@
 # F0 — Índice y constitución
 
-> Spec de fase · Proyecto **Hilo** · `docs/specs/F0_INDICE_Y_CONSTITUCION.md`
+> Spec de fase · Proyecto **Hilo** · `docs/specs/F0_INDEX_AND_CONSTITUTION.md`
 > Origen: Documento de Idea Especificada v2.3 (fuente de verdad del producto)
 > Este documento no se implementa: se lee. Es el mapa y el contrato.
 
@@ -17,12 +17,12 @@ La traducción es **1 fase = 1 fichero en `docs/specs/`**. Cada spec se basta so
 ```
 docs/
 ├── specs/
-│   ├── F0_INDICE_Y_CONSTITUCION.md      ← este documento
-│   ├── F0.1_Proyecto_y_Cimientos.md
+│   ├── F0_INDEX_AND_CONSTITUTION.md     ← este documento
+│   ├── F0_1_Project_and_Foundations.md
 │   ├── F0.2_Spike_Foundation_Models.md
-│   ├── F1_Nucleo_de_Dominio.md
+│   ├── F1_Domain_Core.md
 │   ├── …
-│   └── F10_Hebras_Sueltas.md
+│   └── F10_Loose_Threads.md
 ├── decisions/                           ← ADR-000-stack y ADRs de decisiones caras
 └── design/
     ├── tokens.md                        ← contrato visual, previo a F0.1
@@ -169,8 +169,8 @@ Solo decisiones caras de revertir:
 | ADR | Decisión | Se abre en |
 |---|---|---|
 | `ADR-000-stack` | Stack, aislamiento por defecto y mecanismo de salida del dominio, reglas del kit no contrastadas | Antes de F0.1 |
-| `ADR-001-contrato-modelo` | Contratos de los tres usos de Foundation Models y valor del tope | F0.2 |
-| `ADR-002-esquema-persistencia` | Esquema, identidad entre actores, almacenamiento de fotos | F2 |
+| `ADR-001-model-and-cap` | Contratos de los tres usos de Foundation Models y valor del tope | F0.2 |
+| `ADR-002-persistence-schema` | Esquema, identidad entre actores, almacenamiento de fotos | F2 |
 | `ADR-003-recuperacion` | Cascada y huella de vigencia del retrato (si se adopta la propuesta B8) | F6 |
 
 Cualquier otro ADR requiere justificar por qué no basta una línea en el registro.
@@ -255,19 +255,19 @@ Los cinco por defecto, **parcheados antes de activarse** (Fase 4.2 de la guía).
 
 | Fase | Spec | ADR | Tipo |
 |---|---|---|---|
-| F0 | `F0_INDICE_Y_CONSTITUCION.md` | `ADR-000-stack` | — |
-| F0.1 | `F0.1_Proyecto_y_Cimientos.md` | — | Sin UI |
-| F0.2 | `F0.2_Spike_Foundation_Models.md` | `ADR-001-contrato-modelo` | Sin UI |
-| F1 | `F1_Nucleo_de_Dominio.md` | — | Sin UI |
-| F2 | `F2_Persistencia.md` | `ADR-002-esquema-persistencia` | Sin UI |
-| F3 | `F3_Comprension.md` | — (consume ADR-001) | Sin UI |
-| F4 | `F4_Captura_y_Revision.md` | — | **Con UI** |
-| F5 | `F5_Explorar.md` | — | **Con UI** |
-| F6 | `F6_Recuperacion_y_Preguntar.md` | `ADR-003-recuperacion` | **Con UI** |
-| F7 | `F7_Retrato.md` | — (consume ADR-003) | **Con UI** |
-| F8 | `F8_Ajustes_Espanol_Accesibilidad.md` | — | **Con UI** |
-| F9 | `F9_Tejido.md` | — | **Con UI** |
-| F10 | `F10_Hebras_Sueltas.md` | — | **Con UI** |
+| F0 | `F0_INDEX_AND_CONSTITUTION.md` | `ADR-000-stack` | — |
+| F0.1 | `F0_1_Project_and_Foundations.md` | — | Sin UI |
+| F0.2 | `F0.2_Spike_Foundation_Models.md` | `ADR-001-model-and-cap` | Sin UI |
+| F1 | `F1_Domain_Core.md` | — | Sin UI |
+| F2 | `F2_Persistence.md` | `ADR-002-persistence-schema` | Sin UI |
+| F3 | `F3_Comprehension.md` | — (consume ADR-001) | Sin UI |
+| F4 | `F4_Capture_and_Review.md` | — | **Con UI** |
+| F5 | `F5_Explore.md` | — | **Con UI** |
+| F6 | `F6_Retrieval_and_Asking.md` | `ADR-003-recuperacion` | **Con UI** |
+| F7 | `F7_Portrait.md` | — (consume ADR-003) | **Con UI** |
+| F8 | `F8_Settings_Spanish_Accessibility.md` | — | **Con UI** |
+| F9 | `F9_Weave.md` | — | **Con UI** |
+| F10 | `F10_Loose_Threads.md` | — | **Con UI** |
 
 **F0.2 se sale de la guía.** La guía no contempla fases de spike. Aquí existe porque tres decisiones dependen de una medición y no de un criterio: el tope (§17.2), el contrato de extracción y el comportamiento ante contenido íntimo (riesgo de §15). Su código es desechable, vive fuera del target de la app y no se fusiona. Lo que entrega es un informe y el ADR-001.
 

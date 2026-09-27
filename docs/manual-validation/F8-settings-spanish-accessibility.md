@@ -2,8 +2,8 @@
 
 Batería para dispositivo físico real, no simulador: verifica VoiceOver, Tipografía
 Dinámica, las cuatro apariencias y el comportamiento nativo que solo se juzga en un
-iPhone. Contrastada contra `docs/specs/F8_Ajustes_Espanol_Accesibilidad.md` (bloque
-"En dispositivo"), contra los hallazgos de `docs/validacion-manual/F8-accesibilidad-y-diseno.md`
+iPhone. Contrastada contra `docs/specs/F8_Settings_Spanish_Accessibility.md` (bloque
+"En dispositivo"), contra los hallazgos de `docs/manual-validation/F8-accessibility-and-design.md`
 y contra lo que `verificador-ui` ya comprobó en simulador en F8.1, F8.4 y F8.5 (siempre
 en español, oscuro y tamaño de accesibilidad: la variante por defecto del selector y el
 modo claro solo se han visto en render).
@@ -17,7 +17,7 @@ modo claro solo se han visto en render).
 4. En Ajustes → sección **Debug** (solo en compilaciones Debug) pulsa **Load validation
    dataset**: carga los 5 recuerdos de la memoria de ejemplo aprobada más los 2 de la
    batería de F5 (Marta / el parque; Martina / la bicicleta vieja). Es el mismo set de
-   `docs/validacion-manual/F5-explorar.md`; F8 no necesita datos nuevos.
+   `docs/manual-validation/F5-explore.md`; F8 no necesita datos nuevos.
 5. Guarda además **un recuerdo real** desde Contar un recuerdo (por ejemplo «Comimos con
    José el domingo pasado», con «Entender y guardar»): sirve para comprobar que borrar el
    ejemplo respeta lo tuyo y que José sobrevive con ese recuerdo.
@@ -147,7 +147,7 @@ Repite S1 (normal), S2, S3, momento de la conexión, S4, S5 y S7 en cada aparien
 
 ## Notas conocidas, sin acción pendiente
 
-- `docs/validacion-manual/F5-explorar.md` sigue nombrando el botón Debug «Wipe all
+- `docs/manual-validation/F5-explore.md` sigue nombrando el botón Debug «Wipe all
   data»; desde F8 el borrado es el producto («Borrarlo todo» con doble confirmación).
 - Las claves «Debug» y «Load validation dataset» siguen sin extraerse al catálogo:
   bajo `#if DEBUG`, nunca en Release.

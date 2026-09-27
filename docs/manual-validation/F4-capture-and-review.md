@@ -2,7 +2,7 @@
 
 Batería para dispositivo físico real, no simulador: comprueba las dos pantallas donde
 ocurre el producto, contar y revisar, con el modelo de verdad, VoiceOver, Tipografía
-Dinámica y dictado. Contrastada contra `docs/specs/F4_Captura_y_Revision.md` (bloque
+Dinámica y dictado. Contrastada contra `docs/specs/F4_Capture_and_Review.md` (bloque
 "En dispositivo"), que fue también el punto de control A: si los criterios 1 y 2 no
 pasan, el resto de la app no tiene sentido.
 
@@ -175,6 +175,6 @@ y luego fuimos a la heladería Los Italianos.»:
   lo cubren los tests, con el texto y el botón que corresponden a cada uno.
 - Ya anotado en F8: al reabrir la captura tras guardar sin analizar, el banner «Recuerdo
   guardado» sigue ahí hasta que escribes.
-- El recorrido completo de la entrega (`entrega-hackathon/recorrido-de-principio-a-fin.md`,
+- El recorrido completo de la entrega (`hackathon-delivery/end-to-end-walkthrough.md`,
   pasos 2 a 7) pasa por estas mismas pantallas en otro orden. Si ya lo has hecho, esta
   batería solo añade la matriz de estados, AX5 y VoiceOver.

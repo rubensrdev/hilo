@@ -2,7 +2,7 @@
 
 Batería para dispositivo físico real, no simulador: comprueba que lo guardado sobrevive a
 cerrar la app y que el borrado total la deja como el primer día. Contrastada contra
-`docs/specs/F2_Persistencia.md` (bloque "En dispositivo").
+`docs/specs/F2_Persistence.md` (bloque "En dispositivo").
 
 F2 no tenía interfaz propia, así que la batería usa las pantallas que llegaron después
 (captura, Memoria, detalle y Ajustes) solo como forma de escribir y leer el almacén. Lo
@@ -68,5 +68,5 @@ deslizándola hacia arriba, no solo volver a la pantalla de inicio.
 - No hay migraciones: si el esquema cambia, hay que borrar la app y reinstalarla. En la
   build de la entrega el esquema no cambia.
 - El borrado total se valida también, con sus dos confirmaciones, en
-  `F8-ajustes-espanol-accesibilidad.md` §1. Aquí interesa lo que queda en el almacén, no
+  `F8-settings-spanish-accessibility.md` §1. Aquí interesa lo que queda en el almacén, no
   las alertas.
