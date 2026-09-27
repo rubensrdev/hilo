@@ -1,3 +1,91 @@
+<p align="center">
+  <img src="docs/content/hilo-icon.png" width="128" alt="Hilo app icon">
+</p>
+
+<p align="center">
+
+[🇬🇧 English](#english) · [🇪🇸 Español](#español)
+
+</p>
+
+## English <a name="english"></a>
+
+# Hilo
+
+Hilo is a private personal memory: you tell a memory in your own words, and the app
+recognises on its own the people, places and objects that appear in it, lets you review
+what it understood before saving it, and connects it to earlier memories that share any
+of those elements. Everything happens on the device — no account, no cloud, no internet
+connection.
+
+## What makes it different
+
+- **It is your memory, not a diary.** There are no forms or tags: you tell the memory the
+  way you would tell it out loud, and Hilo understands who, where and what. Your words are
+  kept exactly as written, never corrected or rewritten.
+- **The intelligence lives on the iPhone.** Comprehension uses the system's own language
+  model (Apple Intelligence) through Foundation Models. A server is never consulted, not
+  even when the system offers one.
+- **Nothing leaves the phone.** There is no account, no sync, no analytics and no network
+  code. The app works end to end in airplane mode, and deleting really deletes, photos
+  included.
+- **You decide what stays.** Before saving you see what Hilo understood and correct it.
+  Connections always say why they exist, and the date you see is always the one you
+  wrote: the deduced year is only used for sorting.
+
+## What it does today
+
+- Tell a memory by typing or dictating, with an optional photo.
+- Progressive comprehension of people, places and objects, which appear while Hilo
+  reads, with the date in your own words.
+- Review before saving: remove, rename, resolve doubts («Is José Luis José?») or
+  add the date.
+- Automatic connection to earlier memories, with the reason always visible («By
+  Lucía»).
+- Browse the memory in chronological order or by element, with search.
+- An example memory to try it without writing anything, and full deletion.
+- If comprehension fails, the memory is saved anyway, unanalysed, and can be read
+  later. The text is never lost.
+- Interface in English and Spanish, with VoiceOver, Dynamic Type up to AX5, Reduce
+  Motion and Increase Contrast.
+
+## How it is built
+
+- **Swift 6** in language mode 6, with strict concurrency and `MainActor` by default.
+- **SwiftUI** for the whole interface, **SwiftData** for the local store and
+  **Foundation Models** for on-device comprehension.
+- **No third-party dependencies**, neither in the app nor in the tests.
+- iOS 26.4 minimum, iPhone only, portrait. Built with Xcode 27.
+- A single target organised in folders with strict boundaries: `Domain` (pure rules,
+  no Apple frameworks beyond Foundation), `Persistence`, `Intelligence`, `Shared`,
+  `DesignSystem` and `Features`, one folder per screen.
+- Everything that can be decided with certainty (canonical names, element resolution,
+  ordering, connections) is a pure, tested function. The model only extracts; it never decides.
+- Tests with **Swift Testing**, written before the code, with the model replaced by
+  deterministic doubles. The interface is validated by hand on the device.
+
+## Try it
+
+1. Open `Hilo.xcodeproj` in Xcode 27 and run the `Hilo` scheme on an iPhone with Apple
+   Intelligence turned on.
+2. In Memory, tap **Load an example memory** to see connections without writing
+   anything, or **Tell your first memory** to start your own.
+
+The full demo walkthrough is in
+[`docs/manual-validation/hackathon-delivery/end-to-end-walkthrough.md`](docs/manual-validation/hackathon-delivery/end-to-end-walkthrough.md).
+
+## Documentation
+
+| Path | What it holds |
+|---|---|
+| [`docs/specs/`](docs/specs/) | One functional spec per phase; `F0_INDEX_AND_CONSTITUTION.md` is the constitution |
+| [`docs/decisions/`](docs/decisions/) | ADRs: stack, model contracts and persistence schema |
+| [`docs/design/`](docs/design/) | Design tokens and visual references |
+| [`docs/manual-validation/`](docs/manual-validation/) | On-device validation batteries, one per phase |
+| [`CLAUDE.md`](CLAUDE.md) | Working rules for the repo |
+
+## Español <a name="español"></a>
+
 # Hilo
 
 Hilo es una memoria personal privada: cuentas un recuerdo con tus propias palabras, y la
