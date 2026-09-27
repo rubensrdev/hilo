@@ -9,10 +9,10 @@ Once recuerdos que, cargados juntos, enseñan el producto entero sin que el usua
 
 | Qué se ve | Dónde |
 |---|---|
-| Conexión por **persona** | Nines (1, 4, 5, 9) · Marcos (3, 5) · abuela Mercedes (6, 7) |
+| Conexión por **persona** | Nines (1, 2, 4, 5, 9) · Marcos (3, 5) · abuela Mercedes (6, 7) |
 | Conexión por **lugar** | Triana (1, 9) y la playa de Bolonia (4, 11) |
 | Conexión por **objeto** | La Vespa (3, 5, 8) |
-| **Retrato** de una persona | Nines: cuatro recuerdos, supera el umbral de tres |
+| **Retrato** de una persona | Nines: cinco recuerdos, supera el umbral de tres |
 | **Retrato** de un objeto | La Vespa: tres recuerdos, justo en el umbral |
 | Agrupación por **década** | 1970s, 1980s, 1990s, 2000s, 2010s |
 | Grupo **«sin año»** | Recuerdos 6 y 7 |
