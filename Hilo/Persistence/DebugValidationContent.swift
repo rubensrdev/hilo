@@ -1,7 +1,7 @@
 #if DEBUG
   import Foundation
 
-  /// Two memories that complete the example for docs/validacion-manual: a rename collision, a match
+  /// Two memories that complete the example for docs/manual-validation: a rename collision, a match
   /// only through an element, and an extract that must centre. Never compiled into Release.
   nonisolated enum DebugValidationContent {
     static let seeds: [ExampleMemorySeed] = [

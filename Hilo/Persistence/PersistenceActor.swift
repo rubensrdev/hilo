@@ -202,7 +202,7 @@ actor PersistenceActor {
   }
 
   #if DEBUG
-    /// Adds two memories to the example for docs/validacion-manual. Never in Release; same
+    /// Adds two memories to the example for docs/manual-validation. Never in Release; same
     /// idempotency guard as loadExampleMemory.
     func loadDebugValidationDataset(loadedAt: Date) throws {
       guard try fetchExampleMemoryRecords().isEmpty else { return }

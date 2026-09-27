@@ -23,7 +23,7 @@ struct ExampleMemorySeed {
   let appearances: [ExampleAppearanceSeed]
 }
 
-/// docs/content/memoria-de-ejemplo.md as approved, word for word. nonisolated so the persistence
+/// docs/content/example-memory.md as approved, word for word. nonisolated so the persistence
 /// actor can read it.
 nonisolated enum ExampleMemoryContent {
   static func seeds(for language: ExampleMemoryLanguage) -> [ExampleMemorySeed] {
