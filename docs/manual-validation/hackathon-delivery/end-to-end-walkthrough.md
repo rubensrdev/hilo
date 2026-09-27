@@ -15,15 +15,21 @@ Duración aproximada: 30–40 minutos.
 ## Qué datos se usan
 
 - **Tus recuerdos de prueba**, que cuentas tú durante el recorrido. Los textos van escritos
-  abajo. Son inventados y **no comparten ningún nombre con la memoria de ejemplo**, así los
-  recuentos de José, Carmen y compañía salen exactos.
+  abajo y son inventados. **Comparten un nombre con la memoria de ejemplo: Lucía** (recuerdo
+  10 del ejemplo). Al cargar el set en el paso 4, la Lucía del ejemplo se une a la tuya, y
+  desde ahí sus recuentos incluyen el recuerdo del informe (2018). «El mercado de Triana» es
+  un lugar distinto de «Triana».
+
+  > ⚠ **Pendiente de Rubén:** antes, estos textos no compartían ningún nombre con el ejemplo.
+  > Ahora Lucía coincide. Los recuentos de abajo ya lo tienen en cuenta. Si prefieres que no
+  > coincidan, hay que cambiar el nombre en los relatos de los pasos 2, 3 y 6.
 - **El set de validación**, que se carga desde Ajustes → **Debug** → **Load validation
-  dataset**. Es la memoria de ejemplo aprobada (`docs/content/example-memory.md`, cinco
-  recuerdos) más los dos recuerdos sintéticos de F5 (`DebugValidationContent.swift`):
+  dataset**. Es la memoria de ejemplo (`docs/content/example-memory.md`, once recuerdos) más
+  los dos recuerdos sintéticos de F5 (`DebugValidationContent.swift`), trece en total:
   - **A**: Marta y el parque, «por 1990». Marta nunca se nombra en el relato.
   - **B**: un relato largo con Martina y la bicicleta vieja, sin fecha.
 - **La memoria de ejemplo del producto**, que se carga desde el vacío o desde Ajustes →
-  **Cargar la memoria de ejemplo**. Son los mismos cinco recuerdos, sin A ni B.
+  **Cargar la memoria de ejemplo**. Son los mismos once recuerdos, sin A ni B.
 
 Cómo se cubre cada capacidad:
 
@@ -63,10 +69,10 @@ sale solo al contar un recuerdo nuevo sobre el set.
       vez** («Todo se queda en tu iPhone. Sin cuenta ni conexión.») y dos salidas: **Cuenta tu
       primer recuerdo** y **Cargar una memoria de ejemplo**.
 - [ ] La pestaña **Preguntar** muestra «Preguntar llega pronto». Es lo esperado en esta entrega.
-- [ ] Pulsa **Cargar una memoria de ejemplo**. Aparecen cinco recuerdos agrupados en «Años
-      2000», «Años 1990», «Años 1980» y «Sin fecha». El grupo «Sin fecha» lleva los recuerdos
-      de la máquina de coser (sin fecha) y la caja de latón («no me acuerdo del año, pero fue
-      en otoño»).
+- [ ] Pulsa **Cargar una memoria de ejemplo**. Aparecen once recuerdos agrupados en «Años
+      2010», «Años 2000», «Años 1990», «Años 1980», «Años 1970» y «Sin fecha». El grupo «Sin
+      fecha» lleva los dos recuerdos de la abuela Mercedes: el del jersey verde (sin fecha) y
+      el de la tarta de manzana («el verano que cumplí quince años»).
 - [ ] Ajustes → **Borrar la memoria de ejemplo** → «¿Borrar la memoria de ejemplo?» → **Borrar
       el ejemplo**. El botón pasa a «Cargar la memoria de ejemplo» sin cerrarse la hoja. Pulsa
       **Cerrar**: Memoria vuelve al vacío de primera vez.
@@ -75,8 +81,8 @@ sale solo al contar un recuerdo nuevo sobre el set.
 
 Pulsa **Cuenta tu primer recuerdo** (en adelante, el botón de contar de la barra de Memoria).
 
-- [ ] **Vacío**: el texto de ayuda es un recuerdo de verdad («Mi abuelo José me regaló su
-      reloj…»), no una instrucción. **Entender y guardar** está desactivado y **Guardar sin
+- [ ] **Vacío**: el texto de ayuda es un recuerdo de verdad («Triana, verano de 1979. Nines
+      y yo…»), no una instrucción. **Entender y guardar** está desactivado y **Guardar sin
       analizar** está visible.
 - [ ] **Escribiendo**: escribe
 
@@ -126,7 +132,9 @@ Pulsa **Cuenta un segundo recuerdo**.
 ## 4. Cargar el set de validación
 
 - [ ] Ajustes → sección **Debug** → **Load validation dataset** → Cerrar. Memoria muestra tus
-      dos recuerdos más los siete del set, agrupados por década. Tus recuerdos siguen intactos.
+      dos recuerdos más los trece del set, agrupados por década. Tus recuerdos siguen intactos.
+- [ ] En Personas, Lucía es **una sola** y está «en 3 recuerdos»: tus dos más el del informe
+      del ejemplo (2018).
 - [ ] El botón «Cargar la memoria de ejemplo» de Ajustes pasa a «Borrar la memoria de
       ejemplo»: el set cuenta como ejemplo.
 
@@ -134,6 +142,16 @@ Pulsa **Cuenta un segundo recuerdo**.
 
 Este paso es el único donde el orden importa: primero se prueba todo y se cancela; después se
 guarda de verdad.
+
+> ⚠ **Pendiente de Rubén: este paso depende del ejemplo antiguo y no tiene equivalente
+> directo en el nuevo.** El relato de la merienda cuenta con que José, Carmen, Pilar y Granada
+> ya están en la memoria. En el ejemplo nuevo ninguno existe, así que con este texto no
+> aparece la duda «¿José Luis es José?», Carmen llega como nueva y los recuentos y el
+> «Conectado con 6 recuerdos» de abajo no se cumplen. Hace falta un relato nuevo contra el
+> ejemplo nuevo (por ejemplo, con un nombre que contenga «Nines» o «Marcos»). No lo he
+> inventado. Lo único que sigue valiendo tal cual es «el parque», que viene del recuerdo A.
+> Hasta entonces, sáltate las dos pasadas y ve directo a «Guardar sin responder una duda y
+> editar la fecha».
 
 Pulsa el botón de contar y escribe
 
@@ -183,6 +201,10 @@ Entender y guardar. Si Hilo solo reconoce «José» en vez de «José Luis», ca
       > José Antonio me enseñó a nadar en la playa de Salobreña el verano de 1999.
 
       La revisión trae la duda «¿José Antonio es José…?». **No la respondas.**
+
+      > ⚠ **Pendiente de Rubén:** esta duda solo sale si José existe, y eso depende del
+      > paso 5. Sin él, José Antonio llega como persona nueva, sin duda. El resto de este
+      > bloque (la regla de la fecha, sin conexiones, «Sin fecha») sigue valiendo.
 - [ ] **Regla de la fecha**: edita «el verano de 1999» a «el verano del 99».
 - [ ] Guarda. Como no hay conexiones no hay momento: José Antonio queda separado. Cierra la
       captura.
@@ -201,7 +223,7 @@ Entender y guardar. Si Hilo solo reconoce «José» en vez de «José Luis», ca
 - [ ] **Editar no reanaliza**: pulsa **Editar**, cambia el relato a «Cumpleaños de Lucía en
       Sevilla, con tarta de chocolate.» y guarda. Sigue sin elementos.
 - [ ] Pulsa **Deja que Hilo lea este recuerdo**: «Leyendo tu recuerdo…» y la revisión del relato
-      **actual**, con Lucía «en 2 recuerdos» y Sevilla «en 1 recuerdo» en Ya estaba en tu
+      **actual**, con Lucía «en 3 recuerdos» y Sevilla «en 1 recuerdo» en Ya estaba en tu
       memoria. Guarda.
 - [ ] Es **el mismo recuerdo**, no uno nuevo: ya no dice «Guardado sin analizar», tiene sus
       elementos y conexiones, y en Memoria no se ha movido de sitio.
@@ -224,30 +246,38 @@ Solo uno se puede provocar a mano con garantía. El resto está cubierto por tes
 
 **Por orden cronológico** (Memoria → Recuerdos)
 
-- [ ] Décadas de la más reciente a la más antigua: «Años 2010» (Triana), «Años 2000» (la boda),
-      «Años 1990» (la Alhambra y Marta, «por 1990»), «Años 1980» (el reloj). Al final va **«Sin
-      fecha»**, con la máquina de coser, la caja de latón, Martina, José Antonio y los recuerdos
-      sin fecha que contaste. Los recuerdos de Sevilla caen en el grupo que corresponda según
-      lo que Hilo entendiera de su fecha. Ningún encabezado muestra una fecha que no escribiste.
+- [ ] Décadas de la más reciente a la más antigua: «Años 2010» (tu mercado de Triana, el
+      informe con Lucía, la vuelta a Bolonia y el reencuentro en Triana), «Años 2000» (el vecino
+      Rafa y la boda de Nines), «Años 1990» (Bolonia con Nines, Marcos en la Vespa y Marta,
+      «por 1990»), «Años 1980» (la máquina de escribir) y «Años 1970» (la bici en Triana). Al
+      final va **«Sin fecha»**, con los dos recuerdos de la abuela Mercedes, Martina, José
+      Antonio y los recuerdos sin fecha que contaste. Los recuerdos de Sevilla caen en el grupo
+      que corresponda según lo que Hilo entendiera de su fecha. Ningún encabezado muestra una
+      fecha que no escribiste.
 
 **Por elemento** (Memoria → Personas, lugares y objetos)
 
-- [ ] Filtros **Todos / Personas / Lugares / Objetos**. Personas incluye a José (en 5
-      recuerdos), José Antonio (en 1), Lucía, Carmen, Pilar, Marta, Martina y «mi padre». Cada
-      fila lleva símbolo, tipo en texto y recuento.
-- [ ] **S5 de José**: nombre, tipo, «También conocido como: José Luis», «José aparece en 5
-      recuerdos», el rango temporal con las palabras del usuario y la lista en el mismo orden
-      que Memoria.
-- [ ] **S5 de una hebra suelta** (Pilar, Salobreña o la heladería): un solo recuerdo, invitación
-      a contar otro, sin rango.
+- [ ] Filtros **Todos / Personas / Lugares / Objetos**. Personas incluye a Nines (en 5
+      recuerdos), Marcos (en 2), la abuela Mercedes (en 2), Lucía, tío Paco, el vecino Rafa,
+      José Antonio (en 1), Marta y Martina. Objetos incluye la Vespa (en 3). Cada fila lleva
+      símbolo, tipo en texto y recuento.
+- [ ] **S5 de Nines**: nombre, tipo, «Nines aparece en 5 recuerdos», el rango temporal con las
+      palabras del usuario (de «verano de 1979» a «en 2013») y la lista en el mismo orden que
+      Memoria.
+
+      > ⚠ **Pendiente de Rubén:** antes aquí se comprobaba también el alias «También conocido
+      > como: José Luis», que nacía al responder la duda del paso 5. Hasta que el paso 5
+      > tenga relato nuevo, este S5 no enseña ningún alias.
+- [ ] **S5 de una hebra suelta** (tío Paco, el vecino Rafa, Salobreña o la heladería): un solo
+      recuerdo, invitación a contar otro, sin rango.
 - [ ] **Renombrar desde S5, con colisión**: Martina → «Marta» → se bloquea. **Sin colisión**:
       Martina → «Martina Ruiz» → se aplica, y Memoria y S4 lo reflejan al volver.
 - [ ] **Añadir un alias** a Lucía («Lu»). Repetirlo no lo duplica.
 
 **Navegación y conexiones**
 
-- [ ] Personas → José → el recuerdo de la Alhambra (S4) → Carmen (S5) → la boda (S4) → uno de
-      sus conectados → vuelta atrás hasta Memoria sin perderse.
+- [ ] Personas → Nines → el recuerdo de la boda (S4) → Marcos (S5) → Marcos en la Vespa (S4)
+      → la Vespa (S5) → uno de sus recuerdos → vuelta atrás hasta Memoria sin perderse.
 - [ ] **S4 con foto** (torrijas): la foto se ve entera, sin recortar, bajo el relato y **sin
       texto encima**. Los conectados muestran su motivo («Por Lucía»).
 - [ ] **S4 sin conexiones** (José Antonio): «Todavía sin conectar».
@@ -256,12 +286,15 @@ Solo uno se puede provocar a mano con garantía. El resto está cubierto por tes
 
 En Memoria → Recuerdos, en «Busca en tus recuerdos»:
 
-- [ ] «reloj»: encuentra por el relato, con la coincidencia resaltada en el extracto.
+- [ ] «Vespa»: encuentra por el relato, con la coincidencia resaltada en el extracto.
 - [ ] «Marta»: encuentra el recuerdo A **solo por el elemento** (el relato dice «ella»), y la
       tarjeta enseña a Marta para explicar por qué aparece.
 - [ ] «bicicleta»: el extracto de Martina se centra en la coincidencia, no en el principio.
 - [ ] «José Luis»: encuentra el recuerdo de la merienda por el relato y por el alias.
-- [ ] «Carmen»: la boda y la Alhambra salen **una vez cada una**.
+
+      > ⚠ **Pendiente de Rubén:** depende del relato y el alias del paso 5.
+- [ ] «Marcos»: el recuerdo de la Vespa amarilla y el de la boda salen **una vez cada uno**,
+      aunque coincidan por el relato y por el elemento.
 - [ ] «xyz»: «Nada coincide todavía», distinto del vacío de primera vez.
 
 ## 10. Borrar un recuerdo
@@ -276,12 +309,17 @@ En Memoria → Recuerdos, en «Busca en tus recuerdos»:
 ## 11. La memoria de ejemplo desde Ajustes
 
 - [ ] Ajustes → **Borrar la memoria de ejemplo** → Borrar el ejemplo. Cierra: solo quedan **tus**
-      recuerdos. **José sigue existiendo**, con su alias José Luis y un único recuerdo (la
-      merienda). Carmen y el parque también siguen, con un recuerdo cada uno. Marta, Martina,
-      Pilar, el reloj y el resto del ejemplo han desaparecido.
-- [ ] Ajustes → **Cargar la memoria de ejemplo**: vuelven los cinco recuerdos **en español**,
-      sin A ni B, y José recupera sus conexiones con tu merienda (en 5 recuerdos). Cargarlo otra
-      vez no duplica nada.
+      recuerdos. **Lucía sigue existiendo**, con sus recuerdos tuyos y sin el del informe.
+      Nines, Marcos, la abuela Mercedes, la Vespa, Triana, Marta, Martina y el resto del
+      ejemplo han desaparecido.
+- [ ] Ajustes → **Cargar la memoria de ejemplo**: vuelven los once recuerdos **en español**,
+      sin A ni B, y Lucía recupera el recuerdo del informe (2018), uno más en su recuento.
+      Cargarlo otra vez no duplica nada.
+
+      > ⚠ **Pendiente de Rubén:** antes aquí se comprobaba que José, con su alias José Luis,
+      > sobrevivía con la merienda y recuperaba sus conexiones al recargar. Con el ejemplo
+      > nuevo, lo cubre Lucía, que también está en tus recuerdos. Si el paso 5 pasa a tener
+      > un relato con Nines o Marcos, conviene volver a comprobarlo aquí con esa persona.
 
 ## 12. Borrado total
 
@@ -308,8 +346,8 @@ recuerdo» y el foco nunca salta al principio de la hoja.
 
 - Todo el recorrido se ha hecho en modo avión: si ha salido bien, también está validado el
   criterio de funcionar sin conexión.
-- Las dudas de identidad, el reconocimiento de «José Luis» y los recuentos del momento de la
-  conexión dependen de lo que entienda el modelo. Si Hilo extrae un nombre distinto, lo que
+- Las dudas de identidad, el reconocimiento de una variante de nombre y los recuentos del
+  momento de la conexión dependen de lo que entienda el modelo. Si Hilo extrae un nombre distinto, lo que
   vale es la regla (mismo tipo, nombre contenido en el otro → duda), no la cifra exacta.
 - La sección Debug de Ajustes («Debug», «Load validation dataset») está en inglés: nunca se
   compila en Release.
