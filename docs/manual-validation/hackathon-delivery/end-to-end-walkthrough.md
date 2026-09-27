@@ -15,14 +15,10 @@ Duración aproximada: 30–40 minutos.
 ## Qué datos se usan
 
 - **Tus recuerdos de prueba**, que cuentas tú durante el recorrido. Los textos van escritos
-  abajo y son inventados. **Comparten un nombre con la memoria de ejemplo: Lucía** (recuerdo
-  10 del ejemplo). Al cargar el set en el paso 4, la Lucía del ejemplo se une a la tuya, y
-  desde ahí sus recuentos incluyen el recuerdo del informe (2018). «El mercado de Triana» es
-  un lugar distinto de «Triana».
-
-  > ⚠ **Pendiente de Rubén:** antes, estos textos no compartían ningún nombre con el ejemplo.
-  > Ahora Lucía coincide. Los recuentos de abajo ya lo tienen en cuenta. Si prefieres que no
-  > coincidan, hay que cambiar el nombre en los relatos de los pasos 2, 3 y 6.
+  abajo y son inventados. Salvo el relato del paso 5, que nombra a propósito a Nines y Marcos
+  para provocar la duda y los reconocimientos, **no comparten ningún nombre con la memoria de
+  ejemplo**, así los recuentos salen exactos. «El mercado de Triana» es un lugar distinto de
+  «Triana».
 - **El set de validación**, que se carga desde Ajustes → **Debug** → **Load validation
   dataset**. Es la memoria de ejemplo (`docs/content/example-memory.md`, once recuerdos) más
   los dos recuerdos sintéticos de F5 (`DebugValidationContent.swift`), trece en total:
@@ -86,11 +82,11 @@ Pulsa **Cuenta tu primer recuerdo** (en adelante, el botón de contar de la barr
       analizar** está visible.
 - [ ] **Escribiendo**: escribe
 
-      > Comí con mi hermana Lucía en el mercado de Triana, en la Semana Santa de 2019.
+      > Comí con mi hermana Ana en el mercado de Triana, en la Semana Santa de 2019.
 
       Entender y guardar se activa.
 - [ ] **Comprendiendo**: pulsa **Entender y guardar**. Se ve «Leyendo tu recuerdo…» y los
-      elementos aparecen de uno en uno (Lucía, el mercado de Triana), cada uno con su color,
+      elementos aparecen de uno en uno (Ana, el mercado de Triana), cada uno con su color,
       símbolo y tipo.
 - [ ] **Revisión como comienzo**: se abre la hoja de revisión con «Tus palabras, tal como las
       escribiste», el relato intacto y «Aquí empiezan los hilos», además de «Es la primera vez
@@ -99,7 +95,7 @@ Pulsa **Cuenta tu primer recuerdo** (en adelante, el botón de contar de la barr
 - [ ] **La fecha entendida**: «la Semana Santa de 2019», editable. No la toques.
 - [ ] **Quitar y deshacer**: quita «el mercado de Triana» con su X. Queda «Fuera de este
       recuerdo» con **Deshacer**; pulsa Deshacer y vuelve con su papel.
-- [ ] **Renombrar un elemento nuevo**: toca Lucía → «¿Cambiar el nombre de Lucía?» **sin**
+- [ ] **Renombrar un elemento nuevo**: toca Ana → «¿Cambiar el nombre de Ana?» **sin**
       mensaje de alcance, porque es nueva y no afecta a nada más. Cancela.
 - [ ] Pulsa **Guardar recuerdo**. Como no hay conexiones no hay momento de la conexión: la
       revisión se cierra y la captura queda vacía, lista para otro. Ciérrala con **Cancelar**.
@@ -114,17 +110,17 @@ Pulsa **Cuenta un segundo recuerdo**.
       miniatura con **Quitar la foto**. Añadir la foto antes de escribir también vale.
 - [ ] **Dictando**: con el micrófono del teclado del sistema, dicta
 
-      > Lucía me enseñó a hacer torrijas en su cocina de Sevilla.
+      > Ana me enseñó a hacer torrijas en su cocina de Sevilla.
 
       Hilo no graba audio: el texto lo pone el dictado del sistema.
 - [ ] **Cerrar la revisión sin guardar**: Entender y guardar → cuando se abra la revisión,
       desliza la hoja hacia abajo. Vuelves a la captura con **el relato y la foto intactos** y
       con Entender y guardar disponible.
 - [ ] Vuelve a pulsar **Entender y guardar**. La revisión trae **Ya estaba en tu memoria**:
-      «Lucía · en 1 recuerdo», sin contar el que estás guardando. Sevilla aparece en «Lo que
+      «Ana · en 1 recuerdo», sin contar el que estás guardando. Sevilla aparece en «Lo que
       Hilo ha entendido» como nueva.
 - [ ] Guarda. **Momento de la conexión**: «Recuerdo guardado», tu relato, «Conectado con 1
-      recuerdo», el recuerdo del mercado con el motivo **«Por Lucía»** y el trazo que los une.
+      recuerdo», el recuerdo del mercado con el motivo **«Por Ana»** y el trazo que los une.
       Pulsa **Hecho**.
 - [ ] Todo el paso 2 más este paso lleva **menos de un minuto** por recuerdo cuando no te paras
       a comprobar (criterio 1 de F4).
@@ -133,8 +129,6 @@ Pulsa **Cuenta un segundo recuerdo**.
 
 - [ ] Ajustes → sección **Debug** → **Load validation dataset** → Cerrar. Memoria muestra tus
       dos recuerdos más los trece del set, agrupados por década. Tus recuerdos siguen intactos.
-- [ ] En Personas, Lucía es **una sola** y está «en 3 recuerdos»: tus dos más el del informe
-      del ejemplo (2018).
 - [ ] El botón «Cargar la memoria de ejemplo» de Ajustes pasa a «Borrar la memoria de
       ejemplo»: el set cuenta como ejemplo.
 
@@ -143,68 +137,62 @@ Pulsa **Cuenta un segundo recuerdo**.
 Este paso es el único donde el orden importa: primero se prueba todo y se cancela; después se
 guarda de verdad.
 
-> ⚠ **Pendiente de Rubén: este paso depende del ejemplo antiguo y no tiene equivalente
-> directo en el nuevo.** El relato de la merienda cuenta con que José, Carmen, Pilar y Granada
-> ya están en la memoria. En el ejemplo nuevo ninguno existe, así que con este texto no
-> aparece la duda «¿José Luis es José?», Carmen llega como nueva y los recuentos y el
-> «Conectado con 6 recuerdos» de abajo no se cumplen. Hace falta un relato nuevo contra el
-> ejemplo nuevo (por ejemplo, con un nombre que contenga «Nines» o «Marcos»). No lo he
-> inventado. Lo único que sigue valiendo tal cual es «el parque», que viene del recuerdo A.
-> Hasta entonces, sáltate las dos pasadas y ve directo a «Guardar sin responder una duda y
-> editar la fecha».
-
 Pulsa el botón de contar y escribe
 
-> Merendamos con José Luis y la tía Carmen en el parque, y luego fuimos a la heladería Los Italianos.
+> Merendamos con Nines García y Marcos en el parque, y luego fuimos a la heladería Los Italianos.
 
-Entender y guardar. Si Hilo solo reconoce «José» en vez de «José Luis», cancela y escribe
-«mi primo José Luis Ortega».
+Entender y guardar. **Plan B**: si Hilo solo reconoce «Nines» en vez de «Nines García»,
+cancela y escribe «mi amiga Nines García».
 
 **Primera pasada: probar y cancelar**
 
 - [ ] Están los **cuatro bloques**, cada uno solo con contenido:
-  - **Lo que Hilo ha entendido**: la heladería Los Italianos.
-  - **Ya estaba en tu memoria**: Carmen «en 2 recuerdos» y el parque «en 1 recuerdo».
-  - **Hilo no está seguro**: «¿José Luis es José, que ya estaba en tu memoria?», con **Sí, es
-    José** y **Otra persona** del mismo peso y ninguna preseleccionada, más «Puedes guardar sin
-    responder. Hilo los mantendrá separados.»
+  - **Lo que Hilo ha entendido**: la heladería Los Italianos, nueva.
+  - **Ya estaba en tu memoria**: Marcos «en 2 recuerdos» (la Vespa amarilla y la boda) y el
+    parque «en 1 recuerdo» (el recuerdo A).
+  - **Hilo no está seguro**: «¿Nines García es Nines, que ya estaba en tu memoria?», con **Sí,
+    es Nines** y **Otra persona** del mismo peso y ninguna preseleccionada, más «Puedes
+    guardar sin responder. Hilo los mantendrá separados.». Es una duda y no una coincidencia:
+    «nines garcia» y «nines» no son el mismo canónico, pero «nines» está contenido como palabra
+    completa en el otro, y los dos son personas.
   - **La fecha**: sin fecha entendida, con «Añade una fecha con tus palabras».
-- [ ] **Renombrar un existente hacia un nombre ocupado**: toca Carmen → el aviso de alcance
-      («Carmen aparece en otros 2 recuerdos. El nombre nuevo también se verá allí.») → escribe
-      «Pilar» → se bloquea con «Pilar ya existe» y «Elige otro nombre, o cambia antes el nombre
-      de Pilar.». Al cerrarlo vuelves al campo con «Pilar» tal como estaba. Cancela.
+- [ ] **Renombrar un existente hacia un nombre ocupado**: toca Marcos → el aviso de alcance
+      («Marcos aparece en otros 2 recuerdos. El nombre nuevo también se verá allí.») → escribe
+      «Lucía» → se bloquea con «Lucía ya existe» y «Elige otro nombre, o cambia antes el nombre
+      de Lucía.». Lucía existe como persona por el recuerdo del informe del ejemplo (2018). Al
+      cerrarlo vuelves al campo con «Lucía» tal como estaba. Cancela.
 - [ ] **Renombrar un existente sin colisión**: toca el parque → escribe «el parque del Retiro» →
       acepta. Queda pendiente: solo se aplicaría al guardar.
 - [ ] **Renombrar un nuevo hacia un nombre existente**: toca la heladería Los Italianos →
-      escribe «Granada» → pasa a **Ya estaba en tu memoria** como reconocimiento de Granada, y
-      se puede rechazar.
-- [ ] **Rechazar un reconocimiento**: en Carmen pulsa **No es Carmen**. Pasa a «Lo que Hilo ha
-      entendido» como nueva. Con VoiceOver, el foco se queda sobre Carmen.
+      escribe «Triana» → pasa a **Ya estaba en tu memoria** como reconocimiento de Triana
+      (recuerdos 1 y 9), y se puede rechazar. «El mercado de Triana» también es un lugar y se
+      parece, pero la coincidencia exacta va antes que la duda: se reconoce Triana, sin duda con
+      el mercado.
+- [ ] **Rechazar un reconocimiento**: en Marcos pulsa **No es Marcos**. Pasa a «Lo que Hilo ha
+      entendido» como nuevo. Con VoiceOver, el foco se queda sobre Marcos.
 - [ ] **Cancela la revisión** deslizando la hoja. Vuelves a la captura con el relato intacto.
 
 **Segunda pasada: guardar de verdad**
 
 - [ ] Pulsa otra vez **Entender y guardar**. La revisión vuelve a estar **limpia**: el parque se
-      llama «el parque», Carmen está en «Ya estaba en tu memoria», la heladería es nueva y la
+      llama «el parque», Marcos está en «Ya estaba en tu memoria», la heladería es nueva y la
       duda está sin responder. Nada de la primera pasada ha quedado.
-- [ ] Responde **Sí, es José**: José Luis pasa a «Ya estaba en tu memoria» como José, y se ve
-      «Hilo reconocerá este nombre para José en futuros recuerdos.».
-- [ ] Guarda. **Momento de la conexión**: «Conectado con 6 recuerdos». Los motivos: «Por José»
-      en la máquina de coser, la caja de latón y el reloj del verano del 87; José y Carmen en
-      la Alhambra; «Por Carmen» en la boda; «Por el parque» en el recuerdo de Marta. Cada
-      recuerdo aparece una sola vez. Hecho.
+- [ ] Responde **Sí, es Nines**: Nines García pasa a «Ya estaba en tu memoria» como Nines, y se
+      ve «Hilo reconocerá este nombre para Nines en futuros recuerdos.».
+- [ ] Guarda. **Momento de la conexión**: «Conectado con 7 recuerdos», cada uno una sola vez.
+      Los motivos: «Por Nines» en la bici en Triana (1), la máquina de escribir (2), Bolonia (4)
+      y el reencuentro en Triana (9); «Por Nines y Marcos» en la boda (5); «Por Marcos» en la
+      Vespa amarilla (3); «Por el parque» en el recuerdo de Marta (A). Hecho.
 
-**Guardar sin responder una duda y editar la fecha**
+**Editar la fecha**
 
 - [ ] Cuenta otro:
 
       > José Antonio me enseñó a nadar en la playa de Salobreña el verano de 1999.
 
-      La revisión trae la duda «¿José Antonio es José…?». **No la respondas.**
-
-      > ⚠ **Pendiente de Rubén:** esta duda solo sale si José existe, y eso depende del
-      > paso 5. Sin él, José Antonio llega como persona nueva, sin duda. El resto de este
-      > bloque (la regla de la fecha, sin conexiones, «Sin fecha») sigue valiendo.
+      Guardar sin responder una duda de nombre repetido queda fuera de esta entrega: el ejemplo
+      nuevo no tiene un caso equivalente, y no se inventa un nombre para forzarlo. José Antonio
+      llega como persona nueva, sin duda.
 - [ ] **Regla de la fecha**: edita «el verano de 1999» a «el verano del 99».
 - [ ] Guarda. Como no hay conexiones no hay momento: José Antonio queda separado. Cierra la
       captura.
@@ -215,15 +203,15 @@ Entender y guardar. Si Hilo solo reconoce «José» en vez de «José Luis», ca
 
 - [ ] Cuenta:
 
-      > Cumpleaños de Lucía, con tarta de chocolate.
+      > Cumpleaños de Ana, con tarta de chocolate.
 
       Pulsa **Guardar sin analizar**. Aparece «Recuerdo guardado». Cierra la captura.
 - [ ] Abre ese recuerdo (S4): se ven «Guardado sin analizar», **Deja que Hilo lea este
       recuerdo** y ningún elemento.
-- [ ] **Editar no reanaliza**: pulsa **Editar**, cambia el relato a «Cumpleaños de Lucía en
+- [ ] **Editar no reanaliza**: pulsa **Editar**, cambia el relato a «Cumpleaños de Ana en
       Sevilla, con tarta de chocolate.» y guarda. Sigue sin elementos.
 - [ ] Pulsa **Deja que Hilo lea este recuerdo**: «Leyendo tu recuerdo…» y la revisión del relato
-      **actual**, con Lucía «en 3 recuerdos» y Sevilla «en 1 recuerdo» en Ya estaba en tu
+      **actual**, con Ana «en 2 recuerdos» y Sevilla «en 1 recuerdo» en Ya estaba en tu
       memoria. Guarda.
 - [ ] Es **el mismo recuerdo**, no uno nuevo: ya no dice «Guardado sin analizar», tiene sus
       elementos y conexiones, y en Memoria no se ha movido de sitio.
@@ -257,29 +245,25 @@ Solo uno se puede provocar a mano con garantía. El resto está cubierto por tes
 
 **Por elemento** (Memoria → Personas, lugares y objetos)
 
-- [ ] Filtros **Todos / Personas / Lugares / Objetos**. Personas incluye a Nines (en 5
-      recuerdos), Marcos (en 2), la abuela Mercedes (en 2), Lucía, tío Paco, el vecino Rafa,
-      José Antonio (en 1), Marta y Martina. Objetos incluye la Vespa (en 3). Cada fila lleva
+- [ ] Filtros **Todos / Personas / Lugares / Objetos**. Personas incluye a Nines (en 6
+      recuerdos), Marcos (en 3), la abuela Mercedes (en 2), Ana, Lucía, tío Paco, el vecino
+      Rafa, José Antonio (en 1), Marta y Martina. Objetos incluye la Vespa (en 3). Cada fila lleva
       símbolo, tipo en texto y recuento.
-- [ ] **S5 de Nines**: nombre, tipo, «Nines aparece en 5 recuerdos», el rango temporal con las
-      palabras del usuario (de «verano de 1979» a «en 2013») y la lista en el mismo orden que
-      Memoria.
-
-      > ⚠ **Pendiente de Rubén:** antes aquí se comprobaba también el alias «También conocido
-      > como: José Luis», que nacía al responder la duda del paso 5. Hasta que el paso 5
-      > tenga relato nuevo, este S5 no enseña ningún alias.
+- [ ] **S5 de Nines**: nombre, tipo, «También conocido como: Nines García», «Nines aparece en 6
+      recuerdos», el rango temporal con las palabras del usuario y la lista en el mismo orden
+      que Memoria.
 - [ ] **S5 de una hebra suelta** (tío Paco, el vecino Rafa, Salobreña o la heladería): un solo
       recuerdo, invitación a contar otro, sin rango.
 - [ ] **Renombrar desde S5, con colisión**: Martina → «Marta» → se bloquea. **Sin colisión**:
       Martina → «Martina Ruiz» → se aplica, y Memoria y S4 lo reflejan al volver.
-- [ ] **Añadir un alias** a Lucía («Lu»). Repetirlo no lo duplica.
+- [ ] **Añadir un alias** a Ana («Anita»). Repetirlo no lo duplica.
 
 **Navegación y conexiones**
 
 - [ ] Personas → Nines → el recuerdo de la boda (S4) → Marcos (S5) → Marcos en la Vespa (S4)
       → la Vespa (S5) → uno de sus recuerdos → vuelta atrás hasta Memoria sin perderse.
 - [ ] **S4 con foto** (torrijas): la foto se ve entera, sin recortar, bajo el relato y **sin
-      texto encima**. Los conectados muestran su motivo («Por Lucía»).
+      texto encima**. Los conectados muestran su motivo («Por Ana»).
 - [ ] **S4 sin conexiones** (José Antonio): «Todavía sin conectar».
 
 ## 9. Buscar
@@ -290,9 +274,7 @@ En Memoria → Recuerdos, en «Busca en tus recuerdos»:
 - [ ] «Marta»: encuentra el recuerdo A **solo por el elemento** (el relato dice «ella»), y la
       tarjeta enseña a Marta para explicar por qué aparece.
 - [ ] «bicicleta»: el extracto de Martina se centra en la coincidencia, no en el principio.
-- [ ] «José Luis»: encuentra el recuerdo de la merienda por el relato y por el alias.
-
-      > ⚠ **Pendiente de Rubén:** depende del relato y el alias del paso 5.
+- [ ] «Nines García»: encuentra el recuerdo de la merienda por el relato y por el alias.
 - [ ] «Marcos»: el recuerdo de la Vespa amarilla y el de la boda salen **una vez cada uno**,
       aunque coincidan por el relato y por el elemento.
 - [ ] «xyz»: «Nada coincide todavía», distinto del vacío de primera vez.
@@ -302,24 +284,19 @@ En Memoria → Recuerdos, en «Busca en tus recuerdos»:
 - [ ] Abre el de José Antonio → **Borrar recuerdo** → el texto de «¿Borrar este recuerdo?» dice
       que **José Antonio y la playa de Salobreña desaparecen**, porque no tienen más recuerdos.
       Confirma. En Personas ya no está José Antonio.
-- [ ] Abre el de las torrijas (con foto) → Borrar → el texto dice que **Lucía se queda, con sus
-      otros recuerdos**, y que tus palabras y tu foto se borran. Confirma. Lucía sigue en
+- [ ] Abre el de las torrijas (con foto) → Borrar → el texto dice que **Ana se queda, con sus
+      otros recuerdos**, y que tus palabras y tu foto se borran. Confirma. Ana sigue en
       Personas con un recuerdo menos.
 
 ## 11. La memoria de ejemplo desde Ajustes
 
 - [ ] Ajustes → **Borrar la memoria de ejemplo** → Borrar el ejemplo. Cierra: solo quedan **tus**
-      recuerdos. **Lucía sigue existiendo**, con sus recuerdos tuyos y sin el del informe.
-      Nines, Marcos, la abuela Mercedes, la Vespa, Triana, Marta, Martina y el resto del
-      ejemplo han desaparecido.
+      recuerdos. **Nines sigue existiendo**, con su alias Nines García y un único recuerdo (la
+      merienda). Marcos y el parque también siguen, con un recuerdo cada uno. Lucía, Marta,
+      Martina, la abuela Mercedes, la Vespa, Triana y el resto del ejemplo han desaparecido.
 - [ ] Ajustes → **Cargar la memoria de ejemplo**: vuelven los once recuerdos **en español**,
-      sin A ni B, y Lucía recupera el recuerdo del informe (2018), uno más en su recuento.
-      Cargarlo otra vez no duplica nada.
-
-      > ⚠ **Pendiente de Rubén:** antes aquí se comprobaba que José, con su alias José Luis,
-      > sobrevivía con la merienda y recuperaba sus conexiones al recargar. Con el ejemplo
-      > nuevo, lo cubre Lucía, que también está en tus recuerdos. Si el paso 5 pasa a tener
-      > un relato con Nines o Marcos, conviene volver a comprobarlo aquí con esa persona.
+      sin A ni B, y Nines recupera sus conexiones con tu merienda (en 6 recuerdos); Marcos
+      vuelve a estar en 3. Cargarlo otra vez no duplica nada.
 
 ## 12. Borrado total
 
