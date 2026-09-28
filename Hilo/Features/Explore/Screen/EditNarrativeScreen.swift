@@ -4,6 +4,7 @@ import SwiftUI
 /// a minimal editor of its own, not the review.
 struct EditNarrativeScreen: View {
   @State private var draft: String
+  @FocusState private var isDraftFocused: Bool
   @Environment(\.dismiss) private var dismiss
   let onSave: (String) async -> Void
 
@@ -20,6 +21,7 @@ struct EditNarrativeScreen: View {
     NavigationStack {
       TextEditor(text: $draft)
         .relato()
+        .focused($isDraftFocused)
         .padding(Spacing.espacio2)
         .background(Color.superficieHundida)
         .clipShape(RoundedRectangle(cornerRadius: Spacing.radioCampo, style: .continuous))
@@ -28,6 +30,7 @@ struct EditNarrativeScreen: View {
         .accessibilityIdentifier("detail.editNarrative")
         .navigationTitle("Edit memory")
         .navigationBarTitleDisplayMode(.inline)
+        .hidesKeyboard($isDraftFocused)
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {
             Button("Cancel") { dismiss() }
