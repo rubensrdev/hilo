@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/content/hilo-icon.png" width="128" alt="Hilo app icon">
+  <img src="marketing/hilo-icon.png" width="128" alt="Hilo app icon">
 
 [🇬🇧 English](#english) · [🇪🇸 Español](#español)
 
