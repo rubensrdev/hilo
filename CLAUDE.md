@@ -4,6 +4,8 @@ Contract for Claude Code in this repository. Rules here override defaults and ha
 
 `docs/specs/F0_INDEX_AND_CONSTITUTION.md` is the constitution — it prevails over any other technical practice in this repo, and is read, never implemented. Product-level conflicts fall back to the Idea Especificada v2.3 instead. This file is the short operational summary of that constitution, not a replacement for it.
 
+The decision log (`06_registro_decisiones.md`) outranks this file. If a rule here contradicts a decision in the log, the log wins: say so and stop. This file may lag behind the log, and only Rubén corrects it.
+
 Hilo is a private personal memory: the user tells a memory in their own words, the app recognises the people, places and objects in it, lets the user review what it understood, and connects that memory to earlier ones. Everything happens on the device.
 
 ## Stack
@@ -74,10 +76,10 @@ Folders in a single target. The boundary is enforced by review and by a hook, no
 - Verify every iOS API against Cupertino MCP before using it, targeting iOS 26.4. **Never** an API above the deployment target.
 - The SDK is newer than the deployment target, so the compiler is not the only guard. **Never** add an availability check to reach an API newer than iOS 26.4: keep the 26.4 API and bring the decision to Rubén. An availability check written to use something newer is a BLOCKER.
 - **One exception, and only one**: `if #available(iOS 27, *)` is allowed solely to catch and map an error the system throws at runtime that has no iOS 26.4 equivalent — today, only `FoundationModels.LanguageModelError` in the comprehension `catch` (`ADR-001` §3). On 26.4 that type does not exist and is never thrown, so the check is inert there. Never to call an API, store a type in a model, or enable new behavior. Any other availability check is still a BLOCKER.
-- **Comments are written in English, doc-comment style (`///`) where the type or function needs one.** They explain a decision, never the code: write one only where the reason is not visible in the code itself — a trade-off, a non-obvious ordering, a rule from the spec the code alone does not reveal.
+- **Code comments are written in Spanish, doc-comment style (`///`) where the type or function needs one** (DEC-31, ratified by DEC-62). Code, identifiers and names stay in English; only the comment text is Spanish. Comments explain a decision, never the code: write one only where the reason is not visible in the code itself — a trade-off, a non-obvious ordering, a rule from the spec the code alone does not reveal.
 - One or two lines, plain natural language, the way Rubén would note something for his future self. **Never** a paragraph, **never** a file header comment, **never** a doc-comment on every symbol, and **never** a comment that restates the line below it.
 - Clarity comes first from names, types, structure and small units. If a function needs a comment to be understood, try a better name or a smaller function first.
-- Cite a phase or task number only when the comment is explaining a real constraint the code alone would not reveal — never as routine attribution. A product rule from the spec is usually worth citing in three or four words — `/// Rule 11: an element with no memories left disappears.` — a task ID rarely is.
+- Cite a phase or task number only when the comment is explaining a real constraint the code alone would not reveal — never as routine attribution. A product rule from the spec is usually worth citing in three or four words — `/// Regla 11: un elemento sin recuerdos desaparece.` — a task ID rarely is.
 - Soft-deprecated APIs already present in a file you edit: keep them, deliver the change, propose migration as a separate task. Apple's scoping rule wins over the modernity rule.
 
 ### Data
@@ -140,7 +142,7 @@ Folders in a single target. The boundary is enforced by review and by a hook, no
 
 When implementing a screen, cross-reference the phase spec, the design README section, and `tokens.md` — never eyeball a screenshot. If the design handoff and a phase spec disagree, the phase spec wins; flag the conflict instead of silently choosing.
 
-**Language of written files:** `CLAUDE.md`, `MEMORY.md`, and every `.claude/skills/*/SKILL.md` and `.claude/agents/*.md` are always written in English, regardless of the conversation's language. Product vocabulary with no 1:1 translation (*hilo*, *recuerdo*, *elemento*) and literal quotes from the Spanish spec corpus (e.g. `Estado: Proposed`) are the only exceptions. This does **not** apply to `docs/`: that corpus is authored in Spanish on purpose.
+**Language of written files:** `CLAUDE.md`, `MEMORY.md`, and every `.claude/skills/*/SKILL.md` and `.claude/agents/*.md` are always written in English, regardless of the conversation's language. Product vocabulary with no 1:1 translation (*hilo*, *recuerdo*, *elemento*) and literal quotes from the Spanish spec corpus (e.g. `Estado: Proposed`) are the only exceptions. This does **not** apply to `docs/`: that corpus is authored in Spanish on purpose, with folder and file names in English (DEC-61). Code comments are a separate case: they are written in Spanish (see Language & APIs).
 
 ## Session protocol
 
