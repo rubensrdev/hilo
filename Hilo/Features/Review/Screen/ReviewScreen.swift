@@ -98,6 +98,7 @@ struct ReviewScreen: View {
       .background(Color.fondo)
       .navigationTitle("Review")
       .navigationBarTitleDisplayMode(.inline)
+      .hidesKeyboard($isDateFocused)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button {

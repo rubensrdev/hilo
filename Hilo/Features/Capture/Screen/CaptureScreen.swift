@@ -4,6 +4,7 @@ import SwiftUI
 struct CaptureScreen: View {
   @Bindable var state: CaptureState
   @State private var photosPickerItem: PhotosPickerItem?
+  @FocusState private var isNarrativeFocused: Bool
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @Environment(\.locale) private var environmentLocale
   @Environment(\.displayScale) private var displayScale
@@ -31,6 +32,7 @@ struct CaptureScreen: View {
       .background(Color.fondo)
       .navigationTitle("Tell a memory")
       .navigationBarTitleDisplayMode(.inline)
+      .hidesKeyboard($isNarrativeFocused)
       // In the bar, so it stays in view with a long narrative and the chips never push it away.
       .toolbar {
         if state.canDiscard {
@@ -104,6 +106,7 @@ struct CaptureScreen: View {
         .scrollContentBackground(.hidden)
         .frame(minHeight: Spacing.altoMinimoCampoCaptura)
         .padding(Spacing.espacio2)
+        .focused($isNarrativeFocused)
         .accessibilityLabel("Your memory")
         .accessibilityIdentifier("capture.narrative")
       if state.narrative.isEmpty {
