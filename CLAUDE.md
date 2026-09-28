@@ -4,7 +4,7 @@ Contract for Claude Code in this repository. Rules here override defaults and ha
 
 `docs/specs/F0_INDEX_AND_CONSTITUTION.md` is the constitution — it prevails over any other technical practice in this repo, and is read, never implemented. Product-level conflicts fall back to the Idea Especificada v2.3 instead. This file is the short operational summary of that constitution, not a replacement for it.
 
-The decision log (`06_registro_decisiones.md`) outranks this file. If a rule here contradicts a decision in the log, the log wins: say so and stop. This file may lag behind the log, and only Rubén corrects it.
+Rubén's decision log lives outside this repository, in his Claude project, so you cannot read it. When Rubén's prompt cites a decision (DEC-nn) that contradicts a rule in this file, the decision wins: say which rule you are setting aside and follow the decision. This file may lag behind the log, and only Rubén corrects it. If a prompt and this file conflict and no decision is cited, stop and ask.
 
 Hilo is a private personal memory: the user tells a memory in their own words, the app recognises the people, places and objects in it, lets the user review what it understood, and connects that memory to earlier ones. Everything happens on the device.
 
